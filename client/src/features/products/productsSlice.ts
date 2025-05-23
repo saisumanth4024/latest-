@@ -1,267 +1,194 @@
-import { createSlice, createEntityAdapter, createSelector, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createEntityAdapter, PayloadAction, createSelector, EntityId } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
-import { Product, SearchHistoryItem, ViewedProduct, SearchParams, SortOption } from './types';
-import { localStorage } from '@/utils/storage';
+import { SearchParams, SearchHistoryItem, SortOption } from './types';
 
-// Entity adapter for normalized state management
-export const productsAdapter = createEntityAdapter<Product>();
-export const viewedProductsAdapter = createEntityAdapter<ViewedProduct>({
-  sortComparer: (a, b) => new Date(b.viewedAt).getTime() - new Date(a.viewedAt).getTime()
-});
-export const searchHistoryAdapter = createEntityAdapter<SearchHistoryItem>({
-  selectId: (item) => item.query,
-  sortComparer: (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+// Create entity adapter for search history
+const searchHistoryAdapter = createEntityAdapter<SearchHistoryItem & { id: string }>({
+  selectId: (item) => item.id,
+  sortComparer: (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
 });
 
-// Load persisted viewed products and search history from localStorage
-const loadViewedProducts = (): ViewedProduct[] => {
-  try {
-    const data = window.localStorage.getItem('viewedProducts');
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error('Failed to load viewed products from localStorage', error);
-    return [];
-  }
-};
-
-const loadSearchHistory = (): SearchHistoryItem[] => {
-  try {
-    const data = window.localStorage.getItem('searchHistory');
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error('Failed to load search history from localStorage', error);
-    return [];
-  }
-};
-
+// Initial state for products slice
 interface ProductsState {
-  // Current search/filter parameters
   searchParams: SearchParams;
-  // UI state
-  searchInputValue: string;
-  showSearchSuggestions: boolean;
-  isSidebarOpen: boolean;
-  viewMode: 'grid' | 'list';
-  // Recent searches and viewed products
-  viewedProducts: ReturnType<typeof viewedProductsAdapter.getInitialState>;
   searchHistory: ReturnType<typeof searchHistoryAdapter.getInitialState>;
-  // Virtualization state
-  visibleStartIndex: number;
-  visibleEndIndex: number;
+  visibleRange: {
+    startIndex: number;
+    endIndex: number;
+  };
+  viewMode: 'grid' | 'list';
+  isSidebarOpen: boolean;
 }
 
 const initialState: ProductsState = {
   searchParams: {
+    query: null,
+    category: null,
+    brand: null,
+    minPrice: null,
+    maxPrice: null,
+    rating: null,
+    sort: 'relevance',
     page: 1,
-    limit: 20,
-    sort: 'relevance' as SortOption,
+    limit: 24,
   },
-  searchInputValue: '',
-  showSearchSuggestions: false,
-  isSidebarOpen: true,
+  searchHistory: searchHistoryAdapter.getInitialState(),
+  visibleRange: {
+    startIndex: 0,
+    endIndex: 0,
+  },
   viewMode: 'grid',
-  viewedProducts: viewedProductsAdapter.getInitialState(loadViewedProducts()),
-  searchHistory: searchHistoryAdapter.getInitialState(loadSearchHistory()),
-  visibleStartIndex: 0,
-  visibleEndIndex: 0,
+  isSidebarOpen: false,
 };
 
+// Create products slice
 const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    // Search params actions
-    setSearchParams: (state, action: PayloadAction<Partial<SearchParams>>) => {
-      state.searchParams = { ...state.searchParams, ...action.payload, page: 1 }; // Reset to page 1 when changing filters
+    // Set search query
+    setQuery: (state, action: PayloadAction<string | null>) => {
+      state.searchParams.query = action.payload;
+      state.searchParams.page = 1; // Reset to first page
     },
     
+    // Add item to search history
+    addSearchHistoryItem: (state, action: PayloadAction<string>) => {
+      const query = action.payload.trim();
+      if (query) {
+        const timestamp = new Date().toISOString();
+        const id = `${query}-${timestamp}`;
+        
+        // Check if this query already exists and remove it to avoid duplicates
+        const existingItems = Object.values(state.searchHistory.entities)
+          .filter(item => item && item.query.toLowerCase() === query.toLowerCase());
+        
+        if (existingItems.length > 0) {
+          searchHistoryAdapter.removeMany(
+            state.searchHistory, 
+            existingItems.map(item => item?.id as string)
+          );
+        }
+        
+        // Add new item
+        searchHistoryAdapter.addOne(state.searchHistory, {
+          id,
+          query,
+          timestamp,
+        });
+        
+        // Keep only the latest 10 searches
+        const allIds = state.searchHistory.ids as string[];
+        if (allIds.length > 10) {
+          const idsToRemove = allIds.slice(10);
+          searchHistoryAdapter.removeMany(state.searchHistory, idsToRemove);
+        }
+      }
+    },
+    
+    // Clear search history
+    clearSearchHistory: (state) => {
+      searchHistoryAdapter.removeAll(state.searchHistory);
+    },
+    
+    // Set category filter
+    setCategory: (state, action: PayloadAction<string | null>) => {
+      state.searchParams.category = action.payload;
+      state.searchParams.page = 1; // Reset to first page
+    },
+    
+    // Set brand filter
+    setBrand: (state, action: PayloadAction<string | null>) => {
+      state.searchParams.brand = action.payload;
+      state.searchParams.page = 1; // Reset to first page
+    },
+    
+    // Set price range filter
+    setPriceRange: (state, action: PayloadAction<{ minPrice: number | null; maxPrice: number | null }>) => {
+      state.searchParams.minPrice = action.payload.minPrice;
+      state.searchParams.maxPrice = action.payload.maxPrice;
+      state.searchParams.page = 1; // Reset to first page
+    },
+    
+    // Set rating filter
+    setRating: (state, action: PayloadAction<number | null>) => {
+      state.searchParams.rating = action.payload;
+      state.searchParams.page = 1; // Reset to first page
+    },
+    
+    // Set sort option
+    setSort: (state, action: PayloadAction<SortOption>) => {
+      state.searchParams.sort = action.payload;
+    },
+    
+    // Set pagination page
     setPage: (state, action: PayloadAction<number>) => {
       state.searchParams.page = action.payload;
     },
     
-    setSort: (state, action: PayloadAction<SortOption>) => {
-      state.searchParams.sort = action.payload;
-      state.searchParams.page = 1; // Reset to page 1 when changing sort
+    // Set items per page
+    setLimit: (state, action: PayloadAction<number>) => {
+      state.searchParams.limit = action.payload;
+      state.searchParams.page = 1; // Reset to first page
     },
     
-    setCategory: (state, action: PayloadAction<string | undefined>) => {
-      state.searchParams.category = action.payload;
-      state.searchParams.page = 1;
-    },
-    
-    setBrand: (state, action: PayloadAction<string | undefined>) => {
-      state.searchParams.brand = action.payload;
-      state.searchParams.page = 1;
-    },
-    
-    setPriceRange: (state, action: PayloadAction<{ min?: number; max?: number }>) => {
-      state.searchParams.minPrice = action.payload.min;
-      state.searchParams.maxPrice = action.payload.max;
-      state.searchParams.page = 1;
-    },
-    
-    setRating: (state, action: PayloadAction<number | undefined>) => {
-      state.searchParams.rating = action.payload;
-      state.searchParams.page = 1;
-    },
-    
-    setFilter: (state, action: PayloadAction<{ key: string; value: string | string[] | number | boolean }>) => {
-      const { key, value } = action.payload;
-      state.searchParams.filters = { ...state.searchParams.filters, [key]: value };
-      state.searchParams.page = 1;
-    },
-    
+    // Reset all filters
     resetFilters: (state) => {
       state.searchParams = {
-        page: 1,
-        limit: state.searchParams.limit,
-        sort: 'relevance',
-        query: state.searchParams.query, // Keep the search query
+        ...initialState.searchParams,
+        query: state.searchParams.query, // Preserve search query
+        sort: state.searchParams.sort, // Preserve sort option
       };
     },
     
-    // UI state actions
-    setSearchInputValue: (state, action: PayloadAction<string>) => {
-      state.searchInputValue = action.payload;
+    // Set visible range for virtualized list
+    setVisibleRange: (state, action: PayloadAction<{ startIndex: number; endIndex: number }>) => {
+      state.visibleRange = action.payload;
     },
     
-    setShowSearchSuggestions: (state, action: PayloadAction<boolean>) => {
-      state.showSearchSuggestions = action.payload;
-    },
-    
+    // Set view mode (grid or list)
     setViewMode: (state, action: PayloadAction<'grid' | 'list'>) => {
       state.viewMode = action.payload;
     },
     
+    // Toggle sidebar visibility
     toggleSidebar: (state) => {
       state.isSidebarOpen = !state.isSidebarOpen;
-    },
-    
-    setSidebarOpen: (state, action: PayloadAction<boolean>) => {
-      state.isSidebarOpen = action.payload;
-    },
-    
-    // Virtualization actions
-    setVisibleRange: (state, action: PayloadAction<{ startIndex: number; endIndex: number }>) => {
-      state.visibleStartIndex = action.payload.startIndex;
-      state.visibleEndIndex = action.payload.endIndex;
-    },
-    
-    // Viewed products actions
-    addViewedProduct: (state, action: PayloadAction<ViewedProduct>) => {
-      viewedProductsAdapter.upsertOne(state.viewedProducts, action.payload);
-      
-      // Persist to localStorage
-      try {
-        const allViewedProducts = viewedProductsAdapter.getSelectors().selectAll(state.viewedProducts);
-        window.localStorage.setItem('viewedProducts', JSON.stringify(allViewedProducts.slice(0, 20))); // Keep only the most recent 20
-      } catch (error) {
-        console.error('Failed to save viewed products to localStorage', error);
-      }
-    },
-    
-    clearViewedProducts: (state) => {
-      viewedProductsAdapter.removeAll(state.viewedProducts);
-      window.localStorage.removeItem('viewedProducts');
-    },
-    
-    // Search history actions
-    addSearchHistoryItem: (state, action: PayloadAction<SearchHistoryItem>) => {
-      searchHistoryAdapter.upsertOne(state.searchHistory, action.payload);
-      
-      // Persist to localStorage
-      try {
-        const allSearchHistory = searchHistoryAdapter.getSelectors().selectAll(state.searchHistory);
-        window.localStorage.setItem('searchHistory', JSON.stringify(allSearchHistory.slice(0, 10))); // Keep only the most recent 10
-      } catch (error) {
-        console.error('Failed to save search history to localStorage', error);
-      }
-    },
-    
-    removeSearchHistoryItem: (state, action: PayloadAction<string>) => {
-      searchHistoryAdapter.removeOne(state.searchHistory, action.payload);
-      
-      // Update localStorage
-      try {
-        const allSearchHistory = searchHistoryAdapter.getSelectors().selectAll(state.searchHistory);
-        window.localStorage.setItem('searchHistory', JSON.stringify(allSearchHistory));
-      } catch (error) {
-        console.error('Failed to update search history in localStorage', error);
-      }
-    },
-    
-    clearSearchHistory: (state) => {
-      searchHistoryAdapter.removeAll(state.searchHistory);
-      window.localStorage.removeItem('searchHistory');
     },
   },
 });
 
-// Actions
+// Export actions
 export const {
-  setSearchParams,
-  setPage,
-  setSort,
+  setQuery,
+  addSearchHistoryItem,
+  clearSearchHistory,
   setCategory,
   setBrand,
   setPriceRange,
   setRating,
-  setFilter,
+  setSort,
+  setPage,
+  setLimit,
   resetFilters,
-  setSearchInputValue,
-  setShowSearchSuggestions,
+  setVisibleRange,
   setViewMode,
   toggleSidebar,
-  setSidebarOpen,
-  setVisibleRange,
-  addViewedProduct,
-  clearViewedProducts,
-  addSearchHistoryItem,
-  removeSearchHistoryItem,
-  clearSearchHistory,
 } = productsSlice.actions;
 
-// Selectors
-export const selectProductsState = (state: RootState) => state.products;
+// Export selectors
 export const selectSearchParams = (state: RootState) => state.products.searchParams;
-export const selectSearchInputValue = (state: RootState) => state.products.searchInputValue;
-export const selectShowSearchSuggestions = (state: RootState) => state.products.showSearchSuggestions;
+export const selectVisibleRange = (state: RootState) => state.products.visibleRange;
 export const selectViewMode = (state: RootState) => state.products.viewMode;
 export const selectIsSidebarOpen = (state: RootState) => state.products.isSidebarOpen;
-export const selectVisibleRange = (state: RootState) => ({
-  startIndex: state.products.visibleStartIndex,
-  endIndex: state.products.visibleEndIndex,
-});
 
-// Entity selectors
-const viewedProductsSelectors = viewedProductsAdapter.getSelectors<RootState>(
-  (state) => state.products.viewedProducts
-);
-export const selectAllViewedProducts = viewedProductsSelectors.selectAll;
-export const selectViewedProductsCount = viewedProductsSelectors.selectTotal;
+// Export search history selectors
+const selectSearchHistoryState = (state: RootState) => state.products.searchHistory;
+export const {
+  selectAll: selectAllSearchHistory,
+  selectById: selectSearchHistoryById,
+  selectIds: selectSearchHistoryIds,
+} = searchHistoryAdapter.getSelectors(selectSearchHistoryState);
 
-const searchHistorySelectors = searchHistoryAdapter.getSelectors<RootState>(
-  (state) => state.products.searchHistory
-);
-export const selectAllSearchHistory = searchHistorySelectors.selectAll;
-export const selectSearchHistoryCount = searchHistorySelectors.selectTotal;
-
-// Memoized selectors
-export const selectHasActiveFilters = createSelector(
-  selectSearchParams,
-  (params) => {
-    // Check if any filter is applied except for pagination
-    const { page, limit, sort } = params;
-    const paramsCopy = { ...params };
-    
-    // Remove pagination and default sort
-    delete paramsCopy.page;
-    delete paramsCopy.limit;
-    if (paramsCopy.sort === 'relevance') delete paramsCopy.sort;
-    
-    // Check if there are any filters left
-    return Object.keys(paramsCopy).length > 0;
-  }
-);
-
+// Export reducer
 export default productsSlice.reducer;

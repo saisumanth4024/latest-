@@ -1,110 +1,56 @@
-// Product-related types
+// Product interfaces
 export interface Product {
-  id: string;
+  id: string | number;
   name: string;
   description: string;
   price: number;
   originalPrice?: number;
-  discountPercentage?: number;
+  imageUrl: string;
+  brand: string;
+  category: string;
   rating: number;
   reviewCount: number;
-  images: string[];
-  thumbnail: string;
-  category: string;
-  subCategory?: string;
-  brand: string;
-  tags: string[];
-  inStock: boolean;
-  stockCount?: number;
-  sku: string;
+  stock: number;
+  isNew: boolean;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
-  featured?: boolean;
-  bestSeller?: boolean;
-  newArrival?: boolean;
-  attributes?: Record<string, string | string[] | number | boolean>;
-  specifications?: Record<string, string | number>;
-  variants?: ProductVariant[];
 }
 
-export interface ProductVariant {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-  originalPrice?: number;
-  discountPercentage?: number;
-  inStock: boolean;
-  stockCount?: number;
-  attributes: Record<string, string | number | boolean>;
-  image?: string;
+// Search parameters for filtering products
+export interface SearchParams {
+  query?: string | null;
+  category?: string | null;
+  brand?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  rating?: number | null;
+  sort?: SortOption | null;
+  page: number;
+  limit: number;
 }
 
-export interface ProductFilterAttribute {
-  id: string;
-  name: string;
-  type: 'checkbox' | 'radio' | 'range' | 'select';
-  values?: string[];
-  minValue?: number;
-  maxValue?: number;
-  unit?: string;
-}
-
+// Sort options
 export type SortOption = 
   | 'relevance' 
   | 'price-asc' 
   | 'price-desc' 
   | 'rating-desc' 
   | 'newest' 
-  | 'discount' 
-  | 'bestselling';
+  | 'bestselling'
+  | 'discount';
 
-export interface SearchParams {
-  page?: number;
-  limit?: number;
-  sort?: SortOption;
-  sortDirection?: 'asc' | 'desc';
-  category?: string;
-  brand?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  rating?: number;
-  query?: string;
-  filters?: Record<string, string | string[] | number | boolean>;
-}
-
-export interface ProductsResponse {
-  products: Product[];
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-  hasMore: boolean;
-  filters?: Record<string, ProductFilterAttribute>;
-  appliedFilters?: Record<string, any>;
-  categories?: { name: string; count: number }[];
-  brands?: { name: string; count: number }[];
-  priceRange?: { min: number; max: number };
-}
-
-export interface ProductResponse {
-  product: Product;
-  relatedProducts?: Product[];
-}
-
-// For tracking viewed products in Redux
-export interface ViewedProduct {
-  id: string;
-  name: string;
-  price: number;
-  thumbnail: string;
-  category: string;
-  brand: string;
-  viewedAt: string;
-}
-
-// For tracking search history in Redux
+// Search history item
 export interface SearchHistoryItem {
   query: string;
   timestamp: string;
-  resultCount?: number;
+}
+
+// Product list response from API
+export interface ProductListResponse {
+  products: Product[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

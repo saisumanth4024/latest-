@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { setQuery, addToSearchHistory, selectSearchParams, selectSearchHistory } from '../productsSlice';
+import { setQuery, addSearchHistoryItem, selectSearchParams, selectAllSearchHistory } from '../productsSlice';
 import { 
   Search, 
   Mic, 
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 const SearchBar = () => {
   const dispatch = useAppDispatch();
   const { query } = useAppSelector(selectSearchParams);
-  const searchHistory = useAppSelector(selectSearchHistory);
+  const searchHistory = useAppSelector(selectAllSearchHistory);
   
   const [searchValue, setSearchValue] = useState(query || '');
   const [isInputFocused, setIsInputFocused] = useState(false);
