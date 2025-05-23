@@ -4,7 +4,8 @@ import Dashboard from "@/pages/Dashboard";
 import Layout from "@/components/layout/Layout";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
-import ProfilePage from "@/pages/ProfilePage";
+import ProfilePageLegacy from "@/pages/ProfilePage";
+import ProfilePage from "@/features/profile/ProfilePage";
 import { AuthProvider, ProtectedRoute, useAuthRedirect } from "@/features/auth";
 import { UserRole } from "@/types";
 
@@ -65,8 +66,15 @@ export const routes = [
     title: "Profile",
   },
   { 
+    path: "/profile-legacy", 
+    component: ProfilePageLegacy, 
+    requireAuth: true,
+    title: "Profile (Legacy)",
+    hideInMenu: true,
+  },
+  { 
     path: "/settings", 
-    component: SettingsPage, 
+    component: ProfilePage, 
     requireAuth: true,
     title: "Settings",
   },
