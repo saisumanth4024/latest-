@@ -1,7 +1,12 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Layout from "@/components/layout/Layout";
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
+import ProfilePage from "@/pages/ProfilePage";
+import { AuthProvider, ProtectedRoute, useAuthRedirect } from "@/features/auth";
+import { UserRole } from "@/types";
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -16,40 +21,136 @@ const ProductsPage = () => <PlaceholderPage title="Products" />;
 const OrdersPage = () => <PlaceholderPage title="Orders" />;
 const SearchPage = () => <PlaceholderPage title="Search" />;
 const AnalyticsPage = () => <PlaceholderPage title="Analytics" />;
-const ProfilePage = () => <PlaceholderPage title="Profile" />;
 const SettingsPage = () => <PlaceholderPage title="Settings" />;
-const AdminPage = () => <PlaceholderPage title="Admin" />;
+const AdminDashboardPage = () => <PlaceholderPage title="Admin Dashboard" />;
+const SellerDashboardPage = () => <PlaceholderPage title="Seller Dashboard" />;
 
-// Create a central routes configuration
+// Create a central routes configuration with auth requirements
 export const routes = [
   {
     path: "/",
     component: Dashboard,
-    exact: true
+    exact: true,
+    requireAuth: false,
+    title: "Dashboard",
   },
-  { path: "/products", component: ProductsPage },
-  { path: "/orders", component: OrdersPage },
-  { path: "/search", component: SearchPage },
-  { path: "/analytics", component: AnalyticsPage },
-  { path: "/profile", component: ProfilePage },
-  { path: "/settings", component: SettingsPage },
-  { path: "/admin", component: AdminPage },
-  { path: "*", component: NotFound }
+  { 
+    path: "/products", 
+    component: ProductsPage, 
+    requireAuth: false,
+    title: "Products"
+  },
+  { 
+    path: "/orders", 
+    component: OrdersPage, 
+    requireAuth: true,
+    title: "Orders"
+  },
+  { 
+    path: "/search", 
+    component: SearchPage, 
+    requireAuth: false,
+    title: "Search"
+  },
+  { 
+    path: "/analytics", 
+    component: AnalyticsPage, 
+    requireAuth: true,
+    title: "Analytics",
+  },
+  { 
+    path: "/profile", 
+    component: ProfilePage, 
+    requireAuth: true,
+    title: "Profile",
+  },
+  { 
+    path: "/settings", 
+    component: SettingsPage, 
+    requireAuth: true,
+    title: "Settings",
+  },
+  { 
+    path: "/admin/dashboard", 
+    component: AdminDashboardPage, 
+    requireAuth: true,
+    roles: [UserRole.ADMIN],
+    title: "Admin Dashboard",
+  },
+  { 
+    path: "/seller/dashboard", 
+    component: SellerDashboardPage, 
+    requireAuth: true,
+    roles: [UserRole.SELLER, UserRole.ADMIN],
+    title: "Seller Dashboard",
+  },
+  { 
+    path: "/login", 
+    component: LoginPage, 
+    requireAuth: false,
+    title: "Login",
+    hideInMenu: true,
+  },
+  { 
+    path: "/signup", 
+    component: SignupPage, 
+    requireAuth: false,
+    title: "Sign Up",
+    hideInMenu: true,
+  },
+  { 
+    path: "*", 
+    component: NotFound,
+    requireAuth: false,
+    title: "Not Found",
+    hideInMenu: true,
+  }
 ];
+
+// Router Component that handles auth redirection
+function AppRouter() {
+  // Listen for auth redirects
+  useAuthRedirect();
+  
+  // Get current path to determine if we should show the layout
+  const [location] = useLocation();
+  const noLayoutPaths = ['/login', '/signup'];
+  const shouldShowLayout = !noLayoutPaths.includes(location);
+  
+  // Generate routes with the appropriate protection
+  const routeElements = routes.map((route, index) => {
+    // Non-auth routes or special paths
+    if (!route.requireAuth || route.path === "*" || noLayoutPaths.includes(route.path)) {
+      return (
+        <Route 
+          key={index} 
+          path={route.path === "*" ? undefined : route.path} 
+          component={route.component} 
+        />
+      );
+    }
+    
+    // Protected routes (with roles if specified)
+    return (
+      <Route key={index} path={route.path}>
+        <ProtectedRoute roles={route.roles}>
+          <route.component />
+        </ProtectedRoute>
+      </Route>
+    );
+  });
+  
+  const content = <Switch>{routeElements}</Switch>;
+  
+  // Wrap with layout for most pages, except login/signup
+  return shouldShowLayout ? <Layout>{content}</Layout> : content;
+}
 
 function App() {
   return (
-    <Layout>
-      <Switch>
-        {routes.map((route, index) => (
-          route.path === "*" ? (
-            <Route key={index} component={route.component} />
-          ) : (
-            <Route key={index} path={route.path} component={route.component} />
-          )
-        ))}
-      </Switch>
-    </Layout>
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
   );
 }
 

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
-import { selectUserRole, setUserRole } from '@/features/auth/authSlice';
+import { selectUserRole } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
 import { getNavigationByRole, type UserRole, type NavItem as NavItemType, type NavSection } from '@/config/navigation';
 import { NavIcon } from '@/components/icons/NavIcons';
+// Import directly from types for the demo role selector
+import { UserRole as UserRoleEnum } from '@/types';
 
 interface NavItemProps {
   href: string;
@@ -44,10 +46,17 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   // Get navigation items filtered by user role
   const navSections = getNavigationByRole(userRole);
 
-  // This would normally be triggered by auth system
-  // Added here for demo purposes
+  // Demo role selector - in a real app, this would be based on user permissions/login
+  // For demo purposes, we'll use localStorage to simulate role changes
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    dispatch(setUserRole(e.target.value as UserRole));
+    const selectedRole = e.target.value as UserRoleEnum;
+    
+    // Store the selected role in localStorage for demo purposes
+    localStorage.set('demoUserRole', { role: selectedRole });
+    
+    // Reload the page to simulate a role change
+    // In a real app, this would be handled by the auth system
+    window.location.reload();
   };
   
   return (

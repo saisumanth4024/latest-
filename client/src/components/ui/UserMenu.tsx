@@ -2,16 +2,11 @@ import { useState } from 'react';
 import { useAppDispatch } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
-
-interface User {
-  id: number;
-  username: string;
-  avatar?: string;
-  initials: string;
-}
+import { UserProfile } from '@/types';
+import { Link } from 'wouter';
 
 interface UserMenuProps {
-  user: User;
+  user: UserProfile;
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
@@ -71,32 +66,51 @@ export default function UserMenu({ user }: UserMenuProps) {
           <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 shadow-lg rounded-md overflow-hidden z-20 border border-slate-200 dark:border-slate-700">
             <ul>
               <li>
-                <a 
-                  href="#profile" 
-                  onClick={(e) => { e.preventDefault(); closeMenu(); }}
-                  className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-                >
-                  Profile
-                </a>
+                <Link href="/profile">
+                  <div 
+                    onClick={closeMenu}
+                    className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    Profile
+                  </div>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#settings"
-                  onClick={(e) => { e.preventDefault(); closeMenu(); }}
-                  className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-                >
-                  Settings
-                </a>
+                <Link href="/settings">
+                  <div
+                    onClick={closeMenu}
+                    className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    Settings
+                  </div>
+                </Link>
               </li>
-              <li>
-                <a 
-                  href="#help"
-                  onClick={(e) => { e.preventDefault(); closeMenu(); }}
-                  className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-                >
-                  Help
-                </a>
-              </li>
+              {/* Admin link - only visible to admins */}
+              {user.role === 'admin' && (
+                <li>
+                  <Link href="/admin/dashboard">
+                    <div
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                    >
+                      Admin Dashboard
+                    </div>
+                  </Link>
+                </li>
+              )}
+              {/* Seller link - only visible to sellers and admins */}
+              {(user.role === 'seller' || user.role === 'admin') && (
+                <li>
+                  <Link href="/seller/dashboard">
+                    <div
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                    >
+                      Seller Dashboard
+                    </div>
+                  </Link>
+                </li>
+              )}
               <li className="border-t border-slate-200 dark:border-slate-700">
                 <button 
                   onClick={handleLogout}
