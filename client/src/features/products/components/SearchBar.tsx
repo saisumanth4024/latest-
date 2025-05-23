@@ -65,7 +65,7 @@ const SearchBar = () => {
   const handleSearch = (value: string) => {
     if (value.trim()) {
       dispatch(setQuery(value.trim()));
-      dispatch(addToSearchHistory(value.trim()));
+      dispatch(addSearchHistoryItem(value.trim()));
       setIsInputFocused(false);
     }
   };
@@ -171,7 +171,7 @@ const SearchBar = () => {
           )}
           
           <Button
-            variant="primary"
+            variant="default"
             size="sm"
             className="h-8 ml-1"
             onClick={() => handleSearch(searchValue)}
@@ -188,15 +188,15 @@ const SearchBar = () => {
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup heading="Recent Searches">
-                {searchHistory.slice(0, 5).map((item, index) => (
+                {searchHistory.slice(0, 5).map((historyItem, index) => (
                   <CommandItem
                     key={index}
-                    value={item}
-                    onSelect={() => handleHistoryItemClick(item)}
+                    value={historyItem.query}
+                    onSelect={() => handleHistoryItemClick(historyItem.query)}
                     className="flex items-center cursor-pointer"
                   >
                     <History className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{item}</span>
+                    <span>{historyItem.query}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>

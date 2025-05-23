@@ -17,8 +17,11 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
+// Import the actual ProductsPage component
+import { ProductsPage as ProductsPageImpl } from "@/features/products";
+
 // Create components for each route
-const ProductsPage = () => <PlaceholderPage title="Products" />;
+const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
 const OrdersPage = () => <PlaceholderPage title="Orders" />;
 const SearchPage = () => <PlaceholderPage title="Search" />;
 const AnalyticsPage = () => <PlaceholderPage title="Analytics" />;
@@ -37,7 +40,7 @@ export const routes = [
   },
   { 
     path: "/products", 
-    component: ProductsPage, 
+    component: ProductsPageImpl, 
     requireAuth: false,
     title: "Products"
   },
