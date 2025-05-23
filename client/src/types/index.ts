@@ -1,8 +1,37 @@
 // User role types
-export type UserRole = 'guest' | 'user' | 'admin' | 'seller';
+export enum UserRole {
+  GUEST = 'guest',
+  USER = 'user',
+  ADMIN = 'admin',
+  SELLER = 'seller'
+}
 
 // User status types
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
+
+// Auth status types
+export enum AuthStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated', 
+  UNAUTHENTICATED = 'unauthenticated'
+}
+
+// Auth credentials types
+export interface UserCredentials {
+  username: string;
+  password: string;
+  remember?: boolean;
+}
+
+// User registration types
+export interface UserRegistration {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+}
 
 // User profile interface
 export interface UserProfile {

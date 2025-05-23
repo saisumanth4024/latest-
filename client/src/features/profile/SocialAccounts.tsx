@@ -72,7 +72,7 @@ export default function SocialAccounts() {
       case 'facebook':
         return <SiFacebook className="h-5 w-5" />;
       case 'twitter':
-        return <SiTwitter className="h-5 w-5" />;
+        return <FaTwitter className="h-5 w-5" />;
       case 'linkedin':
         return <SiLinkedin className="h-5 w-5" />;
       default:
