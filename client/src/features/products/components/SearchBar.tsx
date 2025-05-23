@@ -1,242 +1,236 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { setQuery, addToSearchHistory, selectSearchParams, selectSearchHistory } from '../productsSlice';
 import { 
-  setSearchInputValue, 
-  setShowSearchSuggestions, 
-  selectSearchInputValue,
-  selectShowSearchSuggestions,
-  setSearchParams,
-  addSearchHistoryItem
-} from '../productsSlice';
-import { useGetSuggestedSearchesQuery, useGetHotSearchTagsQuery } from '../productsApi';
-import { cn } from '@/lib/utils';
-import { 
-  Search as SearchIcon, 
-  Mic as MicIcon, 
-  X as XIcon,
-  Flame as TrendingIcon 
+  Search, 
+  Mic, 
+  X, 
+  History, 
+  ArrowUp,
+  CornerDownLeft
 } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { 
+  Button,
+  Input,
+  Card,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 const SearchBar = () => {
   const dispatch = useAppDispatch();
-  const searchInputValue = useAppSelector(selectSearchInputValue);
-  const showSuggestions = useAppSelector(selectShowSearchSuggestions);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isFocused, setIsFocused] = useState(false);
-
-  // RTK Query hooks
-  const { data: suggestedSearches = [] } = useGetSuggestedSearchesQuery(searchInputValue, {
-    skip: !searchInputValue || searchInputValue.length < 2,
-  });
+  const { query } = useAppSelector(selectSearchParams);
+  const searchHistory = useAppSelector(selectSearchHistory);
   
-  const { data: hotSearchTags = [] } = useGetHotSearchTagsQuery();
-
-  // Debounced search handler
-  const debouncedSearch = useRef(
-    debounce((value: string) => {
-      if (value.trim()) {
-        dispatch(setSearchParams({ query: value, page: 1 }));
-      }
-    }, 500)
-  ).current;
-
+  const [searchValue, setSearchValue] = useState(query || '');
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // SpeechRecognition setup
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+  
+  if (recognition) {
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchValue(transcript);
+      handleSearch(transcript);
+      setIsListening(false);
+    };
+    
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+    
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  }
+  
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    dispatch(setSearchInputValue(value));
-    
+    setSearchValue(e.target.value);
+  };
+  
+  // Handle search submission
+  const handleSearch = (value: string) => {
     if (value.trim()) {
-      debouncedSearch(value);
-    } else {
-      // If the search input is cleared, reset the search query
-      dispatch(setSearchParams({ query: undefined }));
+      dispatch(setQuery(value.trim()));
+      dispatch(addToSearchHistory(value.trim()));
+      setIsInputFocused(false);
     }
   };
-
-  // Handle search submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (searchInputValue.trim()) {
-      dispatch(setSearchParams({ query: searchInputValue, page: 1 }));
-      dispatch(setShowSearchSuggestions(false));
-      
-      // Add to search history
-      dispatch(addSearchHistoryItem({
-        query: searchInputValue,
-        timestamp: new Date().toISOString(),
-      }));
-      
-      // Blur the input
-      if (inputRef.current) {
-        inputRef.current.blur();
-      }
-    }
-  };
-
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion: string) => {
-    dispatch(setSearchInputValue(suggestion));
-    dispatch(setSearchParams({ query: suggestion, page: 1 }));
-    dispatch(setShowSearchSuggestions(false));
-    
-    // Add to search history
-    dispatch(addSearchHistoryItem({
-      query: suggestion,
-      timestamp: new Date().toISOString(),
-    }));
-  };
-
-  // Clear search input
-  const handleClear = () => {
-    dispatch(setSearchInputValue(''));
-    dispatch(setSearchParams({ query: undefined }));
-    
-    // Focus the input
+  
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchValue('');
+    dispatch(setQuery(null));
     if (inputRef.current) {
       inputRef.current.focus();
     }
   };
-
-  // Mock function for voice search (would normally use Web Speech API)
+  
+  // Toggle voice search
   const handleVoiceSearch = () => {
-    alert('Voice search clicked! This would activate the device microphone in a real implementation.');
-    // In a real implementation:
-    // 1. Request microphone access
-    // 2. Start recognition
-    // 3. Update the search input with the recognized text
-    // 4. Submit the search
+    if (recognition) {
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+        setIsListening(true);
+      }
+    }
   };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
-        dispatch(setShowSearchSuggestions(false));
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dispatch]);
-
-  // Helper function for debouncing
-  function debounce<F extends (...args: any[]) => any>(func: F, wait: number) {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+  // Handle key press for search
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchValue);
+    }
     
-    return function(this: any, ...args: Parameters<F>) {
-      const context = this;
-      if (timeout !== null) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => {
-        func.apply(context, args);
-      }, wait);
-    };
-  }
-
+    // Handle escape key
+    if (e.key === 'Escape') {
+      setIsInputFocused(false);
+    }
+  };
+  
+  // Handle focus of input
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+  };
+  
+  // Handle blur of input
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Delay blur to allow for clicking on suggestion items
+    setTimeout(() => {
+      setIsInputFocused(false);
+    }, 200);
+  };
+  
+  // Handle clicking a history item
+  const handleHistoryItemClick = (item: string) => {
+    setSearchValue(item);
+    handleSearch(item);
+  };
+  
+  // Update local state when Redux state changes
+  useEffect(() => {
+    setSearchValue(query || '');
+  }, [query]);
+  
   return (
-    <div className="relative w-full max-w-xl mx-auto">
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="relative flex items-center">
-          <SearchIcon className="absolute left-3 text-gray-400 h-5 w-5" />
-          
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search products, brands, categories..."
-            value={searchInputValue}
-            onChange={handleInputChange}
-            onFocus={() => {
-              setIsFocused(true);
-              dispatch(setShowSearchSuggestions(true));
-            }}
-            className={cn(
-              "w-full h-11 pl-10 pr-20 rounded-full border border-gray-300",
-              "focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 outline-none",
-              "dark:bg-gray-800 dark:border-gray-700 dark:text-white transition-all"
-            )}
-          />
-          
-          {searchInputValue && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="absolute right-14 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+    <div className="relative w-full">
+      <div className="relative flex items-center">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+        
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder="Search products, brands, categories..."
+          className="pl-10 pr-20 h-12 w-full bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus-visible:ring-blue-500"
+          value={searchValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+        />
+        
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+          {searchValue && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={handleClearSearch}
             >
-              <XIcon className="h-5 w-5" />
-            </button>
+              <X className="h-4 w-4" />
+            </Button>
           )}
           
-          <button
-            type="button"
-            onClick={handleVoiceSearch}
-            className={cn(
-              "absolute right-3 p-2 rounded-full text-gray-500",
-              "hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            )}
-            aria-label="Search by voice"
-          >
-            <MicIcon className="h-5 w-5" />
-          </button>
-        </div>
-      </form>
-      
-      {/* Suggestions dropdown */}
-      {showSuggestions && (isFocused || suggestedSearches.length > 0) && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
-          {searchInputValue && suggestedSearches.length > 0 ? (
-            <div className="p-2">
-              <div className="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                <SearchIcon className="h-4 w-4 mr-2" />
-                <span>Suggestions</span>
-              </div>
-              
-              <ul>
-                {suggestedSearches.map((suggestion, index) => (
-                  <li key={index}>
-                    <button
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                    >
-                      <span className="flex items-center">
-                        <SearchIcon className="h-4 w-4 mr-2 text-gray-400" />
-                        {suggestion}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : !searchInputValue && hotSearchTags.length > 0 ? (
-            <div className="p-2">
-              <div className="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                <TrendingIcon className="h-4 w-4 mr-2" />
-                <span>Popular Searches</span>
-              </div>
-              
-              <div className="px-3 py-2 flex flex-wrap gap-2">
-                {hotSearchTags.map((tag, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSuggestionClick(tag)}
-                    className="rounded-full"
-                  >
-                    {tag}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-              Type to search for products
-            </div>
+          {recognition && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700",
+                isListening && "text-red-500 animate-pulse"
+              )}
+              onClick={handleVoiceSearch}
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
           )}
+          
+          <Button
+            variant="primary"
+            size="sm"
+            className="h-8 ml-1"
+            onClick={() => handleSearch(searchValue)}
+          >
+            Search
+          </Button>
+        </div>
+      </div>
+      
+      {/* Search Suggestions Dropdown */}
+      {isInputFocused && searchHistory.length > 0 && (
+        <Card className="absolute top-full left-0 right-0 mt-1 z-10 p-0 shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+          <Command className="border-0">
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup heading="Recent Searches">
+                {searchHistory.slice(0, 5).map((item, index) => (
+                  <CommandItem
+                    key={index}
+                    value={item}
+                    onSelect={() => handleHistoryItemClick(item)}
+                    className="flex items-center cursor-pointer"
+                  >
+                    <History className="h-4 w-4 mr-2 text-gray-500" />
+                    <span>{item}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              
+              {searchValue && (
+                <CommandGroup heading="Search">
+                  <CommandItem 
+                    value={searchValue} 
+                    onSelect={() => handleSearch(searchValue)}
+                    className="flex items-center cursor-pointer"
+                  >
+                    <Search className="h-4 w-4 mr-2 text-gray-500" />
+                    <span>{searchValue}</span>
+                    <CornerDownLeft className="ml-auto h-4 w-4 text-gray-500" />
+                  </CommandItem>
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </Card>
+      )}
+      
+      {/* Voice Search Active Indicator */}
+      {isListening && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <Card className="w-full max-w-md mx-4 p-6 text-center animate-in zoom-in-90">
+            <div className="mx-auto rounded-full bg-red-100 p-6 mb-4 relative">
+              <Mic className="h-12 w-12 text-red-500 animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-4 border-red-500 animate-ping opacity-75"></div>
+            </div>
+            <h2 className="text-xl font-bold mb-2">Listening...</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Speak now or</p>
+            <Button onClick={() => recognition?.stop()}>Cancel</Button>
+          </Card>
         </div>
       )}
     </div>

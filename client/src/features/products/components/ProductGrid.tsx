@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { FixedSizeGrid, FixedSizeGridProps, areEqual } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
