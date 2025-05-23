@@ -20,6 +20,10 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 // Import the actual ProductsPage component
 import { ProductsPage as ProductsPageImpl } from "@/features/products";
 
+// Import cart and wishlist pages
+import CartPage from "@/features/cart/components/CartPage";
+import WishlistPage from "@/features/wishlist/components/WishlistPage";
+
 // Create components for each route
 const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
 const OrdersPage = () => <PlaceholderPage title="Orders" />;
@@ -43,6 +47,18 @@ export const routes = [
     component: ProductsPageImpl, 
     requireAuth: false,
     title: "Products"
+  },
+  {
+    path: "/cart",
+    component: CartPage,
+    requireAuth: false,
+    title: "Cart"
+  },
+  {
+    path: "/wishlists",
+    component: WishlistPage,
+    requireAuth: true,
+    title: "Wishlists"
   },
   { 
     path: "/orders", 

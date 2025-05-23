@@ -1,210 +1,222 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppDispatch } from '@/app/hooks';
 import { 
-  updateCartItemQuantity, 
+  updateCartItemQuantity,
   removeFromCart,
-  moveToWishlist,
-  saveForLater
+  moveToWishlist
 } from '../cartSlice';
-import { addFromCart } from '@/features/wishlist/wishlistSlice';
+import { addToWishlist } from '@/features/wishlist/wishlistSlice';
 import { CartItem as CartItemType } from '@/types/cart';
+import { 
+  Card,
+  CardContent,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
-  Trash2,
-  Heart,
-  Bookmark,
-  Plus,
-  Minus,
+  Trash2, 
+  Heart, 
+  MinusCircle,
+  PlusCircle
 } from 'lucide-react';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
 
 interface CartItemProps {
   item: CartItemType;
+  wishlistId?: string;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item }) => {
+const CartItem: React.FC<CartItemProps> = ({ item, wishlistId }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
   const dispatch = useAppDispatch();
   const { toast } = useToast();
 
   // Handle quantity change
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity <= 0) return; // Don't allow zero or negative quantities
+  const handleQuantityChange = async (change: number) => {
+    const newQuantity = item.quantity + change;
     
+    if (newQuantity < 1) return;
     if (newQuantity > 10) {
       toast({
         title: 'Maximum quantity reached',
         description: 'You cannot add more than 10 units of this item.',
         variant: 'destructive',
       });
-      newQuantity = 10;
+      return;
     }
     
-    dispatch(updateCartItemQuantity({
-      itemId: item.id,
-      quantity: newQuantity,
-    }));
+    setIsUpdating(true);
     
-    toast({
-      title: 'Cart updated',
-      description: `Quantity updated to ${newQuantity}.`,
-      variant: 'default',
-    });
-  };
-
-  // Handle quantity increment
-  const handleIncrement = () => {
-    if (item.quantity < 10) {
-      handleQuantityChange(item.quantity + 1);
-    } else {
+    try {
+      await dispatch(updateCartItemQuantity({
+        itemId: item.id,
+        quantity: newQuantity
+      }));
+    } catch (error) {
       toast({
-        title: 'Maximum quantity reached',
-        description: 'You cannot add more than 10 units of this item.',
+        title: 'Error',
+        description: 'Failed to update quantity. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  // Handle quantity decrement
-  const handleDecrement = () => {
-    if (item.quantity > 1) {
-      handleQuantityChange(item.quantity - 1);
-    }
-  };
-
-  // Handle remove item
+  // Handle remove from cart
   const handleRemove = () => {
     dispatch(removeFromCart(item.id));
     toast({
       title: 'Item removed',
-      description: `${item.product.name} has been removed from your cart.`,
+      description: 'Item has been removed from your cart.',
       variant: 'default',
     });
   };
 
   // Handle move to wishlist
   const handleMoveToWishlist = () => {
-    dispatch(addFromCart({ cartItem: item }));
-    dispatch(moveToWishlist(item.id));
+    if (!wishlistId) {
+      toast({
+        title: 'No wishlist available',
+        description: 'Please create a wishlist first to save this item.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    dispatch(addToWishlist({
+      wishlistId,
+      item: {
+        productId: item.productId,
+        variantId: item.variantId,
+        product: item.product,
+        variant: item.variant,
+        addedAt: new Date().toISOString(),
+      }
+    }));
+    
+    dispatch(moveToWishlist({
+      itemId: item.id,
+      wishlistId
+    }));
+    
     toast({
       title: 'Moved to wishlist',
-      description: `${item.product.name} has been moved to your wishlist.`,
-      variant: 'default',
-    });
-  };
-
-  // Handle save for later
-  const handleSaveForLater = () => {
-    dispatch(addFromCart({ cartItem: item }));
-    dispatch(saveForLater(item.id));
-    toast({
-      title: 'Saved for later',
-      description: `${item.product.name} has been saved for later in your wishlist.`,
+      description: 'Item has been moved to your wishlist.',
       variant: 'default',
     });
   };
 
   return (
-    <div className="flex items-center py-4 border-b last:border-b-0">
-      {/* Product Image & Info */}
-      <div className="flex items-center w-1/2">
-        <div className="w-20 h-20 rounded-md border overflow-hidden flex-shrink-0">
-          <img 
-            src={item.product.imageUrl || 'https://via.placeholder.com/80'} 
-            alt={item.product.name} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="ml-4">
-          <h3 className="font-medium text-base">{item.product.name}</h3>
-          <div className="text-sm text-muted-foreground">
-            {item.variant && (
-              <span className="mr-2">
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Product Image */}
+          <div className="w-24 h-24 flex-shrink-0 rounded-md border overflow-hidden">
+            <img 
+              src={item.product?.imageUrl || 'https://via.placeholder.com/96'} 
+              alt={item.product?.name || 'Product'} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Product Info */}
+          <div className="flex-1">
+            <h3 className="font-medium mb-1">{item.product?.name || 'Product'}</h3>
+            
+            {/* Product Variant */}
+            {item.variant && Object.keys(item.variant).length > 0 && (
+              <div className="text-sm text-muted-foreground mb-1">
                 {Object.entries(item.variant)
                   .filter(([key]) => !['id', 'productId'].includes(key))
-                  .map(([key, value]) => `${key}: ${value}`)
-                  .join(', ')}
-              </span>
+                  .map(([key, value]) => (
+                    <span key={key} className="mr-2">
+                      {key.charAt(0).toUpperCase() + key.slice(1)}: {value}
+                    </span>
+                  ))}
+              </div>
             )}
-            <span>SKU: {item.sku}</span>
+            
+            {/* SKU and other details */}
+            <div className="text-xs text-muted-foreground mb-2">
+              SKU: {item.sku}
+              {item.isDigital && <span className="ml-2">Digital Product</span>}
+            </div>
+            
+            {/* Price */}
+            <div className="flex items-end justify-between mt-2">
+              <div>
+                <div className="font-medium">
+                  ${item.unitPrice.toFixed(2)}
+                </div>
+                {item.discountTotal > 0 && (
+                  <div className="text-sm text-green-600 dark:text-green-400">
+                    Discount: -${item.discountTotal.toFixed(2)}
+                  </div>
+                )}
+              </div>
+              
+              {/* Quantity Controls */}
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-7 w-7"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={isUpdating || item.quantity <= 1}
+                >
+                  <MinusCircle className="h-4 w-4" />
+                  <span className="sr-only">Decrease</span>
+                </Button>
+                
+                <span className="w-8 text-center font-medium">
+                  {isUpdating ? '...' : item.quantity}
+                </span>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-7 w-7"
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={isUpdating || item.quantity >= 10}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span className="sr-only">Increase</span>
+                </Button>
+              </div>
+            </div>
+            
+            {/* Item Total */}
+            <div className="text-sm font-medium mt-2">
+              Total: ${item.total.toFixed(2)}
+            </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="flex sm:flex-col gap-2 mt-2 sm:mt-0">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleMoveToWishlist}
+              disabled={!wishlistId}
+              className="h-8"
+            >
+              <Heart className="h-4 w-4 mr-2" />
+              Save
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRemove}
+              className="h-8 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* Price, Quantity, Total */}
-      <div className="flex justify-end w-1/2">
-        <div className="w-24 text-center">
-          ${item.unitPrice.toFixed(2)}
-        </div>
-        <div className="w-24 flex items-center justify-center">
-          <div className="flex items-center">
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="h-7 w-7" 
-              onClick={handleDecrement}
-              disabled={item.quantity <= 1}
-            >
-              <Minus className="h-3 w-3" />
-            </Button>
-            <Input 
-              type="number"
-              value={item.quantity}
-              onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-              min="1"
-              max="10"
-              className="w-12 h-7 mx-1 text-center"
-            />
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="h-7 w-7" 
-              onClick={handleIncrement}
-              disabled={item.quantity >= 10}
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-        <div className="w-24 text-center font-medium">
-          ${item.total.toFixed(2)}
-        </div>
-        <div className="w-8 flex justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <span className="sr-only">Open menu</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-vertical">
-                  <circle cx="12" cy="12" r="1" />
-                  <circle cx="12" cy="5" r="1" />
-                  <circle cx="12" cy="19" r="1" />
-                </svg>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleMoveToWishlist}>
-                <Heart className="w-4 h-4 mr-2" />
-                Move to Wishlist
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSaveForLater}>
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save for Later
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleRemove}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
