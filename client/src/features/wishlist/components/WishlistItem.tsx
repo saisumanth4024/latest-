@@ -45,6 +45,7 @@ const WishlistItem: React.FC<WishlistItemProps> = ({ item, wishlistId }) => {
         variant: item.variant,
         quantity: 1,
         unitPrice: item.product.price,
+        discountTotal: 0,
         sku: item.product.sku || 'SKU-' + item.productId,
         isDigital: item.product.isDigital || false,
         requiresShipping: item.product.requiresShipping !== false,
@@ -52,7 +53,7 @@ const WishlistItem: React.FC<WishlistItemProps> = ({ item, wishlistId }) => {
       }));
       
       // Remove from wishlist
-      dispatch(moveToCart({
+      dispatch(removeFromWishlist({
         wishlistId,
         itemId: item.id
       }));

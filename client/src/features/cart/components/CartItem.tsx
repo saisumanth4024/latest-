@@ -1,223 +1,222 @@
-import React, { useState } from 'react';
-import { useAppDispatch } from '@/app/hooks';
-import { 
-  updateCartItemQuantity,
-  removeFromCart,
-  moveToWishlist
-} from '../cartSlice';
-import { addToWishlist } from '@/features/wishlist/wishlistSlice';
-import { CartItem as CartItemType } from '@/types/cart';
-import { 
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import {
   Card,
   CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Trash2, 
-  Heart, 
-  MinusCircle,
-  PlusCircle
+import {
+  Trash,
+  Heart,
+  Plus,
+  Minus,
+  Gift,
+  Package
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { CartItem as CartItemType } from '@/types';
+import { formatCurrency } from '@/lib/utils';
+import {
+  removeFromCart,
+  updateQuantity,
+  saveForLater,
+} from '../cartSlice';
+import { addToWishlist } from '@/features/wishlist/wishlistSlice';
 
 interface CartItemProps {
   item: CartItemType;
   wishlistId?: string;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item, wishlistId }) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const dispatch = useAppDispatch();
+export function CartItem({ item, wishlistId }: CartItemProps) {
+  const dispatch = useDispatch();
   const { toast } = useToast();
 
-  // Handle quantity change
-  const handleQuantityChange = async (change: number) => {
-    const newQuantity = item.quantity + change;
-    
-    if (newQuantity < 1) return;
-    if (newQuantity > 10) {
-      toast({
-        title: 'Maximum quantity reached',
-        description: 'You cannot add more than 10 units of this item.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setIsUpdating(true);
-    
-    try {
-      await dispatch(updateCartItemQuantity({
-        itemId: item.id,
-        quantity: newQuantity
-      }));
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update quantity. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // Handle remove from cart
   const handleRemove = () => {
     dispatch(removeFromCart(item.id));
     toast({
       title: 'Item removed',
-      description: 'Item has been removed from your cart.',
-      variant: 'default',
+      description: 'The item has been removed from your cart.',
     });
   };
 
-  // Handle move to wishlist
-  const handleMoveToWishlist = () => {
-    if (!wishlistId) {
-      toast({
-        title: 'No wishlist available',
-        description: 'Please create a wishlist first to save this item.',
-        variant: 'destructive',
-      });
-      return;
+  const handleQuantityIncrease = () => {
+    if (item.quantity < 99) {
+      dispatch(updateQuantity({
+        id: item.id,
+        quantity: item.quantity + 1
+      }));
     }
-    
-    dispatch(addToWishlist({
-      wishlistId,
-      item: {
+  };
+
+  const handleQuantityDecrease = () => {
+    if (item.quantity > 1) {
+      dispatch(updateQuantity({
+        id: item.id,
+        quantity: item.quantity - 1
+      }));
+    } else {
+      handleRemove();
+    }
+  };
+
+  const handleSaveForLater = () => {
+    dispatch(saveForLater(item.id));
+    toast({
+      title: 'Saved for later',
+      description: 'This item has been saved for later.',
+    });
+  };
+
+  const handleMoveToWishlist = () => {
+    if (wishlistId) {
+      dispatch(addToWishlist({
+        wishlistId,
+        product: item.product,
         productId: item.productId,
         variantId: item.variantId,
-        product: item.product,
-        variant: item.variant,
-        addedAt: new Date().toISOString(),
-      }
-    }));
-    
-    dispatch(moveToWishlist({
-      itemId: item.id,
-      wishlistId
-    }));
-    
-    toast({
-      title: 'Moved to wishlist',
-      description: 'Item has been moved to your wishlist.',
-      variant: 'default',
-    });
+        variant: item.variant
+      }));
+      
+      dispatch(removeFromCart(item.id));
+      
+      toast({
+        title: 'Added to wishlist',
+        description: 'Item has been moved to your wishlist.',
+        variant: 'success',
+      });
+    } else {
+      toast({
+        title: 'Select a wishlist',
+        description: 'Please select a wishlist first.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex items-start gap-4">
           {/* Product Image */}
-          <div className="w-24 h-24 flex-shrink-0 rounded-md border overflow-hidden">
-            <img 
-              src={item.product?.imageUrl || 'https://via.placeholder.com/96'} 
-              alt={item.product?.name || 'Product'} 
-              className="w-full h-full object-cover"
-            />
+          <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
+            {item.product.imageUrl ? (
+              <img 
+                src={item.product.imageUrl} 
+                alt={item.product.name || 'Product image'} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                <Package className="w-8 h-8 text-gray-400" />
+              </div>
+            )}
           </div>
           
-          {/* Product Info */}
+          {/* Product Details */}
           <div className="flex-1">
-            <h3 className="font-medium mb-1">{item.product?.name || 'Product'}</h3>
+            <div className="flex justify-between">
+              <h3 className="font-semibold text-lg">{item.product.name}</h3>
+              <p className="font-semibold">{formatCurrency(item.total)}</p>
+            </div>
             
-            {/* Product Variant */}
-            {item.variant && Object.keys(item.variant).length > 0 && (
-              <div className="text-sm text-muted-foreground mb-1">
-                {Object.entries(item.variant)
-                  .filter(([key]) => !['id', 'productId'].includes(key))
-                  .map(([key, value]) => (
-                    <span key={key} className="mr-2">
-                      {key.charAt(0).toUpperCase() + key.slice(1)}: {value}
-                    </span>
-                  ))}
+            {/* Product Variant & Options */}
+            {item.variant && (
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {item.variant.options?.map((opt, i) => (
+                  <span key={i}>
+                    {opt.name}: <span className="font-medium">{opt.value}</span>
+                    {i < (item.variant?.options?.length || 0) - 1 ? ' / ' : ''}
+                  </span>
+                ))}
               </div>
             )}
             
-            {/* SKU and other details */}
-            <div className="text-xs text-muted-foreground mb-2">
-              SKU: {item.sku}
-              {item.isDigital && <span className="ml-2">Digital Product</span>}
+            {/* Price details */}
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {formatCurrency(item.unitPrice)} each
+              {item.discountTotal > 0 && (
+                <span className="ml-2 text-green-600 dark:text-green-500">
+                  ({formatCurrency(item.discountTotal)} off)
+                </span>
+              )}
             </div>
             
-            {/* Price */}
-            <div className="flex items-end justify-between mt-2">
-              <div>
-                <div className="font-medium">
-                  ${item.unitPrice.toFixed(2)}
-                </div>
-                {item.discountTotal > 0 && (
-                  <div className="text-sm text-green-600 dark:text-green-400">
-                    Discount: -${item.discountTotal.toFixed(2)}
-                  </div>
-                )}
+            {/* Product Badges */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {item.isDigital && (
+                <Badge variant="outline" className="text-xs">Digital</Badge>
+              )}
+              {!item.requiresShipping && (
+                <Badge variant="outline" className="text-xs">No Shipping</Badge>
+              )}
+              {item.giftWrapping?.enabled && (
+                <Badge variant="outline" className="text-xs flex items-center">
+                  <Gift className="w-3 h-3 mr-1" />
+                  Gift Wrapped
+                </Badge>
+              )}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={handleQuantityDecrease}
+                  className="h-8 w-8"
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                
+                <span className="w-10 text-center font-medium">{item.quantity}</span>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={handleQuantityIncrease}
+                  className="h-8 w-8"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
               
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-7 w-7"
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={isUpdating || item.quantity <= 1}
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleSaveForLater}
+                  className="text-xs"
                 >
-                  <MinusCircle className="h-4 w-4" />
-                  <span className="sr-only">Decrease</span>
+                  Save for later
                 </Button>
                 
-                <span className="w-8 text-center font-medium">
-                  {isUpdating ? '...' : item.quantity}
-                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleMoveToWishlist}
+                  className="h-8 w-8"
+                >
+                  <Heart className="w-4 h-4" />
+                </Button>
                 
                 <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-7 w-7"
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={isUpdating || item.quantity >= 10}
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleRemove}
+                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                 >
-                  <PlusCircle className="h-4 w-4" />
-                  <span className="sr-only">Increase</span>
+                  <Trash className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-            
-            {/* Item Total */}
-            <div className="text-sm font-medium mt-2">
-              Total: ${item.total.toFixed(2)}
-            </div>
-          </div>
-          
-          {/* Actions */}
-          <div className="flex sm:flex-col gap-2 mt-2 sm:mt-0">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleMoveToWishlist}
-              disabled={!wishlistId}
-              className="h-8"
-            >
-              <Heart className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRemove}
-              className="h-8 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Remove
-            </Button>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-};
+}
 
 export default CartItem;

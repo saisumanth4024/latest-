@@ -1,184 +1,185 @@
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { 
-  selectCart, 
-  selectCartIsLoading, 
-  selectCartError, 
-  initializeCart,
-  clearCart
-} from '../cartSlice';
-import { 
-  selectWishlists,
-  selectActiveWishlistId,
-  initializeWishlists
-} from '@/features/wishlist/wishlistSlice';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { RootState } from '@/app/store';
+import { fetchCart, clearCart } from '../cartSlice';
 import CartItem from './CartItem';
 import CartSummary from './CartSummary';
 import PromoCodeForm from './PromoCodeForm';
 import EmptyCart from './EmptyCart';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
-import { Link } from 'wouter';
-import { useToast } from '@/components/ui/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
-const CartPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const cart = useAppSelector(selectCart);
-  const isLoading = useAppSelector(selectCartIsLoading);
-  const error = useAppSelector(selectCartError);
-  const wishlists = useAppSelector(selectWishlists);
-  const activeWishlistId = useAppSelector(selectActiveWishlistId);
-  const [selectedWishlistId, setSelectedWishlistId] = useState<string | undefined>(undefined);
+export function CartPage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Initialize cart and wishlists when component mounts
+  const { cart, status, error } = useSelector((state: RootState) => state.cart);
+  const { wishlists } = useSelector((state: RootState) => state.wishlist);
+  
+  const defaultWishlistId = wishlists.length > 0 ? wishlists[0].id.toString() : undefined;
+  
   useEffect(() => {
-    dispatch(initializeCart());
-    dispatch(initializeWishlists());
-  }, [dispatch]);
-
-  // Set selected wishlist ID when wishlists are loaded
-  useEffect(() => {
-    if (wishlists.length > 0) {
-      setSelectedWishlistId(activeWishlistId || wishlists[0].id as string);
+    // Fetch cart data if needed
+    if (status === 'idle') {
+      dispatch(fetchCart());
     }
-  }, [wishlists, activeWishlistId]);
-
-  // Handle clear cart
-  const handleClearCart = () => {
-    if (confirm('Are you sure you want to clear your cart? This action cannot be undone.')) {
-      dispatch(clearCart());
-      toast({
-        title: 'Cart cleared',
-        description: 'All items have been removed from your cart.',
-        variant: 'default',
-      });
-    }
+  }, [dispatch, status]);
+  
+  const handleCheckout = () => {
+    // Redirect to checkout page
+    navigate('/checkout');
+    toast({
+      title: 'Proceeding to checkout',
+      description: 'Taking you to the checkout page...',
+    });
   };
-
+  
+  const handleClearCart = () => {
+    dispatch(clearCart());
+    toast({
+      title: 'Cart cleared',
+      description: 'All items have been removed from your cart.',
+    });
+  };
+  
   // Loading state
-  if (isLoading) {
+  if (status === 'loading' && !cart) {
     return (
-      <div className="container mx-auto py-8 max-w-6xl">
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 border-4 border-t-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg text-muted-foreground">Loading your cart...</p>
+      <div className="container max-w-6xl py-8 mx-auto">
+        <div className="flex flex-col gap-8 animate-pulse">
+          <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded w-1/4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-800 rounded"></div>
+              ))}
+            </div>
+            <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          </div>
         </div>
       </div>
     );
   }
-
+  
   // Error state
   if (error) {
     return (
-      <div className="container mx-auto py-8 max-w-6xl">
-        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/20 rounded-lg p-6 my-4">
-          <h2 className="text-red-800 dark:text-red-300 text-lg font-medium">Error loading cart</h2>
-          <p className="text-red-700 dark:text-red-400 mt-1">{error}</p>
+      <div className="container max-w-6xl py-8 mx-auto">
+        <div className="p-6 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg text-center">
+          <h2 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+            Error Loading Cart
+          </h2>
+          <p className="text-red-700 dark:text-red-400 mb-4">{error}</p>
+          <Button 
+            onClick={() => dispatch(fetchCart())}
+            variant="outline"
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     );
   }
-
-  // Empty cart
+  
+  // Empty cart state
   if (!cart || cart.items.length === 0) {
-    return <EmptyCart />;
-  }
-
-  return (
-    <div className="container mx-auto py-8 max-w-6xl">
-      {/* Cart Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold flex items-center">
-          <ShoppingBag className="mr-3 h-8 w-8" />
-          Your Cart
-          <span className="ml-3 text-lg font-normal text-muted-foreground">
-            ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
-          </span>
-        </h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleClearCart}
-          disabled={cart.items.length === 0}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Clear Cart
-        </Button>
+    return (
+      <div className="container max-w-6xl py-8 mx-auto">
+        <h1 className="text-2xl font-bold mb-8">Shopping Cart</h1>
+        <EmptyCart />
       </div>
-
-      {/* Cart Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    );
+  }
+  
+  // Cart with items
+  return (
+    <div className="container max-w-6xl py-8 mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold">Shopping Cart ({cart.items.length} items)</h1>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/products')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Continue Shopping
+          </Button>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:hover:bg-red-950"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Cart
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear your cart?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will remove all items from your cart. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleClearCart}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                >
+                  Clear Cart
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Cart Items */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Wishlist Selector */}
-          <div className="flex items-center mb-4">
-            <span className="text-sm mr-2">Save to Wishlist:</span>
-            <Select
-              value={selectedWishlistId}
-              onValueChange={(value) => setSelectedWishlistId(value)}
-              disabled={wishlists.length === 0}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select wishlist" />
-              </SelectTrigger>
-              <SelectContent>
-                {wishlists.map((wishlist) => (
-                  <SelectItem key={wishlist.id as string} value={wishlist.id as string}>
-                    {wishlist.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* List of Cart Items */}
-          {cart.items.map((item) => (
-            <CartItem
-              key={item.id}
-              item={item}
-              wishlistId={selectedWishlistId}
+        <div className="md:col-span-2 space-y-4">
+          {cart.items.map(item => (
+            <CartItem 
+              key={item.id} 
+              item={item} 
+              wishlistId={defaultWishlistId}
             />
           ))}
-        </div>
-
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <div className="bg-card rounded-lg border shadow-sm p-6">
-            <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-            <Separator className="mb-4" />
-
-            <CartSummary totals={cart.totals} />
-            <Separator className="my-4" />
-
-            <PromoCodeForm />
-            <Separator className="my-4" />
-
-            <Button className="w-full" size="lg">
-              Proceed to Checkout
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-
-            <div className="mt-4">
-              <Link href="/products">
-                <Button variant="link" size="sm" className="w-full">
-                  Continue Shopping
-                </Button>
-              </Link>
-            </div>
+          
+          {/* Promo Code Section */}
+          <div className="mt-8">
+            <PromoCodeForm coupons={cart.coupons} />
           </div>
+        </div>
+        
+        {/* Cart Summary */}
+        <div>
+          <CartSummary 
+            totals={cart.totals} 
+            itemCount={cart.items.length}
+            onCheckout={handleCheckout}
+          />
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default CartPage;

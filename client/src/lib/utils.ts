@@ -15,6 +15,17 @@ export function formatNumber(num: number): string {
   }
 }
 
+export function formatCurrency(amount: number, currency = 'USD'): string {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  
+  return formatter.format(amount);
+}
+
 export function formatTimeAgo(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
