@@ -4,12 +4,14 @@ import { apiSlice } from '@/features/api/apiSlice';
 import authReducer from '@/features/auth/authSlice';
 import toastReducer from '@/features/ui/toastSlice';
 import modalReducer from '@/features/ui/modalSlice';
+import profileReducer from '@/features/profile/profileSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     toast: toastReducer,
     modal: modalReducer,
+    profile: profileReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
