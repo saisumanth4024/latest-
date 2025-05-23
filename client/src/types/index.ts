@@ -1,4 +1,8 @@
-// User role types
+// Re-export all types for easier imports
+export * from './product';
+export * from './cart';
+export * from './user';
+
 export enum UserRole {
   GUEST = 'guest',
   USER = 'user',
@@ -6,10 +10,8 @@ export enum UserRole {
   SELLER = 'seller'
 }
 
-// User status types
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 
-// Auth status types
 export enum AuthStatus {
   IDLE = 'idle',
   LOADING = 'loading',
@@ -18,14 +20,12 @@ export enum AuthStatus {
   ERROR = 'error'
 }
 
-// Auth credentials types
 export interface UserCredentials {
   username: string;
   password: string;
   remember?: boolean;
 }
 
-// User registration types
 export interface UserRegistration {
   username: string;
   email: string;
@@ -34,7 +34,6 @@ export interface UserRegistration {
   acceptTerms: boolean;
 }
 
-// User profile interface
 export interface UserProfile {
   id: string | number;
   username: string;
@@ -54,7 +53,6 @@ export interface UserProfile {
   initials?: string;
 }
 
-// API Activity interface
 export interface ApiActivity {
   id: number;
   endpoint: string;
@@ -65,7 +63,6 @@ export interface ApiActivity {
   user?: string;
 }
 
-// API Status interface
 export interface ApiStatus {
   id: number;
   name: string;
@@ -75,7 +72,6 @@ export interface ApiStatus {
   responseTime: number;
 }
 
-// Metrics interface
 export interface Metrics {
   totalUsers: number;
   apiRequests: number;
@@ -85,7 +81,6 @@ export interface Metrics {
   period: string;
 }
 
-// Notification interface
 export interface Notification {
   id: string;
   title: string;

@@ -1,305 +1,212 @@
 /**
- * Interface for product categories
- */
-export interface ProductCategory {
-  /** Unique identifier for the category */
-  id: string | number;
-  /** Category name */
-  name: string;
-  /** Category description */
-  description?: string;
-  /** Category image URL */
-  imageUrl?: string;
-  /** Parent category ID for hierarchical categories */
-  parentId?: string | number;
-  /** Whether the category is active */
-  isActive: boolean;
-  /** Category slug for URLs */
-  slug: string;
-  /** Custom attributes for the category */
-  attributes?: Record<string, any>;
-  /** Creation timestamp */
-  createdAt: string | Date;
-  /** Last update timestamp */
-  updatedAt: string | Date;
-}
-
-/**
- * Interface for product tags
- */
-export interface ProductTag {
-  /** Unique identifier for the tag */
-  id: string | number;
-  /** Tag name */
-  name: string;
-  /** Tag slug for URLs */
-  slug: string;
-  /** Creation timestamp */
-  createdAt: string | Date;
-}
-
-/**
- * Enum for product inventory status
- */
-export enum InventoryStatus {
-  IN_STOCK = 'in_stock',
-  LOW_STOCK = 'low_stock',
-  OUT_OF_STOCK = 'out_of_stock',
-  BACK_ORDER = 'back_order',
-  DISCONTINUED = 'discontinued',
-}
-
-/**
- * Interface for product variant options
+ * Interface for product variant option
  */
 export interface ProductVariantOption {
-  /** Option name (e.g., "Color", "Size") */
   name: string;
-  /** Option value (e.g., "Red", "Large") */
   value: string;
-  /** Additional price modifier for this option */
-  priceModifier?: number;
-  /** Image URL specific to this option */
-  imageUrl?: string;
 }
 
 /**
- * Interface for product variants
+ * Interface for product variant
  */
 export interface ProductVariant {
-  /** Unique identifier for the variant */
   id: string | number;
-  /** Variant SKU (Stock Keeping Unit) */
+  productId: string | number;
   sku: string;
-  /** Variant-specific price (overrides base product price) */
-  price?: number;
-  /** Variant-specific sale price */
-  salePrice?: number;
-  /** Variant-specific inventory count */
-  inventoryCount?: number;
-  /** Variant-specific inventory status */
-  inventoryStatus?: InventoryStatus;
-  /** Variant options (e.g., Color: Red, Size: Large) */
+  price: number;
+  compareAtPrice?: number;
   options: ProductVariantOption[];
-  /** Variant-specific image URL */
-  imageUrl?: string;
-  /** Variant weight for shipping calculations */
+  inventory: number;
   weight?: number;
-  /** Variant dimensions for shipping calculations */
   dimensions?: {
     length: number;
     width: number;
     height: number;
     unit: string;
   };
-  /** Whether this variant is active */
-  isActive: boolean;
+  imageUrl?: string;
+  isDefault?: boolean;
 }
 
 /**
- * Interface for product reviews
+ * Interface for product image
  */
-export interface ProductReview {
-  /** Unique identifier for the review */
+export interface ProductImage {
   id: string | number;
-  /** Product ID this review belongs to */
   productId: string | number;
-  /** User ID who wrote the review */
-  userId: string | number;
-  /** User name who wrote the review */
-  userName: string;
-  /** User avatar URL */
-  userAvatar?: string;
-  /** Review rating (1-5) */
-  rating: number;
-  /** Review title */
-  title?: string;
-  /** Review content */
-  content: string;
-  /** Whether the review has been verified */
-  isVerified: boolean;
-  /** Whether the review has been approved */
-  isApproved: boolean;
-  /** Creation timestamp */
-  createdAt: string | Date;
-  /** Last update timestamp */
-  updatedAt: string | Date;
-  /** Helpfulness votes */
-  helpfulCount?: number;
-  /** Unhelpfulness votes */
-  unhelpfulCount?: number;
-  /** Review response from seller */
-  sellerResponse?: {
-    content: string;
-    createdAt: string | Date;
-  };
-}
-
-/**
- * Interface for product pricing
- */
-export interface ProductPricing {
-  /** Base product price */
-  price: number;
-  /** Discounted sale price */
-  salePrice?: number;
-  /** Whether the product is currently on sale */
-  onSale?: boolean;
-  /** Sale start date */
-  saleStartDate?: string | Date;
-  /** Sale end date */
-  saleEndDate?: string | Date;
-  /** Product cost (for internal use) */
-  cost?: number;
-  /** Profit margin percentage */
-  marginPercent?: number;
-  /** Bulk pricing tiers */
-  bulkPricing?: Array<{
-    /** Minimum quantity for this tier */
-    quantity: number;
-    /** Price for this tier */
-    price: number;
-  }>;
-  /** Currency code (e.g., USD, EUR) */
-  currency: string;
-  /** Tax information */
-  tax?: {
-    /** Whether the product is taxable */
-    taxable: boolean;
-    /** Tax category */
-    taxCategory?: string;
-    /** Tax rate percentage */
-    taxRate?: number;
-  };
-}
-
-/**
- * Interface for product metadata and SEO
- */
-export interface ProductMetadata {
-  /** SEO title */
-  metaTitle?: string;
-  /** SEO description */
-  metaDescription?: string;
-  /** SEO keywords */
-  metaKeywords?: string[];
-  /** Custom URL canonical */
-  canonicalUrl?: string;
-  /** Open Graph image URL */
-  ogImageUrl?: string;
-  /** Structured data (JSON-LD) */
-  structuredData?: Record<string, any>;
-}
-
-/**
- * Interface for product media
- */
-export interface ProductMedia {
-  /** Unique identifier for the media item */
-  id: string | number;
-  /** Media type */
-  type: 'image' | 'video' | '3d_model' | 'document';
-  /** Media URL */
   url: string;
-  /** Media alt text */
   alt?: string;
-  /** Media title */
-  title?: string;
-  /** Media caption */
-  caption?: string;
-  /** Whether this is the primary media item */
-  isPrimary: boolean;
-  /** Display order */
-  displayOrder: number;
-  /** Media thumbnail URL */
-  thumbnailUrl?: string;
-  /** Creation timestamp */
-  createdAt: string | Date;
+  position: number;
+  isDefault: boolean;
 }
 
 /**
- * Interface for complete product information
+ * Interface for product category
+ */
+export interface ProductCategory {
+  id: string | number;
+  name: string;
+  slug: string;
+  description?: string;
+  parentId?: string | number;
+  imageUrl?: string;
+  level: number;
+  path: string;
+  children?: ProductCategory[];
+}
+
+/**
+ * Interface for product brand
+ */
+export interface ProductBrand {
+  id: string | number;
+  name: string;
+  slug: string;
+  description?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+}
+
+/**
+ * Interface for product
  */
 export interface Product {
   /** Unique identifier for the product */
   id: string | number;
   /** Product name */
   name: string;
-  /** Product slug for URLs */
+  /** Product slug (URL-friendly version of name) */
   slug: string;
-  /** Product SKU (Stock Keeping Unit) */
-  sku: string;
-  /** Short product description */
-  shortDescription?: string;
-  /** Full product description (may contain HTML) */
+  /** Product description (may contain HTML) */
   description: string;
-  /** Product pricing information */
-  pricing: ProductPricing;
-  /** Product inventory status */
-  inventoryStatus: InventoryStatus;
-  /** Product inventory count */
-  inventoryCount?: number;
-  /** Whether inventory is tracked for this product */
+  /** Short description (plain text) */
+  shortDescription?: string;
+  /** Product SKU (stock keeping unit) */
+  sku: string;
+  /** Regular price */
+  price: number;
+  /** Sales price (if on sale) */
+  salePrice?: number;
+  /** Compare at price (original price for showing discounts) */
+  compareAtPrice?: number;
+  /** Cost price (for internal use) */
+  costPrice?: number;
+  /** Whether the product is on sale */
+  onSale: boolean;
+  /** Whether the product is in stock */
+  inStock: boolean;
+  /** Current inventory level */
+  inventory: number;
+  /** Low stock threshold */
+  lowStockThreshold?: number;
+  /** Whether to track inventory */
   trackInventory: boolean;
-  /** Minimum purchase quantity */
-  minPurchaseQuantity?: number;
-  /** Maximum purchase quantity */
-  maxPurchaseQuantity?: number;
   /** Whether the product is featured */
-  isFeatured: boolean;
-  /** Whether the product is active */
-  isActive: boolean;
-  /** Whether the product is published */
-  isPublished: boolean;
-  /** Product categories */
+  featured: boolean;
+  /** Whether the product is a bestseller */
+  bestseller: boolean;
+  /** Whether the product is new */
+  isNew: boolean;
+  /** Product rating (1-5) */
+  rating: number;
+  /** Number of reviews */
+  reviewCount: number;
+  /** Categories */
   categories: ProductCategory[];
-  /** Product tags */
-  tags: ProductTag[];
+  /** Tags */
+  tags: string[];
+  /** Brand */
+  brand?: ProductBrand;
+  /** Main product image */
+  imageUrl: string;
+  /** All product images */
+  images: ProductImage[];
   /** Product variants */
   variants: ProductVariant[];
-  /** Product media */
-  media: ProductMedia[];
-  /** Primary product image URL */
-  primaryImageUrl?: string;
-  /** Product brand */
-  brand?: {
-    id: string | number;
-    name: string;
-    logoUrl?: string;
+  /** SEO metadata */
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string;
   };
-  /** Product metadata and SEO information */
-  metadata?: ProductMetadata;
-  /** Product reviews */
-  reviews?: ProductReview[];
-  /** Average review rating */
-  averageRating?: number;
-  /** Number of reviews */
-  reviewCount?: number;
-  /** Product attributes */
-  attributes?: Record<string, string | number | boolean>;
-  /** Product specifications */
-  specifications?: Record<string, string | number>;
-  /** Related product IDs */
-  relatedProductIds?: Array<string | number>;
-  /** Product weight for shipping calculations */
+  /** Whether the product is a digital product */
+  isDigital: boolean;
+  /** Whether the product requires shipping */
+  requiresShipping: boolean;
+  /** Product weight */
   weight?: number;
-  /** Product dimensions for shipping calculations */
+  /** Product dimensions */
   dimensions?: {
     length: number;
     width: number;
     height: number;
     unit: string;
   };
-  /** Whether the product is free shipping eligible */
-  freeShipping?: boolean;
-  /** Product shipping class */
-  shippingClass?: string;
-  /** Product warranty information */
-  warranty?: string;
+  /** Whether the product is tax exempt */
+  isTaxExempt: boolean;
+  /** Product attributes (color, size, material, etc.) */
+  attributes?: Record<string, string | string[]>;
   /** Creation timestamp */
   createdAt: string | Date;
   /** Last update timestamp */
   updatedAt: string | Date;
-  /** Seller ID (for marketplace models) */
-  sellerId?: string | number;
+  /** Product seller/vendor */
+  seller?: {
+    id: string | number;
+    name: string;
+    rating?: number;
+  };
+  /** Additional product metadata */
+  metadata?: Record<string, any>;
 }
+
+/**
+ * Interface for a simpler product item, used in listings
+ */
+export interface ProductListItem {
+  id: string | number;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  price: number;
+  salePrice?: number;
+  onSale: boolean;
+  inStock: boolean;
+  imageUrl: string;
+  rating: number;
+  reviewCount: number;
+  categories: Pick<ProductCategory, 'id' | 'name' | 'slug'>[];
+  isNew: boolean;
+  featured: boolean;
+  brand?: Pick<ProductBrand, 'id' | 'name' | 'slug'>;
+}
+
+/**
+ * Interface for product filters
+ */
+export interface ProductFilters {
+  search?: string;
+  categories?: string[];
+  brands?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  onSale?: boolean;
+  inStock?: boolean;
+  featured?: boolean;
+  isNew?: boolean;
+  tags?: string[];
+  attributes?: Record<string, string[]>;
+}
+
+/**
+ * Interface for product sorting options
+ */
+export type ProductSortOption = 
+  | 'newest'
+  | 'price_low'
+  | 'price_high'
+  | 'name_asc'
+  | 'name_desc'
+  | 'popular'
+  | 'rating';

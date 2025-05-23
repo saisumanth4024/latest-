@@ -1,5 +1,34 @@
 import { Product, ProductVariant } from './product';
-import { Address } from './order';
+
+/**
+ * Interface for address
+ */
+export interface Address {
+  /** First name */
+  firstName: string;
+  /** Last name */
+  lastName: string;
+  /** Company name (optional) */
+  company?: string;
+  /** Address line 1 */
+  address1: string;
+  /** Address line 2 (optional) */
+  address2?: string;
+  /** City */
+  city: string;
+  /** State/Province/Region */
+  state: string;
+  /** ZIP/Postal code */
+  postcode: string;
+  /** Country */
+  country: string;
+  /** Phone number (optional) */
+  phone?: string;
+  /** Email (optional) */
+  email?: string;
+  /** Whether this is the default address */
+  isDefault?: boolean;
+}
 
 /**
  * Interface for cart item
@@ -47,9 +76,9 @@ export interface CartItem {
     cost?: number;
   };
   /** Added to cart timestamp */
-  addedAt: string | Date;
+  addedAt: string;
   /** Last updated timestamp */
-  updatedAt: string | Date;
+  updatedAt: string;
   /** item metadata */
   metadata?: Record<string, any>;
 }
@@ -87,7 +116,7 @@ export interface CartCoupon {
   /** Coupon description */
   description?: string;
   /** Applied timestamp */
-  appliedAt: string | Date;
+  appliedAt: string;
 }
 
 /**
@@ -139,11 +168,11 @@ export interface Cart {
   /** Customer note */
   note?: string;
   /** Creation timestamp */
-  createdAt: string | Date;
+  createdAt: string;
   /** Last update timestamp */
-  updatedAt: string | Date;
+  updatedAt: string;
   /** Expiration timestamp */
-  expiresAt?: string | Date;
+  expiresAt?: string;
   /** Whether the cart contains digital items only */
   isDigitalOnly: boolean;
   /** Whether the cart has been converted to an order */
