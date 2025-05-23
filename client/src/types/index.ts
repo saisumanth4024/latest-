@@ -14,7 +14,8 @@ export enum AuthStatus {
   IDLE = 'idle',
   LOADING = 'loading',
   AUTHENTICATED = 'authenticated', 
-  UNAUTHENTICATED = 'unauthenticated'
+  UNAUTHENTICATED = 'unauthenticated',
+  ERROR = 'error'
 }
 
 // Auth credentials types

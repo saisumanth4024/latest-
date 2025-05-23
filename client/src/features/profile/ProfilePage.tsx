@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { selectUser, fetchUserProfile } from './profileSlice';
-import { UserProfile } from '@/types';
+import { UserProfile, UserRole } from '@/types';
 import ProfileForm from './ProfileForm';
 import AvatarUploader from './AvatarUploader';
 import UserSettings from './UserSettings';
@@ -22,7 +22,7 @@ export default function ProfilePage() {
     firstName: 'John',
     lastName: 'Doe',
     fullName: 'John Doe',
-    role: 'user',
+    role: UserRole.USER,
     status: 'active',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
     initials: 'JD',

@@ -12,52 +12,56 @@ import { FaTwitter } from 'react-icons/fa';
 export default function SocialAccounts() {
   const dispatch = useAppDispatch();
   const socialAccounts = useAppSelector(selectSocialAccounts);
-  const toast = useToast();
-  
-  // Handle connecting a social account
-  const handleConnect = async (provider: string) => {
-    try {
-      // In a real app, this would redirect to OAuth flow
-      // For demo purposes, we're just dispatching the action with a mock code
-      await dispatch(connectSocialAccount({
-        userId: '123', // Demo user ID
-        provider,
-        code: 'mock-auth-code'
-      }));
-      
-      toast.success({
-        title: 'Account Connected',
-        description: `Your ${provider} account has been connected successfully.`
+  const { toast } = useToast();
+
+  // Handles connecting a social account
+  const handleConnect = (provider: string) => {
+    if (isConnected(provider)) {
+      toast({
+        title: "Account already connected",
+        description: `Your ${providerNames[provider]} account is already connected.`,
+        variant: "warning",
       });
-    } catch (error: any) {
-      toast.error({
-        title: 'Connection Failed',
-        description: error.message || `Failed to connect ${provider} account`
-      });
+      return;
     }
+
+    // In a real app, this would trigger an OAuth flow
+    dispatch(connectSocialAccount({
+      provider,
+      profileUrl: `https://${provider}.com/user123`,
+      username: `user123_${provider}`,
+      connected: true,
+      connectedAt: new Date().toISOString()
+    }));
+
+    toast({
+      title: "Account connected",
+      description: `Your ${providerNames[provider]} account has been connected successfully.`,
+      variant: "success",
+    });
   };
-  
-  // Handle disconnecting a social account
-  const handleDisconnect = async (provider: string) => {
-    try {
-      await dispatch(disconnectSocialAccount({
-        userId: '123', // Demo user ID
-        provider
-      }));
-      
-      toast.info({
-        title: 'Account Disconnected',
-        description: `Your ${provider} account has been disconnected.`
+
+  // Handles disconnecting a social account
+  const handleDisconnect = (provider: string) => {
+    if (!isConnected(provider)) {
+      toast({
+        title: "No account connected",
+        description: `No ${providerNames[provider]} account is currently connected.`,
+        variant: "warning",
       });
-    } catch (error: any) {
-      toast.error({
-        title: 'Disconnection Failed',
-        description: error.message || `Failed to disconnect ${provider} account`
-      });
+      return;
     }
+
+    dispatch(disconnectSocialAccount(provider));
+
+    toast({
+      title: "Account disconnected",
+      description: `Your ${providerNames[provider]} account has been disconnected.`,
+      variant: "success",
+    });
   };
-  
-  // Get account status
+
+  // Check if provider is connected
   const isConnected = (provider: string) => {
     return socialAccounts.some(account => account.provider === provider && account.connected);
   };
@@ -88,50 +92,44 @@ export default function SocialAccounts() {
     twitter: 'Twitter',
     linkedin: 'LinkedIn'
   };
-  
-  // List of providers to display
-  const providers = ['google', 'github', 'facebook', 'twitter', 'linkedin'];
-  
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Connected Accounts</h3>
+        <h3 className="text-lg font-medium mb-2">Connected Accounts</h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Connect your social accounts to enable single sign-on and access additional features.
+          Connect your accounts to enable single sign-on and share content between platforms.
         </p>
       </div>
-      
+
       <div className="space-y-4">
-        {providers.map((provider) => (
-          <div 
-            key={provider}
-            className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-md"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-800 h-10 w-10 rounded-md">
+        {Object.keys(providerNames).map(provider => (
+          <div key={provider} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800">
                 {getProviderIcon(provider)}
               </div>
               <div>
-                <h4 className="text-sm font-medium">{providerNames[provider]}</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {isConnected(provider)
-                    ? `Connected to ${providerNames[provider]}`
-                    : `Not connected to ${providerNames[provider]}`
-                  }
-                </p>
+                <p className="font-medium">{providerNames[provider]}</p>
+                {isConnected(provider) ? (
+                  <p className="text-xs text-green-600 dark:text-green-400">Connected</p>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Not connected</p>
+                )}
               </div>
             </div>
             
             {isConnected(provider) ? (
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 size="sm"
                 onClick={() => handleDisconnect(provider)}
               >
                 Disconnect
               </Button>
             ) : (
-              <Button
+              <Button 
+                variant="outline" 
                 size="sm"
                 onClick={() => handleConnect(provider)}
               >
@@ -142,13 +140,13 @@ export default function SocialAccounts() {
         ))}
       </div>
       
-      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md space-y-2">
-        <h4 className="text-sm font-medium">Benefits of Connecting Accounts</h4>
-        <ul className="text-sm text-gray-500 dark:text-gray-400 list-disc list-inside space-y-1">
-          <li>Sign in with a single click using your connected accounts</li>
-          <li>Share content directly to your social media profiles</li>
-          <li>Import your contacts and connections</li>
-          <li>Access platform-specific features and integrations</li>
+      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h4 className="text-sm font-medium mb-2">What happens when you connect an account?</h4>
+        <ul className="list-disc pl-5 text-sm text-gray-500 dark:text-gray-400 space-y-1">
+          <li>You can sign in using your connected account</li>
+          <li>We will never post to your accounts without your permission</li>
+          <li>Your account details are securely stored and encrypted</li>
+          <li>You can disconnect your accounts at any time</li>
         </ul>
       </div>
     </div>
