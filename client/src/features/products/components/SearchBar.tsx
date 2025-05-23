@@ -1,169 +1,168 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { setQuery, addSearchHistoryItem, selectSearchParams, selectAllSearchHistory } from '../productsSlice';
-import { 
-  Search, 
-  Mic, 
-  X, 
-  History, 
-  ArrowUp,
-  CornerDownLeft
-} from 'lucide-react';
-import { 
-  Button,
-  Input,
-  Card,
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addSearchQuery, selectSearchHistory } from '../productsSlice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Mic, X, Search, Clock, TrendingUp } from 'lucide-react';
 
-const SearchBar = () => {
-  const dispatch = useAppDispatch();
-  const { query } = useAppSelector(selectSearchParams);
-  const searchHistory = useAppSelector(selectAllSearchHistory);
+interface SearchBarProps {
+  onSearch: (query: string) => void;
+  initialQuery?: string;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialQuery = '' }) => {
+  const dispatch = useDispatch();
+  const searchHistory = useSelector(selectSearchHistory);
   
-  const [searchValue, setSearchValue] = useState(query || '');
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+  const [searchValue, setSearchValue] = useState(initialQuery);
+  const [isFocused, setIsFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognitionSupported, setRecognitionSupported] = useState(false);
+  
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
   
-  // SpeechRecognition setup
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-  
-  if (recognition) {
-    recognition.continuous = false;
-    recognition.lang = 'en-US';
-    
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchValue(transcript);
-      handleSearch(transcript);
-      setIsListening(false);
-    };
-    
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-    
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-  }
-  
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  };
-  
-  // Handle search submission
-  const handleSearch = (value: string) => {
-    if (value.trim()) {
-      dispatch(setQuery(value.trim()));
-      dispatch(addSearchHistoryItem(value.trim()));
-      setIsInputFocused(false);
+  // Check if speech recognition is supported
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+      
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchValue(transcript);
+        handleSearch(transcript);
+        setIsRecording(false);
+      };
+      
+      recognitionRef.current.onerror = () => {
+        setIsRecording(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+      
+      setRecognitionSupported(true);
     }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+  
+  // Handle clicks outside of suggestions dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current && 
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(event.target.value);
   };
   
-  // Clear search
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    setShowSuggestions(true);
+  };
+  
   const handleClearSearch = () => {
     setSearchValue('');
-    dispatch(setQuery(null));
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    inputRef.current?.focus();
   };
   
-  // Toggle voice search
-  const handleVoiceSearch = () => {
-    if (recognition) {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-        setIsListening(true);
-      }
-    }
-  };
-  
-  // Handle key press for search
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch(searchValue);
-    }
+  const handleSearch = (query: string) => {
+    if (!query.trim()) return;
     
-    // Handle escape key
-    if (e.key === 'Escape') {
-      setIsInputFocused(false);
+    dispatch(addSearchQuery(query));
+    onSearch(query);
+    setShowSuggestions(false);
+  };
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch(searchValue);
+    } else if (event.key === 'Escape') {
+      setShowSuggestions(false);
     }
   };
   
-  // Handle focus of input
-  const handleInputFocus = () => {
-    setIsInputFocused(true);
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchValue(suggestion);
+    handleSearch(suggestion);
   };
   
-  // Handle blur of input
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Delay blur to allow for clicking on suggestion items
-    setTimeout(() => {
-      setIsInputFocused(false);
-    }, 200);
+  const handleVoiceSearch = () => {
+    if (isRecording) {
+      recognitionRef.current?.abort();
+      setIsRecording(false);
+    } else {
+      recognitionRef.current?.start();
+      setIsRecording(true);
+    }
   };
   
-  // Handle clicking a history item
-  const handleHistoryItemClick = (item: string) => {
-    setSearchValue(item);
-    handleSearch(item);
-  };
-  
-  // Update local state when Redux state changes
-  useEffect(() => {
-    setSearchValue(query || '');
-  }, [query]);
+  // Generate trending searches (usually from backend)
+  const trendingSearches = [
+    'wireless headphones',
+    'smart tv deals',
+    'gaming accessories',
+    'home office furniture',
+    'fitness trackers'
+  ];
   
   return (
     <div className="relative w-full">
-      <div className="relative flex items-center">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-        
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder="Search products, brands, categories..."
-          className="pl-10 pr-20 h-12 w-full bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus-visible:ring-blue-500"
-          value={searchValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
-        />
-        
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1">
-          {searchValue && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-              onClick={handleClearSearch}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+      <div className="relative">
+        <div className="flex">
+          <div className="relative flex-grow">
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder="Search products, brands, categories..."
+              value={searchValue}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onKeyDown={handleKeyDown}
+              className={`pr-10 ${isFocused ? 'border-primary' : ''}`}
+            />
+            
+            {searchValue && (
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                onClick={handleClearSearch}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           
-          {recognition && (
+          {/* Voice search button */}
+          {recognitionSupported && (
             <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-8 w-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700",
-                isListening && "text-red-500 animate-pulse"
-              )}
+              variant={isRecording ? "destructive" : "outline"}
+              size="sm"
+              className="h-10 ml-1"
               onClick={handleVoiceSearch}
             >
               <Mic className="h-4 w-4" />
@@ -173,64 +172,61 @@ const SearchBar = () => {
           <Button
             variant="default"
             size="sm"
-            className="h-8 ml-1"
+            className="h-10 ml-1"
             onClick={() => handleSearch(searchValue)}
           >
+            <Search className="h-4 w-4 mr-2" />
             Search
           </Button>
         </div>
       </div>
       
       {/* Search Suggestions Dropdown */}
-      {isInputFocused && searchHistory.length > 0 && (
-        <Card className="absolute top-full left-0 right-0 mt-1 z-10 p-0 shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-          <Command className="border-0">
-            <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup heading="Recent Searches">
+      {showSuggestions && (
+        <div 
+          ref={suggestionsRef}
+          className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-2 max-h-96 overflow-y-auto"
+        >
+          {/* Recent Searches */}
+          {searchHistory.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                Recent Searches
+              </div>
+              <ul>
                 {searchHistory.slice(0, 5).map((historyItem, index) => (
-                  <CommandItem
+                  <li 
                     key={index}
-                    value={historyItem.query}
-                    onSelect={() => handleHistoryItemClick(historyItem.query)}
-                    className="flex items-center cursor-pointer"
+                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                    onClick={() => handleSuggestionClick(historyItem.query)}
                   >
-                    <History className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{historyItem.query}</span>
-                  </CommandItem>
+                    {historyItem.query}
+                  </li>
                 ))}
-              </CommandGroup>
-              
-              {searchValue && (
-                <CommandGroup heading="Search">
-                  <CommandItem 
-                    value={searchValue} 
-                    onSelect={() => handleSearch(searchValue)}
-                    className="flex items-center cursor-pointer"
-                  >
-                    <Search className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{searchValue}</span>
-                    <CornerDownLeft className="ml-auto h-4 w-4 text-gray-500" />
-                  </CommandItem>
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </Card>
-      )}
-      
-      {/* Voice Search Active Indicator */}
-      {isListening && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-          <Card className="w-full max-w-md mx-4 p-6 text-center animate-in zoom-in-90">
-            <div className="mx-auto rounded-full bg-red-100 p-6 mb-4 relative">
-              <Mic className="h-12 w-12 text-red-500 animate-pulse" />
-              <div className="absolute inset-0 rounded-full border-4 border-red-500 animate-ping opacity-75"></div>
+              </ul>
+              <hr className="my-2 border-gray-200 dark:border-gray-700" />
             </div>
-            <h2 className="text-xl font-bold mb-2">Listening...</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Speak now or</p>
-            <Button onClick={() => recognition?.stop()}>Cancel</Button>
-          </Card>
+          )}
+          
+          {/* Trending Searches */}
+          <div>
+            <div className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Trending Searches
+            </div>
+            <ul>
+              {trendingSearches.map((trend, index) => (
+                <li 
+                  key={index}
+                  className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                  onClick={() => handleSuggestionClick(trend)}
+                >
+                  {trend}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>

@@ -1,98 +1,119 @@
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { selectSearchParams, setSort, setViewMode, selectViewMode } from '../productsSlice';
-import { SortOption } from '../types';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { 
-  LayoutGrid, 
-  List as ListIcon,
-  SortAsc, 
-  ChevronDown 
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Button,
-  ToggleGroup,
-  ToggleGroupItem
-} from '@/components/ui';
-import { cn } from '@/lib/utils';
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { ArrowDownAZ, ArrowUpAZ, Flame, Star, DollarSign } from 'lucide-react';
 
 interface SortOptionsProps {
-  className?: string;
+  sortBy: 'price' | 'name' | 'rating' | 'newest';
+  sortOrder: 'asc' | 'desc';
+  onChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
 }
 
-const SortOptions = ({ className }: SortOptionsProps) => {
-  const dispatch = useAppDispatch();
-  const { sort } = useAppSelector(selectSearchParams);
-  const viewMode = useAppSelector(selectViewMode);
-
-  // Handle sort change
+const SortOptions: React.FC<SortOptionsProps> = ({
+  sortBy,
+  sortOrder,
+  onChange
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
   const handleSortChange = (value: string) => {
-    dispatch(setSort(value as SortOption));
+    // Format is "field:order"
+    const [newSortBy, newSortOrder] = value.split(':');
+    onChange(newSortBy, newSortOrder as 'asc' | 'desc');
   };
-
-  // Handle view mode change
-  const handleViewModeChange = (value: string) => {
-    if (value) {
-      dispatch(setViewMode(value as 'grid' | 'list'));
+  
+  const getSortIcon = () => {
+    switch (sortBy) {
+      case 'name':
+        return sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />;
+      case 'price':
+        return <DollarSign className="h-4 w-4" />;
+      case 'rating':
+        return <Star className="h-4 w-4" />;
+      case 'newest':
+        return <Flame className="h-4 w-4" />;
+      default:
+        return null;
     }
   };
-
-  // Sort options with human-readable labels
-  const sortOptions = [
-    { value: 'relevance', label: 'Relevance' },
-    { value: 'price-asc', label: 'Price: Low to High' },
-    { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'rating-desc', label: 'Highest Rated' },
-    { value: 'newest', label: 'Newest Arrivals' },
-    { value: 'bestselling', label: 'Best Selling' },
-    { value: 'discount', label: 'Biggest Discount' }
-  ];
-
+  
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case 'name':
+        return `Name (${sortOrder === 'asc' ? 'A-Z' : 'Z-A'})`;
+      case 'price':
+        return `Price (${sortOrder === 'asc' ? 'Low to High' : 'High to Low'})`;
+      case 'rating':
+        return `Rating (${sortOrder === 'asc' ? 'Low to High' : 'High to Low'})`;
+      case 'newest':
+        return 'Newest First';
+      default:
+        return 'Sort By';
+    }
+  };
+  
   return (
-    <div className={cn('flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3', className)}>
-      {/* Sort selection */}
-      <div className="flex items-center">
-        <SortAsc className="mr-2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-        <span className="hidden sm:inline text-sm mr-2 text-gray-600 dark:text-gray-400">
-          Sort by:
-        </span>
-        <Select
-          value={sort}
+    <div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-500 dark:text-gray-400">Sort by:</span>
+        <Select 
+          value={`${sortBy}:${sortOrder}`} 
           onValueChange={handleSortChange}
         >
           <SelectTrigger className="w-[180px] h-9">
-            <SelectValue placeholder="Select a sort option" />
+            <SelectValue>
+              <div className="flex items-center gap-2">
+                {getSortIcon()}
+                <span>{getSortLabel()}</span>
+              </div>
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              {sortOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            <SelectItem value="newest:desc">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4" />
+                <span>Newest First</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="price:asc">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Price: Low to High</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="price:desc">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Price: High to Low</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="rating:desc">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                <span>Highest Rated</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="name:asc">
+              <div className="flex items-center gap-2">
+                <ArrowDownAZ className="h-4 w-4" />
+                <span>Name: A to Z</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="name:desc">
+              <div className="flex items-center gap-2">
+                <ArrowUpAZ className="h-4 w-4" />
+                <span>Name: Z to A</span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
-
-      {/* View mode toggle */}
-      <ToggleGroup
-        type="single"
-        value={viewMode}
-        onValueChange={handleViewModeChange}
-        className="border rounded-md"
-      >
-        <ToggleGroupItem value="grid" aria-label="Grid view">
-          <LayoutGrid className="h-4 w-4" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="list" aria-label="List view">
-          <ListIcon className="h-4 w-4" />
-        </ToggleGroupItem>
-      </ToggleGroup>
     </div>
   );
 };

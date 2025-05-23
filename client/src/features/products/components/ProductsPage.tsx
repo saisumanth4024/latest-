@@ -1,189 +1,227 @@
-import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { useGetProductsQuery } from '../productsApi';
-import { selectSearchParams, toggleSidebar, selectIsSidebarOpen } from '../productsSlice';
-import SearchBar from './SearchBar';
-import FilterSidebar from './FilterSidebar';
-import SortOptions from './SortOptions';
-import ProductGrid from './ProductGrid';
-import { Button, Badge } from '@/components/ui';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
-  Filter as FilterIcon, 
-  X as ClearIcon, 
-  ChevronLeft as ChevronLeftIcon
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  useGetProductsQuery, 
+  useGetCategoriesQuery,
+  useGetBrandsQuery
+} from '../productsApi';
+import { 
+  selectProductFilters, 
+  updateFilters, 
+  resetFilters 
+} from '../productsSlice';
+import ProductGrid from './ProductGrid';
+import FilterSidebar from './FilterSidebar';
+import SearchBar from './SearchBar';
+import SortOptions from './SortOptions';
+import { Button } from '@/components/ui/button';
+import { Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
 
-const ProductsPage = () => {
-  const dispatch = useAppDispatch();
-  const searchParams = useAppSelector(selectSearchParams);
-  const isSidebarOpen = useAppSelector(selectIsSidebarOpen);
+const ProductsPage: React.FC = () => {
+  const dispatch = useDispatch();
+  const filters = useSelector(selectProductFilters);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
-  // Fetch products with RTK Query
-  const { 
-    data, 
-    isLoading, 
-    error,
-    refetch
-  } = useGetProductsQuery(searchParams);
+  // Fetch products based on current filters
+  const { data, isLoading, isFetching, error } = useGetProductsQuery(filters);
+  const { data: categories } = useGetCategoriesQuery();
+  const { data: brands } = useGetBrandsQuery();
   
-  // Refetch when search params change
-  useEffect(() => {
-    refetch();
-  }, [searchParams, refetch]);
-  
-  // Toggle filter sidebar on mobile
-  const handleToggleSidebar = () => {
-    dispatch(toggleSidebar());
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen);
   };
   
-  // Display active filters
-  const renderActiveFilters = () => {
-    const activeFilters = [];
-    
-    if (searchParams.category) {
-      activeFilters.push({
-        label: `Category: ${searchParams.category}`,
-        key: 'category'
-      });
-    }
-    
-    if (searchParams.brand) {
-      activeFilters.push({
-        label: `Brand: ${searchParams.brand}`,
-        key: 'brand'
-      });
-    }
-    
-    if (searchParams.minPrice || searchParams.maxPrice) {
-      const priceLabel = searchParams.minPrice && searchParams.maxPrice
-        ? `Price: $${searchParams.minPrice} - $${searchParams.maxPrice}`
-        : searchParams.minPrice
-        ? `Price: From $${searchParams.minPrice}`
-        : `Price: Up to $${searchParams.maxPrice}`;
-      
-      activeFilters.push({
-        label: priceLabel,
-        key: 'price'
-      });
-    }
-    
-    if (searchParams.rating) {
-      activeFilters.push({
-        label: `Rating: ${searchParams.rating}★ & Up`,
-        key: 'rating'
-      });
-    }
-    
-    if (searchParams.query) {
-      activeFilters.push({
-        label: `Search: "${searchParams.query}"`,
-        key: 'query'
-      });
-    }
-    
-    return activeFilters;
+  const handleSearch = (query: string) => {
+    dispatch(updateFilters({ search: query }));
   };
   
-  const activeFilters = renderActiveFilters();
+  const handleSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    dispatch(updateFilters({ 
+      sortBy: sortBy as any, 
+      sortOrder 
+    }));
+  };
+  
+  const handlePageChange = (page: number) => {
+    dispatch(updateFilters({ page }));
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const handleClearFilters = () => {
+    dispatch(resetFilters(['search'])); // Keep search query when clearing filters
+  };
+  
+  // Calculate pagination
+  const totalPages = data ? Math.ceil(data.total / (filters.limit || 12)) : 0;
+  const currentPage = filters.page || 1;
   
   return (
-    <div className="container mx-auto px-4 pb-12">
-      {/* Search bar */}
-      <div className="py-6">
-        <SearchBar />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Products</h1>
+      
+      {/* Search and Filters UI */}
+      <div className="flex flex-col space-y-4 mb-6">
+        <div className="w-full">
+          <SearchBar onSearch={handleSearch} initialQuery={filters.search || ''} />
+        </div>
+        
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Mobile filter toggle */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="lg:hidden flex items-center gap-2"
+            onClick={toggleMobileSidebar}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </Button>
+
+          {/* Active filter count */}
+          {Object.keys(filters).filter(key => 
+            key !== 'page' && key !== 'limit' && key !== 'sortBy' && key !== 'sortOrder' && filters[key as keyof typeof filters]
+          ).length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="text-sm flex items-center gap-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Clear Filters
+            </Button>
+          )}
+          
+          {/* Sort options */}
+          <div className="ml-auto">
+            <SortOptions 
+              sortBy={filters.sortBy || 'newest'} 
+              sortOrder={filters.sortOrder || 'desc'} 
+              onChange={handleSortChange} 
+            />
+          </div>
+        </div>
       </div>
       
-      <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-6">
-        {/* Filter sidebar */}
-        <aside className={cn(
-          "md:w-1/4 lg:w-1/5 relative",
-          !isSidebarOpen && "hidden md:block"
-        )}>
-          <FilterSidebar />
-        </aside>
+      {/* Main content area with sidebar and products */}
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Filters sidebar - hidden on mobile unless toggled */}
+        <div className={`${
+          mobileSidebarOpen ? 'block' : 'hidden'
+        } lg:block lg:w-1/4 p-4 bg-card rounded-lg border shadow-sm`}>
+          <FilterSidebar
+            categories={categories || []}
+            brands={brands || []}
+            filters={filters}
+            onUpdateFilters={(newFilters) => dispatch(updateFilters(newFilters))}
+            onClose={() => setMobileSidebarOpen(false)}
+          />
+        </div>
         
-        {/* Product content */}
-        <main className="flex-1">
-          <div className="flex flex-col space-y-4">
-            {/* Top bar with mobile filter button and sort */}
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-              <div className="flex justify-between items-center">
-                <Button 
-                  variant="outline" 
-                  className="md:hidden flex items-center"
-                  onClick={handleToggleSidebar}
-                >
-                  {isSidebarOpen ? (
-                    <>
-                      <ChevronLeftIcon className="h-4 w-4 mr-2" />
-                      Hide Filters
-                    </>
-                  ) : (
-                    <>
-                      <FilterIcon className="h-4 w-4 mr-2" />
-                      Show Filters
-                    </>
-                  )}
-                </Button>
-                
-                {data && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {data.totalCount} {data.totalCount === 1 ? 'product' : 'products'}
-                  </div>
-                )}
-              </div>
-              
-              <SortOptions />
+        {/* Products grid */}
+        <div className="flex-1">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-            
-            {/* Active filters */}
-            {activeFilters.length > 0 && (
-              <div className="flex flex-wrap gap-2 py-2">
-                {activeFilters.map((filter) => (
-                  <Badge 
-                    key={filter.key} 
-                    variant="secondary"
-                    className="flex items-center gap-1 pr-1"
-                  >
-                    {filter.label}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                    >
-                      <ClearIcon className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
+          ) : error ? (
+            <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <h3 className="text-xl font-semibold text-red-600 dark:text-red-400">Error loading products</h3>
+              <p className="text-red-500 dark:text-red-300 mt-2">
+                There was a problem loading the products. Please try again.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => dispatch(resetFilters())}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          ) : data?.products.length === 0 ? (
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <h3 className="text-xl font-semibold">No products found</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">
+                Try adjusting your filters or search criteria.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => dispatch(resetFilters())}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Results summary */}
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Showing {data.products.length} of {data.total} products
+                  {isFetching && !isLoading && (
+                    <span className="ml-2 inline-block">
+                      <Loader2 className="h-3 w-3 animate-spin inline-block" />
+                    </span>
+                  )}
+                </p>
               </div>
-            )}
-            
-            {/* Products grid */}
-            <div className="relative min-h-[500px]">
-              <ProductGrid 
-                products={data?.products || []} 
-                loading={isLoading} 
-                error={error ? 'Failed to load products. Please try again.' : undefined}
-              />
               
-              {/* Empty state */}
-              {!isLoading && data?.products && data.products.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center text-center p-8">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">No products found</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Try adjusting your search or filter criteria
-                    </p>
-                    <Button onClick={() => window.location.href = '/products'}>
-                      Clear all filters
+              {/* Product grid */}
+              <ProductGrid products={data.products} />
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage <= 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      // Show 5 pages max with current page in middle when possible
+                      let pageToShow;
+                      if (totalPages <= 5) {
+                        pageToShow = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageToShow = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageToShow = totalPages - 4 + i;
+                      } else {
+                        pageToShow = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageToShow}
+                          variant={currentPage === pageToShow ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageToShow)}
+                        >
+                          {pageToShow}
+                        </Button>
+                      );
+                    })}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                    >
+                      Next
                     </Button>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </main>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

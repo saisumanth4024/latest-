@@ -1,151 +1,163 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { FixedSizeGrid, FixedSizeGridProps, areEqual } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { Product } from '../types';
-import ProductCard from './ProductCard';
-import { setVisibleRange, selectViewMode } from '../productsSlice';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { Link } from 'wouter';
+import { Product } from '../productsApi';
+import { selectProduct } from '../productsSlice';
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader 
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Star } from 'lucide-react';
 
 interface ProductGridProps {
   products: Product[];
-  loading?: boolean;
-  error?: string;
-  className?: string;
 }
 
-const ProductGrid = ({ products, loading, error, className }: ProductGridProps) => {
-  const dispatch = useAppDispatch();
-  const viewMode = useAppSelector(selectViewMode);
-  const gridRef = useRef<FixedSizeGrid>(null);
-  const [columnCount, setColumnCount] = useState(4);
-  
-  // Determine the number of columns based on the viewport width
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 640) { // sm
-        setColumnCount(1);
-      } else if (width < 768) { // md
-        setColumnCount(2);
-      } else if (width < 1024) { // lg
-        setColumnCount(3);
-      } else if (width < 1280) { // xl
-        setColumnCount(4);
-      } else { // 2xl and above
-        setColumnCount(5);
-      }
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  // Reset the grid scroll position when the products change
-  useEffect(() => {
-    if (gridRef.current) {
-      gridRef.current.scrollTo({ scrollTop: 0 });
-    }
-  }, [products]);
-  
-  // Track the visible items range for analytics and optimization
-  const handleItemsRendered = ({ visibleRowStartIndex, visibleRowStopIndex, visibleColumnStartIndex, visibleColumnStopIndex }: any) => {
-    const startIndex = visibleRowStartIndex * columnCount + visibleColumnStartIndex;
-    const endIndex = visibleRowStopIndex * columnCount + visibleColumnStopIndex;
-    
-    dispatch(setVisibleRange({ startIndex, endIndex }));
+const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
+  const dispatch = useDispatch();
+
+  const handleProductClick = (productId: number) => {
+    dispatch(selectProduct(productId));
   };
-  
-  // Display grid or list view based on viewMode
-  if (viewMode === 'list') {
-    return (
-      <div className={cn('space-y-4', className)}>
-        {loading && <div className="text-center py-8">Loading products...</div>}
-        {error && <div className="text-center py-8 text-red-500">{error}</div>}
-        {!loading && products.length === 0 && (
-          <div className="text-center py-8">No products found. Try a different search or filter.</div>
-        )}
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} view="list" />
-        ))}
-      </div>
-    );
-  }
 
-  // Memoized product card to optimize rendering performance
-  const MemoizedProductCard = React.memo(({ data, rowIndex, columnIndex, style }: any) => {
-    const { products, columnCount } = data;
-    const index = rowIndex * columnCount + columnIndex;
-    
-    if (index >= products.length) {
-      return null;
+  // Function to format price
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
+
+  // Render stars for ratings
+  const renderRatingStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(<Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(
+          <span key={i} className="relative">
+            <Star className="h-4 w-4 text-gray-300" />
+            <span className="absolute inset-0 overflow-hidden w-[50%]">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            </span>
+          </span>
+        );
+      } else {
+        stars.push(<Star key={i} className="h-4 w-4 text-gray-300" />);
+      }
     }
-    
-    const product = products[index];
-    
-    return (
-      <div style={{ ...style, padding: 8 }}>
-        <ProductCard product={product} />
-      </div>
-    );
-  }, areEqual);
 
-  // Calculate required grid dimensions based on the products and column count
-  const rowCount = Math.ceil(products.length / columnCount);
-  
+    return stars;
+  };
+
   return (
-    <div className={cn('relative w-full h-full min-h-[500px]', className)}>
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-10">
-          <div className="text-center">
-            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="mt-2">Loading products...</p>
-          </div>
-        </div>
-      )}
-      
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-red-500 p-4">
-            <p>Error loading products: {error}</p>
-            <button 
-              className="mt-2 text-white bg-primary px-4 py-2 rounded hover:bg-primary/90"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {!loading && products.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-4">
-            <p>No products found. Try a different search or filter.</p>
-          </div>
-        </div>
-      )}
-      
-      {products.length > 0 && (
-        <AutoSizer>
-          {({ height, width }: { height: number; width: number }) => (
-            <FixedSizeGrid
-              ref={gridRef}
-              columnCount={columnCount}
-              columnWidth={width / columnCount}
-              height={height}
-              rowCount={rowCount}
-              rowHeight={400} // Fixed height for each product card
-              width={width}
-              onItemsRendered={handleItemsRendered}
-              itemData={{ products, columnCount }}
-            >
-              {MemoizedProductCard}
-            </FixedSizeGrid>
-          )}
-        </AutoSizer>
-      )}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {products.map((product) => (
+        <Link 
+          key={product.id} 
+          href={`/products/${product.id}`}
+          onClick={() => handleProductClick(product.id)}
+        >
+          <Card className="h-full flex flex-col cursor-pointer transition-all duration-200 hover:shadow-md">
+            <div className="relative pt-[75%] overflow-hidden rounded-t-lg">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              />
+              
+              {/* Badges for new or featured products */}
+              <div className="absolute top-2 left-2 flex flex-col gap-1">
+                {product.isNew && (
+                  <Badge variant="default" className="text-xs">New</Badge>
+                )}
+                {product.isFeatured && (
+                  <Badge variant="secondary" className="text-xs">Featured</Badge>
+                )}
+                {!product.inStock && (
+                  <Badge variant="destructive" className="text-xs">Out of Stock</Badge>
+                )}
+              </div>
+              
+              {/* Discount badge if applicable */}
+              {product.discountPrice && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute top-2 right-2 font-semibold"
+                >
+                  {Math.round((1 - product.discountPrice / product.price) * 100)}% OFF
+                </Badge>
+              )}
+            </div>
+            
+            <CardHeader className="pb-2 pt-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">{product.brand}</div>
+              <h3 className="text-base font-semibold line-clamp-2 mt-1">{product.name}</h3>
+            </CardHeader>
+            
+            <CardContent className="pb-2 pt-0 flex-grow">
+              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                {product.description}
+              </p>
+              
+              {/* Rating display */}
+              <div className="flex items-center mt-3">
+                <div className="flex items-center mr-2">
+                  {renderRatingStars(product.rating)}
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ({product.reviewCount})
+                </span>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="pt-2">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-baseline gap-1">
+                  {product.discountPrice ? (
+                    <>
+                      <span className="font-bold text-lg">{formatPrice(product.discountPrice)}</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm line-through">
+                        {formatPrice(product.price)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-lg">{formatPrice(product.price)}</span>
+                  )}
+                </div>
+                
+                {/* Available colors if any */}
+                {product.colors && product.colors.length > 0 && (
+                  <div className="flex -space-x-1">
+                    {product.colors.slice(0, 3).map((color, i) => (
+                      <div 
+                        key={i}
+                        className="w-4 h-4 rounded-full border-2 border-white dark:border-gray-800"
+                        style={{ backgroundColor: color === 'rgb' 
+                          ? 'linear-gradient(135deg, #ff0000, #00ff00, #0000ff)' 
+                          : color 
+                        }}
+                      />
+                    ))}
+                    {product.colors.length > 3 && (
+                      <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-center flex items-center justify-center text-[8px]">
+                        +{product.colors.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardFooter>
+          </Card>
+        </Link>
+      ))}
     </div>
   );
 };

@@ -1,16 +1,29 @@
-// Export components
+// Main component exports
 export { default as ProductsPage } from './components/ProductsPage';
-export { default as ProductCard } from './components/ProductCard';
-export { default as ProductGrid } from './components/ProductGrid';
-export { default as SearchBar } from './components/SearchBar';
-export { default as FilterSidebar } from './components/FilterSidebar';
-export { default as SortOptions } from './components/SortOptions';
 
-// Export from slice
-export * from './productsSlice';
+// Slice exports
+export {
+  updateFilters,
+  resetFilters,
+  addSearchQuery,
+  clearSearchHistory,
+  selectProduct,
+  clearSelectedProduct,
+  clearViewHistory,
+  selectProductFilters,
+  selectSearchHistory,
+  selectSelectedProductId,
+  selectRecentlyViewedIds,
+  selectViewHistory,
+} from './productsSlice';
 
-// Export from API
-export * from './productsApi';
+// API exports
+export {
+  useGetProductsQuery,
+  useGetProductByIdQuery,
+  useGetCategoriesQuery,
+  useGetBrandsQuery,
+  useGetTagsQuery,
+} from './productsApi';
 
-// Export types
-export * from './types';
+export type { Product, ProductFilters } from './productsApi';
