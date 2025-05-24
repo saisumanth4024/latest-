@@ -20,7 +20,7 @@ export default function LogoutButton({
   const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { toast } = useToast();
-  const authStatus = useAppSelector(selectAuthStatus);
+  const auth = useAppSelector(state => state.auth);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -32,9 +32,9 @@ export default function LogoutButton({
       });
       
       // First check if we're using Replit auth or traditional auth
-      if (authStatus.authMethod === 'replit') {
+      if (auth.authMethod === 'replit') {
         // Use Replit's logout endpoint for Replit authentication
-        window.location.href = '/api/logout';
+        window.location.replace('/api/logout');
         return; // Let the redirect handle everything
       }
       
