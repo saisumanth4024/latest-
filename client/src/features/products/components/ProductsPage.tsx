@@ -1,33 +1,15 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useGetProductsQuery } from '../productsApi';
 import { 
   selectFilters, 
   setFilter,
   resetFilters 
 } from '../productsSlice';
-import ProductGrid from './ProductGrid';
-import SearchBar from './SearchBar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { RefreshCw, SlidersHorizontal } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
-
-// Sample product data with realistic names
-const productNames = [
-  "Ultra Wireless Headphones",
-  "Premium Running Shoes",
-  "Smart Watch Pro",
-  "Designer Sunglasses",
-  "Wireless Earbuds",
-  "Ultrabook Laptop 15\"",
-  "Mechanical Keyboard",
-  "Noise-Cancelling Headset",
-  "Performance Athletic Shoes",
-  "Ergonomic Office Chair",
-  "4K Ultra HD Monitor",
-  "Smartphone Pro Max"
-];
+import MockProductsComponent from '../MockProductsComponent';
 
 const ProductsPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -35,15 +17,6 @@ const ProductsPage: React.FC = () => {
   const [sortValue, setSortValue] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const filters = useSelector(selectFilters);
-  
-  // Initial fetch params
-  const [params, setParams] = useState({
-    page: 1,
-    limit: 12,
-    sort: sortValue,
-    search: searchQuery,
-    ...filters
-  });
   
   // Sample filter categories for the sidebar
   const categories = [
@@ -85,31 +58,6 @@ const ProductsPage: React.FC = () => {
     { id: 'price-high', name: 'Price: High to Low' },
     { id: 'rating', name: 'Highest Rated' }
   ];
-  
-  // Create search params for API call
-  const createSearchParams = useCallback(() => {
-    return {
-      page: params.page,
-      limit: params.limit,
-      sort: sortValue,
-      search: searchQuery,
-      ...filters
-    };
-  }, [params.page, params.limit, sortValue, searchQuery, filters]);
-  
-  // Update params when filters change
-  useEffect(() => {
-    setParams(prev => ({
-      ...prev,
-      page: 1, // Reset to first page on filter change
-      sort: sortValue,
-      search: searchQuery,
-      ...filters
-    }));
-  }, [filters, sortValue, searchQuery]);
-  
-  // Fetch products with the current params
-  const { data, error, isLoading } = useGetProductsQuery(createSearchParams());
   
   // Handle category filter change
   const handleCategoryChange = (categoryId: string) => {
@@ -157,10 +105,12 @@ const ProductsPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1">
-              <SearchBar 
-                value={searchQuery} 
-                onChange={handleSearchChange} 
-                placeholder="Search products..." 
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search products..."
+                className="w-full rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
               />
             </div>
             <div className="flex gap-2">
@@ -195,7 +145,7 @@ const ProductsPage: React.FC = () => {
                 {categories.find(c => c.id === filters.category)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ category: null }))}
+                  onClick={() => dispatch(setFilter({ key: "category", value: null }))}
                 >
                   ×
                 </button>
@@ -206,7 +156,7 @@ const ProductsPage: React.FC = () => {
                 {priceRanges.find(p => p.id === filters.priceRange)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ priceRange: null }))}
+                  onClick={() => dispatch(setFilter({ key: "priceRange", value: null }))}
                 >
                   ×
                 </button>
@@ -217,7 +167,7 @@ const ProductsPage: React.FC = () => {
                 {ratings.find(r => r.id === filters.rating)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ rating: null }))}
+                  onClick={() => dispatch(setFilter({ key: "rating", value: null }))}
                 >
                   ×
                 </button>
@@ -308,82 +258,37 @@ const ProductsPage: React.FC = () => {
           
           {/* Product listing */}
           <div className="md:col-span-3">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : error ? (
-              <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <h3 className="text-xl font-semibold text-red-600 dark:text-red-400">Error loading products</h3>
-                <p className="text-red-500 dark:text-red-300 mt-2">
-                  There was a problem loading the products. Please try again.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSortValue('newest');
-                  }}
+            <MockProductsComponent 
+              title=""
+              count={16} 
+              columns={3}
+              filters={{
+                category: filters.category,
+                priceRange: filters.priceRange,
+                rating: filters.rating,
+                sort: sortValue
+              }}
+              searchQuery={searchQuery}
+            />
+            
+            {/* Pagination */}
+            <div className="mt-8 flex justify-center">
+              <div className="flex space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={true}
                 >
-                  Reset Filters
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  Next
                 </Button>
               </div>
-            ) : data?.products && data.products.length === 0 ? (
-              <div className="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <h3 className="text-xl font-semibold">No products found</h3>
-                <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  Try adjusting your filters or search criteria.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSortValue('newest');
-                  }}
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Results summary */}
-                <div className="mb-4 flex items-center justify-between">
-                  {data && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Showing {data.products.length} of {data.total || data.products.length} products
-                    </p>
-                  )}
-                </div>
-                
-                {/* Product grid with sample data */}
-                <ProductGrid 
-                  filters={filters}
-                  columns={3}
-                  limit={12}
-                />
-                
-                {/* Pagination */}
-                <div className="mt-8 flex justify-center">
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={params.page <= 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+            </div>
           </div>
         </div>
       </div>
