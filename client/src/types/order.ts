@@ -1,4 +1,5 @@
 import { OrderStatus, PaymentMethod } from './checkout';
+export { OrderStatus };
 import { Product } from './product';
 import { Address } from './cart';
 

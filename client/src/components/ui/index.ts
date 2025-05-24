@@ -95,3 +95,4 @@ export * from './use-toast';
 // Toggle components
 export { Toggle, toggleVariants } from './toggle';
 export { ToggleGroup, ToggleGroupItem } from './toggle-group';
+export { Switch } from './switch';

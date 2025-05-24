@@ -167,6 +167,52 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Featured Product Showcase */}
+      <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="p-6 md:p-8 flex flex-col justify-center">
+            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mb-4">
+              Featured Product
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Premium Wireless Headphones</h2>
+            <div className="flex items-center mb-4">
+              <div className="flex text-yellow-400">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg key={star} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm text-slate-600 dark:text-slate-400 ml-2">4.7 (284 reviews)</span>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              Experience crystal-clear sound with active noise cancellation, 30-hour battery life, and comfortable over-ear design.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a 
+                href="/products/1" 
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                View Product
+              </a>
+              <a 
+                href="/products/1#reviews" 
+                className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Read Reviews
+              </a>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 p-8 flex items-center justify-center">
+            <div className="w-full max-w-xs h-64 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12v-2a3 3 0 00-3-3H7a3 3 0 00-3 3v2m7-4v16m-7 0h14a3 3 0 003-3V9a3 3 0 00-3-3H7a3 3 0 00-3 3v10a3 3 0 003 3z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         <div className="lg:col-span-2">

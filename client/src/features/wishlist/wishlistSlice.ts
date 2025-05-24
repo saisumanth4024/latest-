@@ -30,6 +30,7 @@ interface WishlistState {
   wishlists: Wishlist[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  activeWishlistId?: string;
 }
 
 // Async thunk for fetching wishlists
@@ -70,7 +71,8 @@ export const fetchWishlists = createAsyncThunk(
 const initialState: WishlistState = {
   wishlists: [],
   status: 'idle',
-  error: null
+  error: null,
+  activeWishlistId: undefined
 };
 
 // Create the wishlist slice
@@ -78,6 +80,10 @@ const wishlistSlice = createSlice({
   name: 'wishlist',
   initialState,
   reducers: {
+    // Set active wishlist
+    setActiveWishlist: (state, action: PayloadAction<string>) => {
+      state.activeWishlistId = action.payload;
+    },
     // Add item to wishlist
     addToWishlist: (state, action: PayloadAction<{
       wishlistId: string;
@@ -345,6 +351,38 @@ export const {
   clearWishlist
 } = wishlistSlice.actions;
 
+// Initialize wishlists (middleware action for app start)
+export const initializeWishlists = () => (dispatch: any) => {
+  dispatch(fetchWishlists());
+};
+
+// Generate a shareable link for a wishlist
+export const regenerateShareableLink = (wishlistId: string) => (dispatch: any, getState: () => RootState) => {
+  const state = getState();
+  const wishlist = state.wishlist.wishlists.find(list => list.id === wishlistId);
+  
+  if (wishlist) {
+    const shareUrl = `${window.location.origin}/wishlist/shared/${wishlistId}?t=${Date.now()}`;
+    
+    dispatch(updateWishlist({
+      wishlistId,
+      name: wishlist.name,
+      description: wishlist.description,
+      isPublic: true
+    }));
+    
+    return shareUrl;
+  }
+  
+  return null;
+};
+
+// Set active wishlist
+export const setActiveWishlist = (wishlistId: string) => ({
+  type: 'wishlist/setActiveWishlist',
+  payload: wishlistId
+});
+
 // Selectors
 export const selectWishlists = (state: RootState) => state.wishlist.wishlists;
 export const selectDefaultWishlist = (state: RootState) => 
@@ -353,6 +391,13 @@ export const selectWishlistById = (id: string) => (state: RootState) =>
   state.wishlist.wishlists.find(list => list.id === id);
 export const selectWishlistStatus = (state: RootState) => state.wishlist.status;
 export const selectWishlistError = (state: RootState) => state.wishlist.error;
+export const selectActiveWishlistId = (state: RootState) => 
+  state.wishlist.activeWishlistId || state.wishlist.wishlists.find(list => list.isDefault)?.id;
+export const selectActiveWishlist = (state: RootState) => {
+  const activeId = selectActiveWishlistId(state);
+  return state.wishlist.wishlists.find(list => list.id === activeId);
+};
+export const selectIsWishlistLoading = (state: RootState) => state.wishlist.status === 'loading';
 
 // Export reducer
 export default wishlistSlice.reducer;
