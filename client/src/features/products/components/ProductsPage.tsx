@@ -12,21 +12,66 @@ import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-// Sample product data for demonstration
+// Sample product data with realistic names and working images
+const productNames = [
+  "Ultra Wireless Headphones",
+  "Premium Running Shoes",
+  "Smart Watch Pro",
+  "Designer Sunglasses",
+  "Wireless Earbuds",
+  "Ultrabook Laptop 15"",
+  "Mechanical Keyboard",
+  "Noise-Cancelling Headset",
+  "Performance Athletic Shoes",
+  "Ergonomic Office Chair",
+  "Modern LED Desk Lamp",
+  "Sectional Sofa"
+];
+
+const productImages = [
+  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80", // Headphones
+  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80", // Red shoes
+  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80", // Watch
+  "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80", // Sunglasses
+  "https://images.unsplash.com/photo-1600086827875-a63b01f1335c?w=400&q=80", // Earbuds
+  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80", // Laptop
+  "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=400&q=80", // Keyboard
+  "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&q=80", // Headset
+  "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=80", // Shoes
+  "https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&q=80", // Chair
+  "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&q=80", // Lamp
+  "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80"  // Sofa
+];
+
+const descriptions = [
+  "Experience premium sound quality with deep bass and noise isolation",
+  "Engineered for comfort and performance with breathable materials",
+  "Track your fitness goals and stay connected with smart notifications",
+  "Polarized lenses with UV protection in a stylish, durable frame",
+  "Crystal clear audio with 30-hour battery life and water resistance",
+  "Ultra-fast performance with 16GB RAM and 512GB SSD storage",
+  "Precision typing experience with customizable RGB lighting",
+  "Block out distractions with advanced noise cancellation technology",
+  "Maximum comfort and support for high-intensity training",
+  "Adjustable lumbar support and breathable mesh for all-day comfort",
+  "Adjustable brightness with multiple color temperatures",
+  "Premium fabric with modular design for flexible arrangements"
+];
+
 const sampleProducts = Array(12).fill(0).map((_, i) => ({
   id: i + 1,
-  name: `Premium Product ${i + 1}`,
-  description: "High quality product with premium features",
-  price: 99.99 + i * 10,
-  discountPrice: i % 3 === 0 ? (99.99 + i * 10) * 0.8 : undefined,
-  image: `https://images.unsplash.com/photo-${1560000000000 + i * 1000}?q=80&w=400`,
+  name: productNames[i],
+  description: descriptions[i],
+  price: (79 + (i * 30)) + 0.99,
+  discountPrice: i % 3 === 0 ? ((79 + (i * 30)) + 0.99) * 0.8 : undefined,
+  image: productImages[i],
   category: i % 3 === 0 ? "Electronics" : i % 3 === 1 ? "Clothing" : "Home & Kitchen",
   brand: i % 4 === 0 ? "SoundMaster" : i % 4 === 1 ? "TechVision" : i % 4 === 2 ? "FitTech" : "HomeConnect",
-  rating: 3.5 + (i % 5) * 0.3,
-  reviews: 10 + i * 5,
+  rating: (Math.floor((3 + Math.random() * 2) * 10) / 10).toFixed(1),
+  reviews: Math.floor(10 + Math.random() * 490),
   inStock: i % 7 !== 0,
   isNew: i % 5 === 0,
-  tags: ["premium", "quality", `tag-${i}`],
+  tags: ["premium", i % 3 === 0 ? "electronics" : i % 3 === 1 ? "clothing" : "home", `${i % 2 === 0 ? "featured" : "bestseller"}`],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 }));
