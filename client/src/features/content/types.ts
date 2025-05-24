@@ -1,231 +1,230 @@
-// Common content types for the CMS system
+// Content and Media Management Types
 
-// Media types
-export type MediaType = 'image' | 'video' | 'document' | 'audio';
-
+// Basic media type shared across media types
 export interface Media {
   id: string;
-  type: MediaType;
-  url: string;
   title: string;
   description?: string;
-  altText?: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  width?: number;
-  height?: number;
-  duration?: number; // in seconds for video/audio
+  fileUrl: string;
   thumbnailUrl?: string;
+  mimeType: string;
+  fileSize: number;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  duration?: number;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
-  tags: string[];
-  uploadedBy: string;
+  authorId?: string;
+  authorName?: string;
+  status: 'active' | 'inactive' | 'draft' | 'archived';
   metadata?: Record<string, any>;
 }
 
-// Video specific types
+// Video-specific types
+export interface VideoSource {
+  quality: string; // e.g., "720p", "1080p"
+  url: string;
+  size?: number;
+  format?: string;
+}
+
+export interface VideoSubtitle {
+  language: string;
+  label: string;
+  url: string;
+}
+
 export interface VideoMetadata {
   duration: number;
   resolution: string;
-  codec: string;
-  bitrate: number;
-  fps?: number;
-  hdrEnabled?: boolean;
-}
-
-export interface VideoSource {
-  url: string;
-  quality: '240p' | '360p' | '480p' | '720p' | '1080p' | '1440p' | '2160p';
-  bitrate: number;
-  type: string; // mime type: 'video/mp4', 'video/webm', etc.
+  codec?: string;
+  bitrate?: number;
+  framerate?: number;
+  aspectRatio?: string;
 }
 
 export interface Video extends Media {
-  type: 'video';
-  sources: VideoSource[];
-  videoMetadata: VideoMetadata;
   videoUrl: string;
-  subtitles?: {
-    language: string;
-    url: string;
-    label: string;
-  }[];
-  chapters?: {
-    start: number; // in seconds
-    end: number; // in seconds
-    title: string;
-  }[];
+  sources?: VideoSource[];
+  subtitles?: VideoSubtitle[];
+  videoMetadata?: VideoMetadata;
+  thumbnailUrl: string;
+  previewGif?: string;
+  viewCount: number;
+  categories?: string[];
+  transcript?: string;
+  isPrivate: boolean;
+  isFeature: boolean;
   relatedVideos?: string[]; // IDs of related videos
-  viewCount?: number;
-  likeCount?: number;
 }
 
 // Banner types
 export type BannerPosition = 
-  | 'home_hero' 
-  | 'home_secondary' 
-  | 'category_top' 
+  | 'home_hero'
+  | 'home_middle'
+  | 'home_bottom'
+  | 'category_top'
   | 'product_sidebar'
-  | 'deals_page' 
-  | 'checkout_confirmation';
+  | 'checkout'
+  | 'profile'
+  | 'custom';
 
-export type BannerType = 'image' | 'video' | 'carousel' | 'html';
+export type BannerType = 'image' | 'video' | 'html' | 'carousel';
 
 export interface Banner {
   id: string;
   title: string;
+  description?: string;
   type: BannerType;
   position: BannerPosition;
-  content: string | Media | Media[]; // URL, Media object, or array of Media for carousel
+  content: string | any; // URL for images, HTML for html banners, video object for video
+  startDate?: string;
+  endDate?: string;
+  isActive: boolean;
   link?: string;
   buttonText?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
+  viewCount: number;
+  clickCount: number;
+  targetAudience?: {
+    countries?: string[];
+    userTypes?: string[];
+    devices?: string[];
+  };
   priority: number; // For ordering multiple banners in the same position
-  targetAudience?: string[]; // user segments to target
   createdAt: string;
   updatedAt: string;
-  viewCount: number; // analytics
-  clickCount: number; // analytics
-  conversionCount: number; // analytics
 }
 
-// Page types
-export type PageType = 'landing' | 'category' | 'static' | 'legal' | 'custom';
+// Content Pages
+export interface PageSection {
+  id: string;
+  type: 'hero' | 'text' | 'image' | 'video' | 'products' | 'banner' | 'custom';
+  title?: string;
+  content: any; // Depends on section type
+  order: number;
+  settings?: Record<string, any>;
+}
 
 export interface Page {
   id: string;
   title: string;
   slug: string;
-  type: PageType;
-  content: string; // HTML content
+  description?: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  sections: PageSection[];
   metaTitle?: string;
   metaDescription?: string;
-  featuredImage?: Media;
-  sections: PageSection[];
-  isPublished: boolean;
-  publishDate?: string;
-  lastModified: string;
-  author: string;
-  tags: string[];
-  relatedPages?: string[]; // IDs of related pages
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  authorId?: string;
+  authorName?: string;
+  thumbnail?: string;
+  type: 'landing' | 'article' | 'help' | 'policy' | 'custom';
 }
 
-export interface PageSection {
-  id: string;
-  title: string;
-  type: 'text' | 'image' | 'video' | 'carousel' | 'products' | 'testimonials' | 'features' | 'cta' | 'custom';
-  content: string | Media | Media[] | string[]; // Content can be HTML, Media, Media[] for carousels, or string[] for product IDs
-  order: number;
-  backgroundColor?: string;
-  textColor?: string;
-  settings?: Record<string, any>; // Additional settings for the section
-}
-
-// Deal types
+// Deals/Promotions
 export interface Deal {
   id: string;
   title: string;
-  description: string;
-  image?: Media;
+  description?: string;
+  imageUrl?: string;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  discountPercentage?: number;
-  discountAmount?: number;
-  minimumPurchase?: number;
-  products: string[]; // Product IDs
-  categories?: string[]; // Category IDs
+  discount?: {
+    type: 'percentage' | 'fixed' | 'free_shipping';
+    value: number;
+  };
   couponCode?: string;
-  termsAndConditions?: string;
-  viewCount: number; // analytics
-  useCount: number; // analytics
+  products?: string[]; // IDs of products this deal applies to
+  categories?: string[]; // IDs of categories this deal applies to
+  conditions?: {
+    minPurchase?: number;
+    maxUses?: number;
+    onePerUser?: boolean;
+    firstTimeOnly?: boolean;
+  };
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Recommendation types
-export type RecommendationType = 
-  | 'trending' 
-  | 'personalized' 
-  | 'similar_products' 
-  | 'frequently_bought_together'
-  | 'recently_viewed' 
-  | 'top_rated';
-
+// Recommendations
 export interface Recommendation {
   id: string;
-  type: RecommendationType;
   title: string;
-  description?: string;
-  productIds: string[];
-  position: string;
+  type: 'product' | 'video' | 'banner' | 'category' | 'collection';
+  items: string[]; // IDs of recommended items
+  algorithm?: 'frequently_bought_together' | 'similar_items' | 'recently_viewed' | 'popular' | 'top_rated' | 'curated';
   isActive: boolean;
-  startDate?: string;
-  endDate?: string;
-  algorithm?: string; // The algorithm used for recommendations
-  viewCount: number; // analytics
-  clickCount: number; // analytics
-  conversionCount: number; // analytics
+  position?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Content search and filtering
-export interface ContentFilter {
-  keywords?: string;
-  contentType?: 'video' | 'image' | 'banner' | 'page' | 'deal';
-  dateRange?: {
-    startDate: string;
-    endDate: string;
-  };
-  tags?: string[];
-  categories?: string[];
-  status?: 'active' | 'inactive' | 'scheduled' | 'expired' | 'draft';
-  sortBy?: 'date' | 'popularity' | 'title' | 'relevance';
-  sortOrder?: 'asc' | 'desc';
-}
-
-// Video player settings
-export interface PlayerSettings {
-  autoplay: boolean;
-  loop: boolean;
-  muted: boolean;
-  controls: boolean;
-  preload: 'auto' | 'metadata' | 'none';
-  poster?: string;
-  playbackRate: number;
-  volume: number;
-  quality: string;
-  subtitlesEnabled: boolean;
-  subtitlesLanguage?: string;
-}
-
-// Video playlist
+// Playlists
 export interface Playlist {
   id: string;
   title: string;
   description?: string;
-  videos: string[]; // Video IDs
-  thumbnailUrl?: string;
+  coverImage?: string;
+  videos: string[]; // IDs of videos in this playlist
+  isPublic: boolean;
+  createdBy: string; // User ID
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  isPublic: boolean;
-  viewCount: number;
+  viewCount?: number;
+  tags?: string[];
 }
 
-// Content collection for homepage, category pages, etc.
+// Content Collections
 export interface ContentCollection {
   id: string;
   title: string;
   description?: string;
-  type: 'banners' | 'videos' | 'products' | 'deals' | 'recommendations' | 'mixed';
-  items: string[]; // IDs of content items
-  position: string;
+  coverImage?: string;
+  type: 'featured' | 'trending' | 'seasonal' | 'thematic' | 'custom';
+  items: {
+    id: string;
+    type: 'video' | 'product' | 'banner' | 'page';
+    priority: number;
+  }[];
   isActive: boolean;
   startDate?: string;
   endDate?: string;
-  maxItems?: number;
-  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+  tags?: string[];
+}
+
+// Filters
+export interface ContentFilter {
+  keywords?: string;
+  categories?: string[];
+  tags?: string[];
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  contentType?: string;
+  status?: 'active' | 'inactive' | 'draft' | 'scheduled' | 'expired';
+  author?: string;
+  sortBy?: 'date' | 'title' | 'popularity' | 'relevance';
+  sortDirection?: 'asc' | 'desc';
+}
+
+// Player Settings
+export interface PlayerSettings {
+  quality: string;
+  autoplay: boolean;
+  volume: number;
+  playbackRate: number;
+  subtitlesEnabled: boolean;
+  subtitlesLanguage?: string;
+  loop: boolean;
 }

@@ -10,6 +10,8 @@ import dashboardReducer from '@/features/dashboard/dashboardSlice';
 import { dashboardApi } from '@/features/dashboard/dashboardApi';
 import notificationsReducer from '@/features/notifications/notificationsSlice';
 import { notificationsApi } from '@/features/notifications/notificationsApi';
+import contentReducer from '@/features/content/contentSlice';
+import { contentApi } from '@/features/content/contentApi';
 
 export const store = configureStore({
   reducer: {
@@ -20,10 +22,12 @@ export const store = configureStore({
     orders: ordersReducer,
     dashboard: dashboardReducer,
     notifications: notificationsReducer,
+    content: contentReducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
+    [contentApi.reducerPath]: contentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -41,7 +45,10 @@ export const store = configureStore({
           'notifications/markAsRead/fulfilled',
           'notifications/markAllAsRead/fulfilled',
           'notifications/addLocalNotification',
-          'dashboard/updateDashboardLayout/fulfilled'
+          'dashboard/updateDashboardLayout/fulfilled',
+          'content/setCurrentVideo',
+          'content/setActiveBanner',
+          'content/setPlaylist'
         ],
         // Ignore these field paths in all actions
         ignoredActionPaths: [
@@ -63,7 +70,14 @@ export const store = configureStore({
           'payload.dueDate',
           'payload.paidDate',
           'payload.readAt',
-          'payload.notifications'
+          'payload.notifications',
+          'payload.content',
+          'payload.videoMetadata',
+          'payload.sources',
+          'payload.subtitles',
+          'payload.targetAudience',
+          'payload.sections',
+          'payload.metadata'
         ],
         // Ignore these paths in the state
         ignoredPaths: [
@@ -95,14 +109,18 @@ export const store = configureStore({
           'notifications.items.*.createdAt',
           'notifications.items.*.readAt',
           'notifications.items.*.expiresAt',
-          'dashboard.layout.widgets.*.settings'
+          'dashboard.layout.widgets.*.settings',
+          'content.currentVideo',
+          'content.activeBanners',
+          'content.playlist'
         ],
       },
     }).concat(
       productsApi.middleware, 
       ordersApi.middleware, 
       dashboardApi.middleware, 
-      notificationsApi.middleware
+      notificationsApi.middleware,
+      contentApi.middleware
     ),
 });
 

@@ -1,171 +1,133 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
-import type { 
+import { 
+  Video, 
+  Banner, 
   ContentFilter, 
   PlayerSettings,
-  Video,
-  Banner
+  Playlist
 } from './types';
+import { contentApi } from './contentApi';
 
-// Define the interface for the content slice state
-export interface ContentState {
-  // Player settings
-  playerSettings: PlayerSettings;
+interface ContentState {
+  // Current video player state
   currentVideo: Video | null;
-  isPlaying: boolean;
   currentTime: number;
   duration: number;
+  isPlaying: boolean;
   volume: number;
   isMuted: boolean;
-  isFullscreen: boolean;
   playbackRate: number;
-  currentPlaylistId: string | null;
-  currentPlaylistIndex: number;
+  isFullscreen: boolean;
   
-  // Content filtering and discovery
+  // Player settings
+  playerSettings: PlayerSettings;
+  
+  // Active banner by position
+  activeBanners: Record<string, Banner>;
+  
+  // Filters for content browsing
   filters: ContentFilter;
   searchQuery: string;
   selectedContentType: string | null;
   selectedCategory: string | null;
-  contentSort: {
+  
+  // Sort options
+  sort: {
     field: string;
     direction: 'asc' | 'desc';
   };
   
-  // Banner display tracking
-  activeBanners: {
-    [key: string]: Banner;
+  // Playlist state
+  playlist: {
+    playlistId: string | null;
+    currentIndex: number;
+    videos: string[]; // IDs of videos in the current playlist
+    shuffle: boolean;
+    repeat: 'none' | 'one' | 'all';
   };
-  
-  // User preferences and recommendations
-  recentlyViewed: string[]; // IDs of recently viewed content
-  viewHistory: {
-    contentId: string;
-    contentType: string;
-    timestamp: string;
-    progress?: number; // For videos
-  }[];
-  personalRecommendations: {
-    contentId: string;
-    contentType: string;
-    score: number; // Recommendation score
-  }[];
 }
 
-// Initialize the content state
 const initialState: ContentState = {
-  // Player settings
-  playerSettings: {
-    autoplay: false,
-    loop: false,
-    muted: false,
-    controls: true,
-    preload: 'metadata',
-    playbackRate: 1,
-    volume: 1,
-    quality: '720p',
-    subtitlesEnabled: false
-  },
+  // Current video player state
   currentVideo: null,
-  isPlaying: false,
   currentTime: 0,
   duration: 0,
-  volume: 1,
+  isPlaying: false,
+  volume: 0.8, // 80% volume by default
   isMuted: false,
+  playbackRate: 1, // Normal speed
   isFullscreen: false,
-  playbackRate: 1,
-  currentPlaylistId: null,
-  currentPlaylistIndex: 0,
   
-  // Content filtering and discovery
+  // Player settings
+  playerSettings: {
+    quality: '720p', // Default quality
+    autoplay: false,
+    volume: 0.8,
+    playbackRate: 1,
+    subtitlesEnabled: false,
+    loop: false
+  },
+  
+  // Active banner by position
+  activeBanners: {},
+  
+  // Filters for content browsing
   filters: {},
   searchQuery: '',
   selectedContentType: null,
   selectedCategory: null,
-  contentSort: {
-    field: 'createdAt',
-    direction: 'desc'
+  
+  // Sort options
+  sort: {
+    field: 'date', // Default sort by date
+    direction: 'desc' // Newest first
   },
   
-  // Banner display tracking
-  activeBanners: {},
-  
-  // User preferences and recommendations
-  recentlyViewed: [],
-  viewHistory: [],
-  personalRecommendations: []
+  // Playlist state
+  playlist: {
+    playlistId: null,
+    currentIndex: 0,
+    videos: [],
+    shuffle: false,
+    repeat: 'none'
+  }
 };
 
-// Create the content slice
 export const contentSlice = createSlice({
   name: 'content',
   initialState,
   reducers: {
-    // Player controls
+    // Video player actions
     setCurrentVideo: (state, action: PayloadAction<Video | null>) => {
       state.currentVideo = action.payload;
-      if (action.payload) {
-        // Add to recently viewed
-        if (!state.recentlyViewed.includes(action.payload.id)) {
-          state.recentlyViewed = [
-            action.payload.id,
-            ...state.recentlyViewed.slice(0, 19) // Keep last 20 items
-          ];
-        }
-        
-        // Add to view history
-        state.viewHistory.unshift({
-          contentId: action.payload.id,
-          contentType: 'video',
-          timestamp: new Date().toISOString(),
-          progress: 0
-        });
-      }
-    },
-    
-    setIsPlaying: (state, action: PayloadAction<boolean>) => {
-      state.isPlaying = action.payload;
+      state.currentTime = 0;
+      state.isPlaying = action.payload !== null; // Auto-play when video is set
     },
     
     setCurrentTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
-      
-      // Update progress in view history if there's a current video
-      if (state.currentVideo && state.duration > 0) {
-        const historyIndex = state.viewHistory.findIndex(
-          item => item.contentId === state.currentVideo?.id
-        );
-        
-        if (historyIndex !== -1) {
-          state.viewHistory[historyIndex].progress = 
-            Math.round((state.currentTime / state.duration) * 100) / 100; // As a percentage
-        }
-      }
     },
     
     setDuration: (state, action: PayloadAction<number>) => {
       state.duration = action.payload;
     },
     
+    setIsPlaying: (state, action: PayloadAction<boolean>) => {
+      state.isPlaying = action.payload;
+    },
+    
     setVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
-      // Also update in player settings
-      state.playerSettings.volume = action.payload;
-      
-      if (action.payload === 0) {
-        state.isMuted = true;
-      } else if (state.isMuted) {
+      if (state.volume > 0) {
         state.isMuted = false;
+      } else if (state.volume === 0) {
+        state.isMuted = true;
       }
     },
     
     setMuted: (state, action: PayloadAction<boolean>) => {
       state.isMuted = action.payload;
-      state.playerSettings.muted = action.payload;
-    },
-    
-    setFullscreen: (state, action: PayloadAction<boolean>) => {
-      state.isFullscreen = action.payload;
     },
     
     setPlaybackRate: (state, action: PayloadAction<number>) => {
@@ -173,56 +135,43 @@ export const contentSlice = createSlice({
       state.playerSettings.playbackRate = action.payload;
     },
     
+    setFullscreen: (state, action: PayloadAction<boolean>) => {
+      state.isFullscreen = action.payload;
+    },
+    
+    // Player settings actions
     setPlayerSettings: (state, action: PayloadAction<Partial<PlayerSettings>>) => {
-      state.playerSettings = {
-        ...state.playerSettings,
-        ...action.payload
-      };
-      
-      // Update related state properties
-      if (action.payload.volume !== undefined) {
-        state.volume = action.payload.volume;
-      }
-      
-      if (action.payload.muted !== undefined) {
-        state.isMuted = action.payload.muted;
-      }
-      
-      if (action.payload.playbackRate !== undefined) {
-        state.playbackRate = action.payload.playbackRate;
-      }
+      state.playerSettings = { ...state.playerSettings, ...action.payload };
     },
     
-    // Playlist controls
-    setCurrentPlaylist: (state, action: PayloadAction<{ playlistId: string | null, index: number }>) => {
-      state.currentPlaylistId = action.payload.playlistId;
-      state.currentPlaylistIndex = action.payload.index;
+    toggleSubtitles: (state) => {
+      state.playerSettings.subtitlesEnabled = !state.playerSettings.subtitlesEnabled;
     },
     
-    nextInPlaylist: (state) => {
-      state.currentPlaylistIndex += 1;
+    setSubtitlesLanguage: (state, action: PayloadAction<string>) => {
+      state.playerSettings.subtitlesLanguage = action.payload;
+      state.playerSettings.subtitlesEnabled = true;
     },
     
-    previousInPlaylist: (state) => {
-      if (state.currentPlaylistIndex > 0) {
-        state.currentPlaylistIndex -= 1;
-      }
+    // Banner actions
+    setActiveBanner: (state, action: PayloadAction<Banner>) => {
+      state.activeBanners[action.payload.position] = action.payload;
     },
     
-    // Content discovery and filtering
-    setSearchQuery: (state, action: PayloadAction<string>) => {
-      state.searchQuery = action.payload;
-    },
-    
+    // Content filter actions
     setContentFilters: (state, action: PayloadAction<Partial<ContentFilter>>) => {
-      state.filters = {
-        ...state.filters,
-        ...action.payload
-      };
+      state.filters = { ...state.filters, ...action.payload };
     },
     
     resetContentFilters: (state) => {
       state.filters = {};
+      state.searchQuery = '';
+      state.selectedContentType = null;
+      state.selectedCategory = null;
+    },
+    
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
     
     setSelectedContentType: (state, action: PayloadAction<string | null>) => {
@@ -233,147 +182,180 @@ export const contentSlice = createSlice({
       state.selectedCategory = action.payload;
     },
     
-    setContentSort: (state, action: PayloadAction<{ field: string, direction: 'asc' | 'desc' }>) => {
-      state.contentSort = action.payload;
+    // Sort options
+    setContentSort: (state, action: PayloadAction<{ field: string; direction: 'asc' | 'desc' }>) => {
+      state.sort = action.payload;
     },
     
-    // Banner management
-    setActiveBanner: (state, action: PayloadAction<Banner>) => {
-      state.activeBanners[action.payload.position] = action.payload;
+    // Playlist actions
+    setPlaylist: (state, action: PayloadAction<Playlist>) => {
+      state.playlist.playlistId = action.payload.id;
+      state.playlist.videos = action.payload.videos;
+      state.playlist.currentIndex = 0;
     },
     
-    removeActiveBanner: (state, action: PayloadAction<string>) => {
-      delete state.activeBanners[action.payload];
+    clearPlaylist: (state) => {
+      state.playlist.playlistId = null;
+      state.playlist.videos = [];
+      state.playlist.currentIndex = 0;
     },
     
-    clearActiveBanners: (state) => {
-      state.activeBanners = {};
-    },
-    
-    // User content preferences
-    addToRecentlyViewed: (state, action: PayloadAction<string>) => {
-      if (!state.recentlyViewed.includes(action.payload)) {
-        state.recentlyViewed = [
-          action.payload,
-          ...state.recentlyViewed.slice(0, 19)
-        ];
+    setPlaylistIndex: (state, action: PayloadAction<number>) => {
+      if (action.payload >= 0 && action.payload < state.playlist.videos.length) {
+        state.playlist.currentIndex = action.payload;
       }
     },
     
-    clearRecentlyViewed: (state) => {
-      state.recentlyViewed = [];
-    },
-    
-    addToViewHistory: (state, action: PayloadAction<{
-      contentId: string;
-      contentType: string;
-      progress?: number;
-    }>) => {
-      // Check if already in history
-      const existingIndex = state.viewHistory.findIndex(
-        item => item.contentId === action.payload.contentId
-      );
+    nextInPlaylist: (state) => {
+      if (state.playlist.videos.length === 0) return;
       
-      if (existingIndex !== -1) {
-        // Update timestamp and progress
-        state.viewHistory[existingIndex].timestamp = new Date().toISOString();
-        if (action.payload.progress !== undefined) {
-          state.viewHistory[existingIndex].progress = action.payload.progress;
-        }
+      if (state.playlist.repeat === 'one') {
+        // Just restart the current video
+        return;
+      }
+      
+      if (state.playlist.shuffle) {
+        // Pick random next video
+        const newIndex = Math.floor(Math.random() * state.playlist.videos.length);
+        state.playlist.currentIndex = newIndex;
       } else {
-        // Add new entry
-        state.viewHistory.unshift({
-          ...action.payload,
-          timestamp: new Date().toISOString()
-        });
+        // Go to next video
+        const newIndex = state.playlist.currentIndex + 1;
         
-        // Keep history manageable
-        if (state.viewHistory.length > 100) {
-          state.viewHistory = state.viewHistory.slice(0, 100);
+        if (newIndex >= state.playlist.videos.length) {
+          if (state.playlist.repeat === 'all') {
+            // Loop back to beginning
+            state.playlist.currentIndex = 0;
+          } else {
+            // End of playlist
+            state.playlist.currentIndex = state.playlist.videos.length - 1;
+          }
+        } else {
+          state.playlist.currentIndex = newIndex;
         }
       }
     },
     
-    clearViewHistory: (state) => {
-      state.viewHistory = [];
+    prevInPlaylist: (state) => {
+      if (state.playlist.videos.length === 0) return;
+      
+      if (state.playlist.shuffle) {
+        // Pick random next video
+        const newIndex = Math.floor(Math.random() * state.playlist.videos.length);
+        state.playlist.currentIndex = newIndex;
+      } else {
+        // Go to previous video
+        const newIndex = state.playlist.currentIndex - 1;
+        
+        if (newIndex < 0) {
+          if (state.playlist.repeat === 'all') {
+            // Loop back to end
+            state.playlist.currentIndex = state.playlist.videos.length - 1;
+          } else {
+            // Beginning of playlist
+            state.playlist.currentIndex = 0;
+          }
+        } else {
+          state.playlist.currentIndex = newIndex;
+        }
+      }
     },
     
-    setPersonalRecommendations: (state, action: PayloadAction<{
-      contentId: string;
-      contentType: string;
-      score: number;
-    }[]>) => {
-      state.personalRecommendations = action.payload;
+    togglePlaylistShuffle: (state) => {
+      state.playlist.shuffle = !state.playlist.shuffle;
+    },
+    
+    setPlaylistRepeat: (state, action: PayloadAction<'none' | 'one' | 'all'>) => {
+      state.playlist.repeat = action.payload;
     }
+  },
+  extraReducers: (builder) => {
+    // Handle video query success to auto-update current video
+    builder.addMatcher(
+      contentApi.endpoints.getVideoById.matchFulfilled,
+      (state, { payload }) => {
+        // Only update the current video if there's no video playing
+        // or if this is the video we're currently playing
+        if (!state.currentVideo || (state.currentVideo && state.currentVideo.id === payload.id)) {
+          state.currentVideo = payload;
+        }
+      }
+    );
+    
+    // Auto-update for playlists
+    builder.addMatcher(
+      contentApi.endpoints.getPlaylistById.matchFulfilled,
+      (state, { payload }) => {
+        // Update the playlist data if it's the current playlist
+        if (state.playlist.playlistId === payload.id) {
+          state.playlist.videos = payload.videos;
+          // Make sure current index is still valid
+          if (state.playlist.currentIndex >= payload.videos.length) {
+            state.playlist.currentIndex = 0;
+          }
+        }
+      }
+    );
   }
 });
 
-// Export action creators
+// Export actions
 export const {
-  // Player controls
+  // Video player actions
   setCurrentVideo,
-  setIsPlaying,
   setCurrentTime,
   setDuration,
+  setIsPlaying,
   setVolume,
   setMuted,
-  setFullscreen,
   setPlaybackRate,
+  setFullscreen,
+  
+  // Player settings actions
   setPlayerSettings,
+  toggleSubtitles,
+  setSubtitlesLanguage,
   
-  // Playlist controls
-  setCurrentPlaylist,
-  nextInPlaylist,
-  previousInPlaylist,
+  // Banner actions
+  setActiveBanner,
   
-  // Content discovery and filtering
-  setSearchQuery,
+  // Content filter actions
   setContentFilters,
   resetContentFilters,
+  setSearchQuery,
   setSelectedContentType,
   setSelectedCategory,
+  
+  // Sort options
   setContentSort,
   
-  // Banner management
-  setActiveBanner,
-  removeActiveBanner,
-  clearActiveBanners,
-  
-  // User content preferences
-  addToRecentlyViewed,
-  clearRecentlyViewed,
-  addToViewHistory,
-  clearViewHistory,
-  setPersonalRecommendations
+  // Playlist actions
+  setPlaylist,
+  clearPlaylist,
+  setPlaylistIndex,
+  nextInPlaylist,
+  prevInPlaylist,
+  togglePlaylistShuffle,
+  setPlaylistRepeat
 } = contentSlice.actions;
 
 // Selectors
-export const selectPlayerSettings = (state: RootState) => state.content.playerSettings;
 export const selectCurrentVideo = (state: RootState) => state.content.currentVideo;
-export const selectIsPlaying = (state: RootState) => state.content.isPlaying;
 export const selectCurrentTime = (state: RootState) => state.content.currentTime;
 export const selectDuration = (state: RootState) => state.content.duration;
+export const selectIsPlaying = (state: RootState) => state.content.isPlaying;
 export const selectVolume = (state: RootState) => state.content.volume;
 export const selectIsMuted = (state: RootState) => state.content.isMuted;
-export const selectIsFullscreen = (state: RootState) => state.content.isFullscreen;
 export const selectPlaybackRate = (state: RootState) => state.content.playbackRate;
-export const selectCurrentPlaylist = (state: RootState) => ({
-  playlistId: state.content.currentPlaylistId,
-  index: state.content.currentPlaylistIndex
-});
-
+export const selectIsFullscreen = (state: RootState) => state.content.isFullscreen;
+export const selectPlayerSettings = (state: RootState) => state.content.playerSettings;
+export const selectActiveBanner = (position: string) => (state: RootState) => 
+  state.content.activeBanners[position] || null;
 export const selectContentFilters = (state: RootState) => state.content.filters;
 export const selectSearchQuery = (state: RootState) => state.content.searchQuery;
 export const selectSelectedContentType = (state: RootState) => state.content.selectedContentType;
 export const selectSelectedCategory = (state: RootState) => state.content.selectedCategory;
-export const selectContentSort = (state: RootState) => state.content.contentSort;
-
-export const selectActiveBanners = (state: RootState) => state.content.activeBanners;
-export const selectActiveBannerByPosition = (position: string) => 
-  (state: RootState) => state.content.activeBanners[position];
-
-export const selectRecentlyViewed = (state: RootState) => state.content.recentlyViewed;
-export const selectViewHistory = (state: RootState) => state.content.viewHistory;
-export const selectPersonalRecommendations = (state: RootState) => state.content.personalRecommendations;
+export const selectContentSort = (state: RootState) => state.content.sort;
+export const selectCurrentPlaylist = (state: RootState) => state.content.playlist;
 
 export default contentSlice.reducer;
