@@ -15,14 +15,14 @@ export function EmptyCart() {
         <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
         
         <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-          Looks like you haven't added any items to your cart yet. 
+          Looks like you haven't added any items to your cart yet.
           Browse our products and find something you'll love!
         </p>
         
         <Button asChild>
           <Link href="/products">
             <span className="flex items-center">
-              Continue shopping
+              Browse products
               <ArrowRight className="ml-2 h-4 w-4" />
             </span>
           </Link>

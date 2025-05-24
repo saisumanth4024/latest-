@@ -1,160 +1,180 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, X, Tag, Check } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { CartCoupon } from '@/types';
 import { applyCoupon, removeCoupon } from '../cartSlice';
+import { X, Tag, Loader2 } from 'lucide-react';
 
-// Form validation schema
-const promoCodeSchema = z.object({
-  code: z.string().min(1, 'Promo code is required').max(20)
-});
+// Demo coupons for testing
+const VALID_COUPON_CODES = {
+  'SAVE10': {
+    code: 'SAVE10',
+    type: 'percentage',
+    value: 10,
+    description: '10% off your order'
+  },
+  'WELCOME20': {
+    code: 'WELCOME20',
+    type: 'percentage',
+    value: 20,
+    description: '20% off for new customers'
+  },
+  'FREESHIP': {
+    code: 'FREESHIP',
+    type: 'free_shipping',
+    value: 0,
+    description: 'Free shipping on your order'
+  },
+  'FLAT25': {
+    code: 'FLAT25',
+    type: 'fixed',
+    value: 25,
+    description: '$25 off your order'
+  }
+};
 
 interface PromoCodeFormProps {
-  coupons: CartCoupon[];
+  appliedCoupons: CartCoupon[];
 }
 
-export function PromoCodeForm({ coupons }: PromoCodeFormProps) {
-  const [isApplying, setIsApplying] = useState(false);
+const promoSchema = z.object({
+  code: z.string().min(1, { message: 'Promo code is required' })
+});
+
+type PromoFormValues = z.infer<typeof promoSchema>;
+
+export function PromoCodeForm({ appliedCoupons }: PromoCodeFormProps) {
   const dispatch = useDispatch();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<z.infer<typeof promoCodeSchema>>({
-    resolver: zodResolver(promoCodeSchema),
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm<PromoFormValues>({
+    resolver: zodResolver(promoSchema),
     defaultValues: {
       code: ''
     }
   });
   
-  const onSubmit = async (data: z.infer<typeof promoCodeSchema>) => {
-    setIsApplying(true);
+  // For demo purposes, we'll simulate checking coupons
+  const onSubmit = async (data: PromoFormValues) => {
+    const couponCode = data.code.trim().toUpperCase();
     
-    try {
-      // Check if coupon is already applied
-      const isAlreadyApplied = coupons.some(
-        coupon => coupon.code.toLowerCase() === data.code.toLowerCase()
-      );
-      
-      if (isAlreadyApplied) {
-        toast({
-          title: 'Coupon already applied',
-          description: 'This coupon code has already been applied to your cart.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Simulate API call to validate coupon
-      setTimeout(() => {
-        // For demo purposes, validate any coupon code
-        const couponType = Math.random() > 0.5 ? 'percentage' : 'fixed';
-        const couponValue = couponType === 'percentage' ? 10 : 5;
-        
-        dispatch(applyCoupon({
-          code: data.code,
-          type: couponType as 'percentage' | 'fixed',
-          value: couponValue,
-          discountAmount: 0, // This will be calculated by the reducer
-          description: couponType === 'percentage' ? `${couponValue}% off your order` : `$${couponValue} off your order`,
-          appliedAt: new Date().toISOString()
-        }));
-        
-        toast({
-          title: 'Coupon applied',
-          description: `${data.code} has been applied to your cart.`,
-          variant: 'success',
-        });
-        
-        form.reset();
-        setIsApplying(false);
-      }, 1000);
-      
-    } catch (error) {
+    // Check if coupon is already applied
+    if (appliedCoupons.some(coupon => coupon.code === couponCode)) {
       toast({
-        title: 'Failed to apply coupon',
-        description: 'The coupon code you entered is invalid.',
+        title: 'Coupon already applied',
+        description: 'This coupon has already been applied to your cart.',
         variant: 'destructive',
       });
-      setIsApplying(false);
+      return;
     }
+    
+    // Simulate API call
+    setIsSubmitting(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Demo validation
+    if (VALID_COUPON_CODES[couponCode as keyof typeof VALID_COUPON_CODES]) {
+      const couponDetails = VALID_COUPON_CODES[couponCode as keyof typeof VALID_COUPON_CODES];
+      
+      dispatch(applyCoupon({
+        ...couponDetails,
+        code: couponCode,
+        discountAmount: 0, // Will be calculated in the reducer
+        appliedAt: new Date().toISOString()
+      }));
+      
+      toast({
+        title: 'Coupon applied',
+        description: `${couponDetails.description} has been applied to your cart.`,
+        variant: 'success',
+      });
+      
+      reset();
+    } else {
+      toast({
+        title: 'Invalid coupon',
+        description: 'The coupon code you entered is invalid or has expired.',
+        variant: 'destructive',
+      });
+    }
+    
+    setIsSubmitting(false);
   };
   
+  // Handle remove coupon
   const handleRemoveCoupon = (code: string) => {
     dispatch(removeCoupon(code));
+    
     toast({
       title: 'Coupon removed',
-      description: `${code} has been removed from your cart.`,
+      description: 'The coupon has been removed from your cart.',
     });
   };
   
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold">Apply Discount Code</h3>
+      <h3 className="text-lg font-semibold">Promotional Code</h3>
       
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2">
         <div className="flex-1">
-          <Input
-            placeholder="Enter promo code"
-            {...form.register('code')}
-            className="w-full"
-            disabled={isApplying}
+          <Input 
+            placeholder="Enter code" 
+            {...register('code')}
+            className="uppercase"
           />
-          {form.formState.errors.code && (
-            <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.code.message}
-            </p>
+          {errors.code && (
+            <p className="text-xs text-red-500 mt-1">{errors.code.message}</p>
           )}
         </div>
-        
-        <Button type="submit" disabled={isApplying}>
-          {isApplying ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Applying
-            </>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Apply'
+            <>Apply</>
           )}
         </Button>
       </form>
       
-      {coupons.length > 0 && (
+      {appliedCoupons.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Applied Coupons:</h4>
-          <div className="flex flex-wrap gap-2">
-            {coupons.map((coupon) => (
-              <div 
-                key={coupon.code}
-                className="group inline-flex items-center bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-sm rounded-full px-3 py-1"
-              >
-                <Tag className="h-3.5 w-3.5 mr-1.5" />
-                <span className="mr-1">{coupon.code}</span>
-                <button
-                  type="button"
+          <p className="text-sm text-muted-foreground">Applied coupons:</p>
+          {appliedCoupons.map((coupon) => (
+            <Alert key={coupon.code} className="py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="flex items-center">
+                    <span className="font-medium">{coupon.code}</span>
+                    {coupon.description && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({coupon.description})
+                      </span>
+                    )}
+                  </AlertDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
                   onClick={() => handleRemoveCoupon(coupon.code)}
-                  className="ml-1 rounded-full p-0.5 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800"
                 >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                  <X className="h-3 w-3" />
+                </Button>
               </div>
-            ))}
-          </div>
-          
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {coupons.map((coupon) => (
-              <div key={coupon.code} className="flex items-start gap-2 mt-1">
-                <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                <span>
-                  <span className="font-medium">{coupon.code}</span>: {coupon.description}
-                </span>
-              </div>
-            ))}
-          </div>
+            </Alert>
+          ))}
         </div>
       )}
     </div>

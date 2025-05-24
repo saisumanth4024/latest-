@@ -1,42 +1,35 @@
 import React from 'react';
 import { Link } from 'wouter';
+import { Heart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Heart, ArrowRight, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
-interface EmptyWishlistProps {
-  onCreateWishlist: () => void;
-}
-
-const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onCreateWishlist }) => {
+export function EmptyWishlist() {
   return (
-    <div className="container mx-auto py-16 max-w-6xl">
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
-          <Heart className="w-10 h-10 text-muted-foreground" />
+    <Card className="w-full">
+      <CardContent className="flex flex-col items-center py-12 px-4 text-center">
+        <div className="p-6 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+          <Heart className="h-12 w-12 text-gray-400 dark:text-gray-500" />
         </div>
         
-        <h1 className="text-3xl font-bold mb-3">Your wishlist is empty</h1>
+        <h2 className="text-2xl font-semibold mb-2">Your wishlist is empty</h2>
         
-        <p className="text-muted-foreground mb-8 max-w-md">
-          Create your first wishlist to save products you love and share with friends and family.
+        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+          Save items you love for later by clicking the heart icon on products.
+          Create multiple wishlists for different occasions and needs.
         </p>
-
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Button onClick={onCreateWishlist} size="lg" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create Wishlist
-          </Button>
-          
+        
+        <Button asChild>
           <Link href="/products">
-            <Button variant="outline" size="lg" className="gap-2">
-              Browse Products
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            <span className="flex items-center">
+              Browse products
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </span>
           </Link>
-        </div>
-      </div>
-    </div>
+        </Button>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default EmptyWishlist;

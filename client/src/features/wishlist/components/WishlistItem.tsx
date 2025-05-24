@@ -1,39 +1,39 @@
 import React from 'react';
-import { useAppDispatch } from '@/app/hooks';
-import { 
-  removeFromWishlist,
-  moveToCart
-} from '../wishlistSlice';
-import { addToCart } from '@/features/cart/cartSlice';
-import { WishlistItem as WishlistItemType } from '../wishlistSlice';
+import { useDispatch } from 'react-redux';
+import { Link } from 'wouter';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShoppingCart } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import {
+  Trash,
+  ShoppingCart,
+  Package,
+  ArrowUpDown,
+  Pencil
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { WishlistItem as WishlistItemType } from '../wishlistSlice';
+import { formatCurrency } from '@/lib/utils';
+import { removeFromWishlist, updateItemNotes } from '../wishlistSlice';
+import { addToCart } from '@/features/cart/cartSlice';
 
 interface WishlistItemProps {
   item: WishlistItemType;
   wishlistId: string;
+  onMoveToAnotherList?: () => void;
+  onEditNotes?: () => void;
 }
 
-const WishlistItem: React.FC<WishlistItemProps> = ({ item, wishlistId }) => {
-  const dispatch = useAppDispatch();
+export function WishlistItem({ 
+  item, 
+  wishlistId, 
+  onMoveToAnotherList,
+  onEditNotes 
+}: WishlistItemProps) {
+  const dispatch = useDispatch();
   const { toast } = useToast();
 
-  // Handle removing from wishlist
-  const handleRemove = () => {
-    dispatch(removeFromWishlist({
-      wishlistId,
-      itemId: item.id
-    }));
-    
-    toast({
-      title: 'Item removed',
-      description: `Item has been removed from your wishlist.`,
-      variant: 'default',
-    });
-  };
-
-  // Handle moving to cart
+  // Handle move to cart
   const handleMoveToCart = () => {
     // Only move to cart if we have the required information
     if (item.product && item.product.price !== undefined) {
@@ -49,7 +49,9 @@ const WishlistItem: React.FC<WishlistItemProps> = ({ item, wishlistId }) => {
         sku: item.product.sku || 'SKU-' + item.productId,
         isDigital: item.product.isDigital || false,
         requiresShipping: item.product.requiresShipping !== false,
-        isTaxExempt: false
+        isTaxExempt: false,
+        options: {},
+        weight: item.product.weight
       }));
       
       // Remove from wishlist
@@ -72,57 +74,142 @@ const WishlistItem: React.FC<WishlistItemProps> = ({ item, wishlistId }) => {
     }
   };
 
+  // Handle remove from wishlist
+  const handleRemove = () => {
+    dispatch(removeFromWishlist({
+      wishlistId,
+      itemId: item.id
+    }));
+    
+    toast({
+      title: 'Item removed',
+      description: 'The item has been removed from your wishlist.',
+    });
+  };
+
   return (
-    <div className="flex items-center border-b last:border-b-0 pb-4 last:pb-0">
-      {/* Product Image & Info */}
-      <div className="flex items-center flex-1">
-        <div className="w-16 h-16 rounded-md border overflow-hidden flex-shrink-0">
-          <img 
-            src={item.product?.imageUrl || 'https://via.placeholder.com/80'} 
-            alt={item.product?.name || 'Product'} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="ml-4">
-          <h3 className="font-medium">{item.product?.name || 'Product'}</h3>
-          <div className="text-sm text-muted-foreground">
-            {item.variant && (
-              <span className="mr-2">
-                {Object.entries(item.variant)
-                  .filter(([key]) => !['id', 'productId'].includes(key))
-                  .map(([key, value]) => `${key}: ${value}`)
-                  .join(', ')}
-              </span>
-            )}
-            {item.product?.price !== undefined && (
-              <div className="font-medium mt-1">${item.product.price.toFixed(2)}</div>
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-4">
+          {/* Product Image */}
+          <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
+            {item.product.imageUrl ? (
+              <img 
+                src={item.product.imageUrl} 
+                alt={item.product.name || 'Product image'} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                <Package className="w-8 h-8 text-gray-400" />
+              </div>
             )}
           </div>
+          
+          {/* Product Details */}
+          <div className="flex-1">
+            <div className="flex justify-between">
+              <Link href={`/products/${item.product.slug || item.productId}`}>
+                <h3 className="font-semibold text-lg hover:underline cursor-pointer">{item.product.name}</h3>
+              </Link>
+              <p className="font-semibold">
+                {formatCurrency(item.product.price || 0)}
+                {item.product.compareAtPrice && (
+                  <span className="text-sm text-gray-500 line-through ml-2">
+                    {formatCurrency(item.product.compareAtPrice)}
+                  </span>
+                )}
+              </p>
+            </div>
+            
+            {/* Variant info if available */}
+            {item.variant && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {item.variant.options?.map((opt: any, i: number) => (
+                  <span key={i}>
+                    {opt.name}: <span className="font-medium">{opt.value}</span>
+                    {i < (item.variant?.options?.length || 0) - 1 ? ' / ' : ''}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {/* Product Badges */}
+            <div className="flex flex-wrap gap-2 my-2">
+              {item.product.isNew && (
+                <Badge>New</Badge>
+              )}
+              {item.product.onSale && (
+                <Badge variant="destructive">Sale</Badge>
+              )}
+              {!item.product.inStock && (
+                <Badge variant="outline" className="text-xs">Out of Stock</Badge>
+              )}
+            </div>
+            
+            {/* Notes */}
+            {item.notes && (
+              <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded-sm my-2">
+                <p className="italic">"{item.notes}"</p>
+              </div>
+            )}
+            
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Added {new Date(item.addedAt).toLocaleDateString()}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center justify-end mt-2 space-x-2">
+              {onEditNotes && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onEditNotes}
+                  className="h-8 gap-1"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Notes
+                </Button>
+              )}
+              
+              {onMoveToAnotherList && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onMoveToAnotherList}
+                  className="h-8 gap-1"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                  Move
+                </Button>
+              )}
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleMoveToCart}
+                className="h-8 gap-1"
+                disabled={!item.product.inStock}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                Add to Cart
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleRemove}
+                className="h-8 gap-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+              >
+                <Trash className="w-3.5 h-3.5" />
+                Remove
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={handleMoveToCart} 
-          disabled={item.product?.price === undefined}
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          Add to Cart
-        </Button>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={handleRemove}
-        >
-          <Trash2 className="w-4 h-4" />
-          <span className="sr-only">Remove</span>
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default WishlistItem;
