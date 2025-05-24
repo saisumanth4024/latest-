@@ -170,7 +170,7 @@ const CartPage: React.FC = () => {
                             </div>
                             <div>
                               <div className="font-medium">{item.product.name}</div>
-                              <div className="text-sm text-muted-foreground">{item.product.brand}</div>
+                              <div className="text-sm text-muted-foreground">{item.product.brand?.name || "Unknown Brand"}</div>
                             </div>
                           </div>
                         </TableCell>
@@ -243,7 +243,7 @@ const CartPage: React.FC = () => {
                           <div>
                             <div className="font-medium">{item.product.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {item.product.brand}
+                              {item.product.brand?.name || 'Unknown Brand'}
                               {item.options && Object.entries(item.options).length > 0 && (
                                 <div className="mt-1">
                                   {Object.entries(item.options).map(([key, value]) => (
@@ -359,7 +359,7 @@ const CartPage: React.FC = () => {
                               </div>
                               <div>
                                 <div className="font-medium">{item.product.name}</div>
-                                <div className="text-sm text-muted-foreground">{item.product.brand}</div>
+                                <div className="text-sm text-muted-foreground">{item.product.brand?.name || "Unknown Brand"}</div>
                               </div>
                             </div>
                           </TableCell>
