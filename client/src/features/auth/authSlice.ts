@@ -22,6 +22,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   expiresAt: number | null;
+  sessions: any[];
 }
 
 // Initial state
@@ -35,6 +36,7 @@ const initialState: AuthState = {
   expiresAt: localStorage.getItem('auth_expires_at') 
     ? parseInt(localStorage.getItem('auth_expires_at') || '0', 10) 
     : null,
+  sessions: [],
 };
 
 // Login async thunk
@@ -375,6 +377,10 @@ export const selectAuthError = (state: RootState) => state.auth.error;
 export const selectFormError = (state: RootState) => state.auth.error;
 
 export const selectUserRole = (state: RootState) => state.auth.user?.role || ('guest' as UserRole);
+export const selectIsAdmin = (state: RootState) => state.auth.user?.role === 'admin';
+export const selectIsSeller = (state: RootState) => state.auth.user?.role === 'seller';
+export const selectIsModerator = (state: RootState) => state.auth.user?.role === 'moderator';
+export const selectSessions = (state: RootState) => state.auth.sessions;
 export const selectAuthStatus = (state: RootState) => ({
   isAuthenticated: state.auth.isAuthenticated,
   isLoading: state.auth.isLoading,
