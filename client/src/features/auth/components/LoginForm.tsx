@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { login, selectAuthError, selectAuthLoading } from '../authSlice';
 
@@ -45,7 +45,12 @@ export default function LoginForm() {
   // Handle form submission
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const result = await dispatch(login(data)).unwrap();
+      const result = await dispatch(login({
+        email: data.email,
+        password: data.password,
+        rememberMe: data.rememberMe
+      })).unwrap();
+      
       if (result) {
         // Redirect to dashboard after successful login
         setLocation('/dashboard');

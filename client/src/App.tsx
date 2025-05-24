@@ -192,8 +192,11 @@ function ProtectedRoute({
         <p className="mb-6 text-gray-600 dark:text-gray-300">
           You need to be logged in to access this page. Please log in to continue.
         </p>
-        <Button asChild className="w-full">
-          <a href="/api/login">Log in with Replit</a>
+        <Button 
+          className="w-full"
+          onClick={() => navigate("/login")}
+        >
+          Log in
         </Button>
       </div>
     );

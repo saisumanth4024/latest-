@@ -1,18 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { 
+  selectAuthUser, 
+  selectAuthStatus, 
+  selectIsAuthenticated,
+  selectAuthLoading,
+  validateUserToken
+} from '@/features/auth/authSlice';
+import { AuthStatus } from '@/features/auth/types';
 
+/**
+ * Custom hook for authentication
+ * Provides authentication status and user data
+ */
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectAuthUser);
+  const status = useAppSelector(selectAuthStatus);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const isLoading = useAppSelector(selectAuthLoading);
+
+  // Check token validity on mount
+  useEffect(() => {
+    if (status === AuthStatus.IDLE) {
+      dispatch(validateUserToken());
+    }
+  }, [dispatch, status]);
 
   return {
     user,
-    isLoading,
-    isAuthenticated: !!user,
-    error,
+    status,
+    isAuthenticated,
+    isLoading
   };
 }
