@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { 
   setQuery, 
@@ -54,7 +54,7 @@ import { formatTimeAgo } from '@/lib/utils';
 
 export default function GlobalSearch() {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const query = useSelector(selectQuery);
   const suggestions = useSelector(selectSuggestions);
   const isLoading = useSelector(selectIsSuggestionsLoading);
@@ -205,7 +205,6 @@ export default function GlobalSearch() {
                 ref={inputRef}
                 value={localQuery}
                 onValueChange={setLocalQuery}
-                onChange={handleInputChange}
                 className="flex-1"
                 placeholder="Search products, brands, categories..."
                 autoFocus

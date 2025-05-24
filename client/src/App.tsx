@@ -31,7 +31,7 @@ import { ReviewsPage, ModerationPage } from "@/features/reviews/pages";
 // Create components for each route
 const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
 import OrdersPage from '@/features/orders/components/OrdersPage';
-const SearchPage = () => <PlaceholderPage title="Search" />;
+import SearchResults from '@/features/search/pages/SearchResults';
 import { DashboardPage } from '@/features/dashboard';
 const AnalyticsPage = () => <DashboardPage />;
 const SettingsPage = () => <PlaceholderPage title="Settings" />;
@@ -87,7 +87,7 @@ export const routes = [
   },
   { 
     path: "/search", 
-    component: SearchPage, 
+    component: SearchResults, 
     requireAuth: false,
     title: "Search"
   },
