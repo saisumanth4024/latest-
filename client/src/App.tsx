@@ -50,6 +50,7 @@ export const routes = [
     exact: true,
     requireAuth: false,
     title: "Dashboard",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
     path: "/login",
@@ -57,12 +58,14 @@ export const routes = [
     requireAuth: false,
     title: "Login",
     hideInMenu: true,
+    roles: ['guest'] as UserRole[],
   },
   { 
     path: "/products", 
     component: ProductsPageImpl, 
     requireAuth: false,
-    title: "Products"
+    title: "Products",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
   },
   {
     path: "/products/:productId",
@@ -70,12 +73,14 @@ export const routes = [
     requireAuth: false,
     title: "Product Details",
     hideInMenu: true,
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
     path: "/cart",
     component: CartPage,
     requireAuth: false,
-    title: "Cart"
+    title: "Cart",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
   },
   {
     path: "/checkout",
@@ -177,7 +182,7 @@ function ProtectedRoute({
   roles 
 }: { 
   children: React.ReactNode; 
-  roles?: string[] 
+  roles?: UserRole[] 
 }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
@@ -213,9 +218,8 @@ function ProtectedRoute({
   // If roles are specified, check if user has required role
   // Safety checks to avoid errors with undefined user or roles
   if (roles && roles.length > 0 && user) {
-    // For Replit auth, we might not have a role field explicitly set
-    // So assume regular user role as a fallback
-    const userRole = (user as any).role || 'user';
+    // Get the user's role from the authenticated user object
+    const userRole = user.role;
     
     if (!roles.includes(userRole)) {
       toast({

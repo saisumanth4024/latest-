@@ -13,7 +13,7 @@ export interface User {
   email: string;
   firstName?: string;
   lastName?: string;
-  role?: UserRole;
+  role: UserRole;
   profileImageUrl?: string;
   createdAt?: string;
   updatedAt?: string;

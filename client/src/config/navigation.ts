@@ -35,7 +35,7 @@ export const navigation: NavSection[] = [
         title: 'Dashboard',
         path: '/',
         icon: ICONS.DASHBOARD,
-        roles: ['guest', 'user', 'admin', 'seller']
+        roles: ['guest', 'user', 'admin', 'seller', 'moderator']
       },
       {
         title: 'Products',
