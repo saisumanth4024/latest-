@@ -43,12 +43,14 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  GripVertical,
 } from 'lucide-react';
 import { useGetOrdersQuery } from '../ordersApi';
-import { OrderStatus } from '@/types/order';
+import { Order, OrderStatus } from '@/types/order';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
+import { DraggableOrderList } from './DraggableOrderList';
 
 // Helper function to get status badge
 const OrderStatusBadge = ({ status }: { status: OrderStatus }) => {
@@ -337,42 +339,18 @@ export default function OrderList() {
         <>
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order #</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">
-                        {order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(order.placedAt), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        <OrderStatusBadge status={order.status} />
-                      </TableCell>
-                      <TableCell>{order.items.length}</TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(order.billing.total)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" asChild size="sm">
-                          <Link href={`/orders/${order.id}`}>View Details</Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <DraggableOrderList 
+                  orders={data.orders} 
+                  onOrdersReordered={(reorderedOrders) => {
+                    // Here we could save the reordered list to backend if needed
+                    toast({
+                      title: "Order prioritization saved",
+                      description: "Your orders have been rearranged successfully.",
+                    });
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
           
