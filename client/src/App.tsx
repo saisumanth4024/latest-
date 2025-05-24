@@ -27,6 +27,9 @@ import WishlistPage from "@/features/wishlist/components/WishlistPage";
 // Import checkout page
 import Checkout from "@/features/checkout/components/Checkout";
 
+// Import reviews pages
+import { ReviewsPage, ModerationPage } from "@/features/reviews/pages";
+
 // Create components for each route
 const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
 import OrdersPage from '@/features/orders/components/OrdersPage';
@@ -107,6 +110,26 @@ export const routes = [
     component: ProfilePage, 
     requireAuth: true,
     title: "Settings",
+  },
+  { 
+    path: "/reviews/:contentType/:contentId", 
+    component: () => (
+      <ReviewsPage 
+        contentType="product" 
+        contentId="1" 
+        title="Customer Reviews" 
+      />
+    ), 
+    requireAuth: false,
+    title: "Reviews",
+    hideInMenu: true,
+  },
+  {
+    path: "/moderation/reviews",
+    component: () => (<ModerationPage userId="admin" />),
+    requireAuth: true,
+    roles: [UserRole.ADMIN, UserRole.MODERATOR],
+    title: "Review Moderation",
   },
   { 
     path: "/admin/dashboard", 

@@ -1,5 +1,6 @@
 // Main component exports
 export { default as ProductsPage } from './components/ProductsPage';
+export { default as ProductDetailPage } from './components/ProductDetailPage';
 
 // Slice exports
 export {

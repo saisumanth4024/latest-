@@ -139,9 +139,9 @@ export const reviewsApi = createApi({
         result
           ? [
               ...result.reviews.map(review => ({ type: 'Review' as const, id: review.id })),
-              { type: 'Review', id: \`\${arg.contentType}_\${arg.contentId}\` }
+              { type: 'Review', id: `${arg.contentType}_${arg.contentId}` }
             ]
-          : [{ type: 'Review', id: \`\${arg.contentType}_\${arg.contentId}\` }]
+          : [{ type: 'Review', id: `${arg.contentType}_${arg.contentId}` }]
     }),
     
     // Get review children (replies, answers)
@@ -165,7 +165,7 @@ export const reviewsApi = createApi({
       }),
       invalidatesTags: (result, error, arg) => [
         { type: 'Review', id: 'LIST' },
-        { type: 'Review', id: \`\${arg.contentType}_\${arg.contentId}\` },
+        { type: 'Review', id: `${arg.contentType}_${arg.contentId}` },
         ...(arg.parentId ? [{ type: 'Review', id: `children_${arg.parentId}` }] : [])
       ]
     }),

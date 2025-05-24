@@ -1,6 +1,7 @@
-export { ReviewList } from './ReviewList';
-export { ReviewForm } from './ReviewForm';
-export { ReviewDetail } from './ReviewDetail';
-export { ReportModal } from './ReportModal';
-export { ModerationQueue } from './ModerationQueue';
-export { ModerationModal } from './ModerationModal';
+// Export all review components for easier imports
+export * from './ReviewList';
+export * from './ReviewForm';
+export * from './ReviewDetail';
+export * from './ModerationQueue';
+export * from './ModerationModal';
+export * from './ReportModal';

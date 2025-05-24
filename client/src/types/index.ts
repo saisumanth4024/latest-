@@ -7,7 +7,8 @@ export enum UserRole {
   GUEST = 'guest',
   USER = 'user',
   ADMIN = 'admin',
-  SELLER = 'seller'
+  SELLER = 'seller',
+  MODERATOR = 'moderator'
 }
 
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
