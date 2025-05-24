@@ -31,12 +31,7 @@ export default function LogoutButton({
         description: "You are being logged out of your account.",
       });
       
-      // First check if we're using Replit auth or traditional auth
-      if (auth.authMethod === 'replit') {
-        // Use Replit's logout endpoint for Replit authentication
-        window.location.replace('/api/logout');
-        return; // Let the redirect handle everything
-      }
+      // Using only traditional authentication
       
       // For traditional auth, make a fetch request to the server logout endpoint to clear session
       const response = await fetch('/api/auth/logout');

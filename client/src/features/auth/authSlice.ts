@@ -5,8 +5,8 @@ import { User, UserStatus } from './types';
 import { UserRole } from '@/config/navigation';
 
 /**
- * Enhanced auth slice to support both traditional and Replit authentication methods
- * This addresses the integration issues between competing auth implementations
+ * Authentication slice for Redux Toolkit
+ * Handles all authentication state management for the application
  */
 
 // Reference to imported User type from ./types.ts
@@ -28,8 +28,8 @@ interface AuthState {
   error: string | null;
   expiresAt: number | null;
   sessions: any[];
-  // Track authentication method for different logout behavior
-  authMethod: 'traditional' | 'replit' | null;
+  // Traditional authentication only
+  authMethod: 'traditional';
 }
 
 // Initial state
@@ -44,7 +44,7 @@ const initialState: AuthState = {
     ? parseInt(localStorage.getItem('auth_expires_at') || '0', 10) 
     : null,
   sessions: [],
-  authMethod: localStorage.getItem('auth_method') as ('traditional' | 'replit' | null),
+  authMethod: 'traditional',
 };
 
 // Login async thunk
@@ -76,24 +76,7 @@ export const login = createAsyncThunk(
   }
 );
 
-// Replit Auth thunk
-export const fetchReplitUser = createAsyncThunk(
-  'auth/fetchReplitUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiRequest('GET', '/api/auth/user');
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to fetch user');
-      }
-      
-      const userData = await response.json();
-      return userData;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Error fetching user data');
-    }
-  }
-);
+// Traditional auth only - no Replit authentication
 
 // Auth slice
 const authSlice = createSlice({
@@ -107,14 +90,12 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.expiresAt = null;
-      state.authMethod = null;
       state.error = null;
       
       // Clear auth data from localStorage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_refresh_token');
       localStorage.removeItem('auth_expires_at');
-      localStorage.removeItem('auth_method');
       localStorage.removeItem('demoUserRole');
       
       // Don't redirect here - let the component handle the redirect
@@ -125,17 +106,13 @@ const authSlice = createSlice({
       token: string; 
       refreshToken: string;
       expiresAt: number;
-      authMethod?: 'traditional' | 'replit';
     }>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
       state.expiresAt = action.payload.expiresAt;
       state.isAuthenticated = true;
-      state.authMethod = action.payload.authMethod || 'traditional';
-      
-      // Store auth method in localStorage
-      localStorage.setItem('auth_method', state.authMethod);
+      state.authMethod = 'traditional';
     },
   },
   extraReducers: (builder) => {
@@ -224,25 +201,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Handle Replit auth
-      .addCase(fetchReplitUser.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchReplitUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.authMethod = 'replit';
-        
-        // Store auth method for persistence
-        localStorage.setItem('auth_method', 'replit');
-      })
-      .addCase(fetchReplitUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
-      });
+      // No Replit auth cases needed
   },
 });
 

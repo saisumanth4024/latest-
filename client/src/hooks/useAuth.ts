@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { 
   selectAuthUser, 
@@ -6,14 +6,13 @@ import {
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,
-  fetchReplitUser,
   logout
 } from '@/features/auth/authSlice';
 import { useToast } from '@/hooks/use-toast';
 
 /**
- * Enhanced auth hook that supports both traditional and Replit authentication methods
- * Automatically attempts to fetch user data via Replit auth if no user is authenticated
+ * Authentication hook that provides access to the auth state
+ * and authentication-related functionality
  */
 export function useAuth() {
   const user = useAppSelector(selectAuthUser);
@@ -23,15 +22,6 @@ export function useAuth() {
   const error = useAppSelector(selectAuthError);
   const dispatch = useAppDispatch();
   const { toast } = useToast();
-
-  // Check for Replit authentication if no user is authenticated in Redux store
-  useEffect(() => {
-    // Only try to fetch Replit user if not already authenticated and not already loading
-    if (!isAuthenticated && !isLoading && !error) {
-      // Attempt to fetch user from Replit auth endpoint
-      dispatch(fetchReplitUser());
-    }
-  }, [isAuthenticated, isLoading, error, dispatch]);
 
   // Logout handler with callback for better performance
   const handleLogout = useCallback(() => {
