@@ -1,19 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute } from 'wouter';
 import { useGetProductByIdQuery } from '../productsApi';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { uploadProductImages, clearImageUploadState } from '../productsSlice';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, Truck, ShieldCheck, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Truck, ShieldCheck, ArrowLeft, ChevronRight, ImageIcon, Check, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import ImageUploader, { UploadedImage } from './ImageUploader';
 
 const ProductDetailPage: React.FC = () => {
   const [match, params] = useRoute('/products/:productId');
   const productId = parseInt(params?.productId || '0');
   
+  const dispatch = useAppDispatch();
+  const { status: uploadStatus, error: uploadError } = useAppSelector(
+    (state) => state.products.imageUpload
+  );
+  const { toast } = useToast();
+  
   const { data: product, isLoading, error } = useGetProductByIdQuery(productId);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Reset upload state when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearImageUploadState());
+    };
+  }, [dispatch]);
+  
+  // Handle successful image upload
+  useEffect(() => {
+    if (uploadStatus === 'succeeded') {
+      toast({
+        title: 'Images Uploaded Successfully',
+        description: 'Your product images have been updated.',
+        variant: 'success',
+      });
+      setIsEditMode(false);
+      dispatch(clearImageUploadState());
+    } else if (uploadStatus === 'failed' && uploadError) {
+      toast({
+        title: 'Upload Failed',
+        description: uploadError,
+        variant: 'destructive',
+      });
+    }
+  }, [uploadStatus, uploadError, toast, dispatch]);
+  
+  // Handle the save action for uploaded images
+  const handleSaveImages = () => {
+    if (uploadedImages.length > 0) {
+      dispatch(uploadProductImages({
+        productId,
+        images: uploadedImages
+      }));
+    } else {
+      toast({
+        title: 'No Images Selected',
+        description: 'Please select at least one image to upload',
+        variant: 'warning',
+      });
+    }
+  };
 
   // Placeholder images for demo
   const demoImages = [
@@ -276,6 +331,10 @@ const ProductDetailPage: React.FC = () => {
               <TabsTrigger value="description">Description</TabsTrigger>
               <TabsTrigger value="specifications">Specifications</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              <TabsTrigger value="images">
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Images
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="description" className="p-4">
@@ -320,6 +379,49 @@ const ProductDetailPage: React.FC = () => {
                     This is a demo product. Reviews will be available in the production version.
                   </p>
                 </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="images" className="p-4">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-medium">Product Images</h3>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setIsEditMode(!isEditMode)}
+                  >
+                    {isEditMode ? 'Cancel Editing' : 'Edit Images'}
+                  </Button>
+                </div>
+                
+                {isEditMode ? (
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
+                    <ImageUploader 
+                      onImagesChange={setUploadedImages}
+                      existingImages={(displayProduct.images || [displayProduct.image])}
+                      maxImages={8}
+                      label="Product Images"
+                      helpText="Upload high-quality images of your product. First image will be used as the main product image."
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {(displayProduct.images || [displayProduct.image]).map((image, index) => (
+                      <div key={index} className="aspect-square rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <img 
+                          src={image} 
+                          alt={`${displayProduct.name} view ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="p-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {index === 0 ? 'Main Image' : `Image ${index + 1}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
