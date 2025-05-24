@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import ErrorBoundary, { withErrorBoundary } from "@/components/ErrorBoundary";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import NavigationToast from "@/features/navigation/NavigationToast";
+import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
 
 // Global loading component for lazy-loaded routes
@@ -343,6 +344,7 @@ function App() {
     <>
       <NavigationToast />
       <AppRouter />
+      <Toaster />
     </>
   );
 }

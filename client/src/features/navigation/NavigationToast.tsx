@@ -1,73 +1,72 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useDispatch } from 'react-redux';
-import { navigateTo } from './navigationSlice';
-import { toast } from '@/hooks/use-toast';
-import { MoveRight } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useToast } from '@/hooks/use-toast';
+import { navigateTo, selectCurrentPath } from './navigationSlice';
+import { routes } from '@/App';
 
-// Map of routes to friendly names
-const routeNames: Record<string, string> = {
-  '/': 'Home',
-  '/dashboard': 'Dashboard',
-  '/products': 'Products',
-  '/profile': 'Profile',
-  '/login': 'Login',
-  '/signup': 'Sign Up',
-  '/search': 'Search Results',
-  '/cart': 'Shopping Cart',
-  '/checkout': 'Checkout',
-  '/orders': 'Orders',
-  '/settings': 'Settings',
-  '/help': 'Help & Support',
-  '/about': 'About Us',
-  '/contact': 'Contact Us',
-};
-
-// Get a friendly name for a route, falling back to a formatted path
-const getRouteName = (path: string): string => {
-  // Check if we have a predefined name
-  if (routeNames[path]) return routeNames[path];
-  
-  // Check for dynamic routes like /products/123
-  const segments = path.split('/').filter(Boolean);
-  if (segments.length > 1) {
-    const baseRoute = `/${segments[0]}`;
-    if (routeNames[baseRoute]) {
-      // For detail pages like /products/123
-      return `${routeNames[baseRoute]} Detail`;
-    }
-  }
-  
-  // Format the path as a fallback
-  return segments.length > 0 
-    ? segments.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') 
-    : 'Unknown Page';
-};
-
-export const NavigationToast: React.FC = () => {
+/**
+ * Component that shows toast notifications when navigating between pages
+ * This is a "ghost" component that doesn't render anything visible
+ */
+const NavigationToast = () => {
   const [location] = useLocation();
   const dispatch = useDispatch();
+  const currentPath = useSelector(selectCurrentPath);
+  const { toast } = useToast();
   
-  useEffect(() => {
-    // Update Redux state with the new route
-    dispatch(navigateTo(location));
+  // Helper function to get the route name from the path
+  const getRouteName = (path: string): string => {
+    // Default name if route not found
+    let routeName = 'Unknown Page';
     
-    // Show toast notification
-    const routeName = getRouteName(location);
-    
-    toast({
-      title: (
-        <div className="flex items-center gap-2">
-          <MoveRight className="h-4 w-4" />
-          <span>Navigated to {routeName}</span>
-        </div>
-      ),
-      description: "You are now viewing the " + routeName + " page",
-      duration: 3000, // 3 seconds
-      variant: "default",
+    // Look up the name in the routes array
+    const route = routes.find(r => {
+      // Exact match
+      if (r.path === path) return true;
+      
+      // Dynamic route with parameters (e.g., /products/:id)
+      if (r.path?.includes(':')) {
+        const routeParts = r.path.split('/');
+        const pathParts = path.split('/');
+        
+        // Must have same number of parts
+        if (routeParts.length !== pathParts.length) return false;
+        
+        // Check each part, allowing parameters to match anything
+        return routeParts.every((part, i) => {
+          return part.startsWith(':') || part === pathParts[i];
+        });
+      }
+      
+      return false;
     });
     
-  }, [location, dispatch]);
+    if (route) {
+      routeName = route.title || 'Page';
+    }
+    
+    return routeName;
+  };
+  
+  useEffect(() => {
+    // Only dispatch and show toast if this is a new navigation
+    if (location !== currentPath) {
+      // Update the navigation state
+      dispatch(navigateTo(location));
+    
+      // Show toast notification
+      const routeName = getRouteName(location);
+      
+      toast({
+        title: `Navigated to ${routeName}`,
+        description: "You are now viewing the " + routeName + " page",
+        duration: 3000, // 3 seconds
+        variant: "default",
+      });
+    }
+    
+  }, [location, dispatch, currentPath, toast]);
   
   // This component doesn't render anything visible
   return null;

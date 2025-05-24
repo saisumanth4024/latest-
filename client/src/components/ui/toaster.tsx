@@ -1,5 +1,3 @@
-import React from "react"
-
 import {
   Toast,
   ToastClose,
@@ -9,6 +7,7 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
+import { MoveRight } from "lucide-react"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -19,7 +18,10 @@ export function Toaster() {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
+              {title && <ToastTitle className="flex items-center gap-2">
+                {props.variant === "default" && <MoveRight className="h-4 w-4" />}
+                {title}
+              </ToastTitle>}
               {description && (
                 <ToastDescription>{description}</ToastDescription>
               )}

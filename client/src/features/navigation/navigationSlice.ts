@@ -1,19 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
 
-interface NavigationState {
-  currentRoute: string;
-  previousRoute: string | null;
-  history: {
-    path: string;
-    timestamp: number;
-  }[];
+export interface NavigationState {
+  previousPath: string | null;
+  currentPath: string | null;
+  navigationHistory: string[];
+  lastTransitionTime: number | null;
 }
 
 const initialState: NavigationState = {
-  currentRoute: '/',
-  previousRoute: null,
-  history: [],
+  previousPath: null,
+  currentPath: null,
+  navigationHistory: [],
+  lastTransitionTime: null,
 };
 
 export const navigationSlice = createSlice({
@@ -21,35 +20,35 @@ export const navigationSlice = createSlice({
   initialState,
   reducers: {
     navigateTo: (state, action: PayloadAction<string>) => {
-      // Store previous route
-      state.previousRoute = state.currentRoute;
+      // Update previous path
+      state.previousPath = state.currentPath;
       
-      // Update current route
-      state.currentRoute = action.payload;
+      // Set new current path
+      state.currentPath = action.payload;
       
       // Add to history (limited to last 10 entries)
-      state.history.unshift({
-        path: action.payload,
-        timestamp: Date.now(),
-      });
+      state.navigationHistory = [
+        action.payload,
+        ...state.navigationHistory.slice(0, 9)
+      ];
       
-      // Keep history size manageable
-      if (state.history.length > 10) {
-        state.history = state.history.slice(0, 10);
-      }
+      // Set transition time
+      state.lastTransitionTime = Date.now();
     },
-    clearNavigationHistory: (state) => {
-      state.history = [];
+    
+    clearHistory: (state) => {
+      state.navigationHistory = [];
     },
   },
 });
 
 // Export actions
-export const { navigateTo, clearNavigationHistory } = navigationSlice.actions;
+export const { navigateTo, clearHistory } = navigationSlice.actions;
 
 // Export selectors
-export const selectCurrentRoute = (state: RootState) => state.navigation.currentRoute;
-export const selectPreviousRoute = (state: RootState) => state.navigation.previousRoute;
-export const selectNavigationHistory = (state: RootState) => state.navigation.history;
+export const selectCurrentPath = (state: RootState) => state.navigation.currentPath;
+export const selectPreviousPath = (state: RootState) => state.navigation.previousPath;
+export const selectNavigationHistory = (state: RootState) => state.navigation.navigationHistory;
+export const selectLastTransitionTime = (state: RootState) => state.navigation.lastTransitionTime;
 
 export default navigationSlice.reducer;
