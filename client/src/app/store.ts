@@ -14,6 +14,8 @@ import contentReducer from '@/features/content/contentSlice';
 import { contentApi } from '@/features/content/contentApi';
 import reviewsReducer from '@/features/reviews/reviewsSlice';
 import { reviewsApi } from '@/features/reviews/reviewsApi';
+import searchReducer from '@/features/search/searchSlice';
+import { searchApi } from '@/features/search/searchApi';
 
 export const store = configureStore({
   reducer: {
@@ -26,12 +28,14 @@ export const store = configureStore({
     notifications: notificationsReducer,
     content: contentReducer,
     reviews: reviewsReducer,
+    search: searchReducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
     [contentApi.reducerPath]: contentApi.reducer,
     [reviewsApi.reducerPath]: reviewsApi.reducer,
+    [searchApi.reducerPath]: searchApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -138,7 +142,8 @@ export const store = configureStore({
       dashboardApi.middleware, 
       notificationsApi.middleware,
       contentApi.middleware,
-      reviewsApi.middleware
+      reviewsApi.middleware,
+      searchApi.middleware
     ),
 });
 
