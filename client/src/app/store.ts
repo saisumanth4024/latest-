@@ -3,21 +3,37 @@ import productsReducer from '@/features/products/productsSlice';
 import { productsApi } from '@/features/products/productsApi';
 import cartReducer from '@/features/cart/cartSlice';
 import wishlistReducer from '@/features/wishlist/wishlistSlice';
+import checkoutReducer from '@/features/checkout/checkoutSlice';
 
 export const store = configureStore({
   reducer: {
     products: productsReducer,
     cart: cartReducer,
     wishlist: wishlistReducer,
+    checkout: checkoutReducer,
     [productsApi.reducerPath]: productsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['cart/addToCart/fulfilled', 'wishlist/addToWishlist/fulfilled'],
+        ignoredActions: [
+          'cart/addToCart/fulfilled', 
+          'wishlist/addToWishlist/fulfilled',
+          'checkout/processPayment/fulfilled',
+          'checkout/placeOrder/fulfilled',
+          'checkout/requestOTP/fulfilled'
+        ],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ['payload.createdAt', 'payload.updatedAt', 'payload.addedAt'],
+        ignoredActionPaths: [
+          'payload.createdAt', 
+          'payload.updatedAt', 
+          'payload.addedAt',
+          'payload.timestamp',
+          'payload.expiresAt',
+          'payload.placedAt',
+          'payload.estimatedDelivery'
+        ],
         // Ignore these paths in the state
         ignoredPaths: [
           'cart.cart.createdAt', 
@@ -26,7 +42,12 @@ export const store = configureStore({
           'cart.cart.items.updatedAt',
           'wishlist.wishlists.createdAt',
           'wishlist.wishlists.updatedAt',
-          'wishlist.wishlists.items.addedAt'
+          'wishlist.wishlists.items.addedAt',
+          'checkout.order.placedAt',
+          'checkout.order.estimatedDelivery',
+          'checkout.order.transaction.timestamp',
+          'checkout.otpVerification.expiresAt',
+          'checkout.savedPaymentMethods.lastUsed'
         ],
       },
     }).concat(productsApi.middleware),
