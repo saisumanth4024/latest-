@@ -8,7 +8,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import GlobalSearch from '@/features/search/components/GlobalSearch';
 import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface HeaderProps {
@@ -21,6 +21,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   
   // Get cart items count from Redux store
   const cartItemsCount = useAppSelector((state) => state.cart.cart?.items?.length || 0);
+  
+  // Get wishlist items count from Redux store
+  const wishlistItemsCount = useAppSelector((state) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
   
   return (
     <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm py-2 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
@@ -65,6 +68,21 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         <div className="relative hidden sm:block w-72">
           <GlobalSearch />
         </div>
+        
+        {/* Wishlist Icon */}
+        <Link href="/wishlists">
+          <div className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
+            <Heart className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            {wishlistItemsCount > 0 && (
+              <Badge 
+                variant="secondary"
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+              >
+                {wishlistItemsCount > 99 ? '99+' : wishlistItemsCount}
+              </Badge>
+            )}
+          </div>
+        </Link>
         
         {/* Cart Icon */}
         <Link href="/cart">
