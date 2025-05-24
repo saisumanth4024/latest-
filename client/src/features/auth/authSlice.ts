@@ -35,17 +35,43 @@ interface AuthState {
 // Initial state
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('auth_token'),
-  refreshToken: localStorage.getItem('auth_refresh_token'),
-  isAuthenticated: !!localStorage.getItem('auth_token'),
+  token: null,
+  refreshToken: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null,
-  expiresAt: localStorage.getItem('auth_expires_at') 
-    ? parseInt(localStorage.getItem('auth_expires_at') || '0', 10) 
-    : null,
+  expiresAt: null,
   sessions: [],
   authMethod: 'traditional',
 };
+
+// Load persisted auth state if available
+try {
+  const token = localStorage.getItem('auth_token');
+  const refreshToken = localStorage.getItem('auth_refresh_token');
+  const expiresAtStr = localStorage.getItem('auth_expires_at');
+  
+  if (token && refreshToken && expiresAtStr) {
+    const expiresAt = parseInt(expiresAtStr, 10);
+    // Only restore if token hasn't expired
+    if (expiresAt && Date.now() < expiresAt * 1000) {
+      initialState.token = token;
+      initialState.refreshToken = refreshToken;
+      initialState.expiresAt = expiresAt;
+      initialState.isAuthenticated = true;
+    } else {
+      // Clear expired tokens
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_refresh_token');
+      localStorage.removeItem('auth_expires_at');
+    }
+  }
+} catch (error) {
+  // If there's any error parsing the stored auth state, reset to default
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_refresh_token');
+  localStorage.removeItem('auth_expires_at');
+}
 
 // Login async thunk
 export const login = createAsyncThunk(
@@ -76,7 +102,15 @@ export const login = createAsyncThunk(
   }
 );
 
-// Traditional auth only - no Replit authentication
+// Temporary empty function to satisfy imports while transitioning away from Replit auth
+export const fetchReplitUser = createAsyncThunk(
+  'auth/fetchReplitUser',
+  async (_, { rejectWithValue }) => {
+    // This is a no-op function that immediately returns null
+    // It exists only to prevent import errors during the transition
+    return rejectWithValue('Replit authentication has been removed');
+  }
+);
 
 // Auth slice
 const authSlice = createSlice({
@@ -84,22 +118,25 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      // Clear state
+      // Clear all state
       state.user = null;
       state.token = null;
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.expiresAt = null;
       state.error = null;
+      state.sessions = [];
       
-      // Clear auth data from localStorage
+      // Clear ALL auth-related data from localStorage and sessionStorage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_refresh_token');
       localStorage.removeItem('auth_expires_at');
       localStorage.removeItem('demoUserRole');
+      localStorage.removeItem('auth');
+      sessionStorage.removeItem('redirectAfterLogin');
       
+      // Any other auth-related items should be cleared here
       // Don't redirect here - let the component handle the redirect
-      // This prevents race conditions and improves the user experience
     },
     setCredentials: (state, action: PayloadAction<{ 
       user: User; 
