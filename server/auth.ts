@@ -143,7 +143,8 @@ export async function setupAuth(app: Express) {
       if (err) {
         return res.status(500).json({ message: "Failed to logout" });
       }
-      res.json({ success: true });
+      // Instead of returning JSON, redirect to the homepage
+      res.redirect('/');
     });
   });
 }
