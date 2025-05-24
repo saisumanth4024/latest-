@@ -73,8 +73,8 @@ export const fetchCart = createAsyncThunk(
             productId: '101',
             product: {
               name: 'Premium Headphones',
-              brand: 'AudioTech',
-              imageUrl: null
+              brand: { id: '1', name: 'AudioTech', slug: 'audiotech' },
+              imageUrl: ''
             },
             variantId: 'v1',
             quantity: 1,
@@ -99,8 +99,8 @@ export const fetchCart = createAsyncThunk(
             productId: '102',
             product: {
               name: 'Wireless Mouse',
-              brand: 'TechGear',
-              imageUrl: null
+              brand: { id: '2', name: 'TechGear', slug: 'techgear' },
+              imageUrl: ''
             },
             quantity: 1,
             unitPrice: 49.99,
