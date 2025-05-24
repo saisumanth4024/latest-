@@ -1,303 +1,121 @@
-import { useAppDispatch } from '@/app/hooks';
-import { Product } from '../types';
-import { 
-  Card, 
-  CardContent,
-  CardFooter,
-  Badge,
-  Button 
-} from '@/components/ui';
-import { 
-  ShoppingCart,
-  Heart,
-  Star,
-  Bookmark,
-  Eye 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatNumber } from '@/lib/utils';
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Star, ShoppingCart, Heart } from 'lucide-react';
 
 interface ProductCardProps {
-  product: Product;
-  className?: string;
-  layoutMode?: 'grid' | 'list';
+  product: {
+    id: number | string;
+    name: string;
+    description: string;
+    price: number;
+    discountPrice?: number;
+    image: string;
+    category: string;
+    brand: string;
+    rating: number | string;
+    reviews: number;
+    inStock: boolean;
+    isNew: boolean;
+    tags: string[];
+  };
+  onClick?: (product: any) => void;
 }
 
-const ProductCard = ({ product, className, layoutMode = 'grid' }: ProductCardProps) => {
-  const dispatch = useAppDispatch();
-  
-  // Determine if the card is in grid or list mode
-  const isList = layoutMode === 'list';
-  
-  // Calculate discount percentage
-  const discountPercentage = product.originalPrice && product.price < product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
-  
-  // Truncate long product names
-  const truncatedName = isList
-    ? product.name
-    : product.name.length > 60
-      ? `${product.name.substring(0, 57)}...`
-      : product.name;
-  
-  // Handle add to cart
-  const handleAddToCart = () => {
-    // Dispatch add to cart action (to be implemented)
-    console.log('Add to cart:', product.id);
+const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
+  const handleClick = () => {
+    if (onClick) {
+      onClick(product);
+    }
   };
-  
-  // Handle add to wishlist
-  const handleAddToWishlist = () => {
-    // Dispatch add to wishlist action (to be implemented)
-    console.log('Add to wishlist:', product.id);
-  };
-  
-  // Handle quick view
-  const handleQuickView = () => {
-    // Dispatch open product modal action (to be implemented)
-    console.log('Quick view:', product.id);
-  };
-  
-  // Render stars for product rating
-  const renderStars = () => {
-    const fullStars = Math.floor(product.rating);
-    const hasHalfStar = product.rating % 1 >= 0.5;
-    
-    return (
-      <div className="flex">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Star
-            key={index}
-            className={cn(
-              "h-4 w-4",
-              index < fullStars
-                ? "text-yellow-400 fill-yellow-400"
-                : index === fullStars && hasHalfStar
-                  ? "text-yellow-400 fill-yellow-400 mask-star-half"
-                  : "text-gray-300"
-            )}
-          />
-        ))}
-        <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-          ({product.reviewCount})
-        </span>
-      </div>
-    );
-  };
-  
-  if (isList) {
-    // List view version of the card
-    return (
-      <Card className={cn("overflow-hidden hover:shadow-md transition-shadow", className)}>
-        <div className="flex flex-col sm:flex-row">
-          {/* Product image */}
-          <div className="w-full sm:w-1/4 relative bg-gray-100 dark:bg-gray-800">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="object-contain w-full h-48 sm:h-full"
-            />
-            
-            {/* Discount badge */}
-            {discountPercentage > 0 && (
-              <Badge className="absolute top-2 left-2 bg-red-600">
-                {discountPercentage}% OFF
-              </Badge>
-            )}
-            
-            {/* New badge */}
-            {product.isNew && (
-              <Badge 
-                className="absolute top-2 right-2 bg-blue-600"
-                variant="secondary"
-              >
-                NEW
-              </Badge>
-            )}
-          </div>
-          
-          {/* Product details */}
-          <div className="flex-1 p-4 flex flex-col justify-between">
-            <div>
-              {/* Brand */}
-              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                {product.brand}
-              </div>
-              
-              {/* Product name */}
-              <h3 className="text-lg font-semibold mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                {truncatedName}
-              </h3>
-              
-              {/* Rating */}
-              <div className="mb-2">
-                {renderStars()}
-              </div>
-              
-              {/* Price */}
-              <div className="flex items-center mb-3">
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  ${formatNumber(product.price)}
-                </span>
-                
-                {discountPercentage > 0 && (
-                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                    ${formatNumber(product.originalPrice || 0)}
-                  </span>
-                )}
-              </div>
-              
-              {/* Description */}
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
-                {product.description}
-              </p>
-              
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {product.tags?.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={handleAddToCart}
-                className="flex-1"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add to Cart
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleAddToWishlist}
-                className="h-9 w-9"
-              >
-                <Heart className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleQuickView}
-                className="h-9 w-9"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-  
-  // Grid view version of the card
+
   return (
-    <Card className={cn("overflow-hidden h-full hover:shadow-md transition-shadow", className)}>
-      {/* Product image */}
-      <div className="relative h-48 bg-gray-100 dark:bg-gray-800">
-        <img
-          src={product.imageUrl}
+    <div 
+      className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
+      onClick={handleClick}
+    >
+      <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
+        <img 
+          src={product.image}
           alt={product.name}
-          className="object-contain w-full h-full"
+          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+          loading="lazy"
         />
         
-        {/* Discount badge */}
-        {discountPercentage > 0 && (
-          <Badge className="absolute top-2 left-2 bg-red-600">
-            {discountPercentage}% OFF
+        {product.discountPrice && (
+          <Badge className="absolute top-2 right-2 bg-red-500 text-white font-medium">
+            {Math.round(((product.price - (product.discountPrice || 0)) / product.price) * 100)}% OFF
           </Badge>
         )}
         
-        {/* New badge */}
         {product.isNew && (
-          <Badge 
-            className="absolute top-2 right-2 bg-blue-600"
-            variant="secondary"
-          >
-            NEW
+          <Badge className="absolute top-2 left-2 bg-primary text-white font-medium">
+            New
           </Badge>
         )}
+      </div>
+      
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-1">
+          <Badge variant="outline" className="capitalize text-xs bg-primary/10">
+            {product.category}
+          </Badge>
+          
+          <div className="flex items-center">
+            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 mr-1" />
+            <span className="text-xs font-medium">{product.rating}</span>
+          </div>
+        </div>
         
-        {/* Quick actions */}
-        <div className="absolute -bottom-10 left-0 right-0 flex justify-center space-x-1 p-2 bg-black/40 backdrop-blur-sm group-hover:bottom-0 transition-all opacity-0 group-hover:opacity-100">
+        <h3 className="font-medium text-gray-800 dark:text-gray-200 line-clamp-2 h-12 mb-1">{product.name}</h3>
+        
+        <div className="flex items-center gap-2 mb-3">
+          <span className="font-bold text-primary">${product.discountPrice || product.price}</span>
+          {product.discountPrice && (
+            <span className="text-gray-400 text-sm line-through">${product.price}</span>
+          )}
+        </div>
+        
+        <div className="flex gap-2">
           <Button
-            variant="outline"
-            size="icon"
-            onClick={handleQuickView}
-            className="h-8 w-8 bg-white text-black hover:bg-gray-100 hover:text-black"
+            variant="default"
+            size="sm"
+            className="flex-1 py-1 h-8"
           >
-            <Eye className="h-4 w-4" />
+            <ShoppingCart className="h-3.5 w-3.5 mr-1" />
+            <span className="text-xs">Add</span>
           </Button>
-          
           <Button
             variant="outline"
             size="icon"
-            onClick={handleAddToWishlist}
-            className="h-8 w-8 bg-white text-black hover:bg-gray-100 hover:text-black"
+            className="h-8 w-8"
           >
-            <Heart className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleAddToCart}
-            className="h-8 w-8 bg-white text-black hover:bg-gray-100 hover:text-black"
-          >
-            <ShoppingCart className="h-4 w-4" />
+            <Heart className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
-      
-      <CardContent className="p-3">
-        {/* Brand */}
-        <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-          {product.brand}
-        </div>
-        
-        {/* Product name */}
-        <h3 className="text-sm font-medium mb-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-2">
-          {truncatedName}
-        </h3>
-        
-        {/* Rating */}
-        <div className="mb-2">
-          {renderStars()}
-        </div>
-        
-        {/* Price */}
-        <div className="flex items-center">
-          <span className="text-base font-bold text-gray-900 dark:text-white">
-            ${formatNumber(product.price)}
-          </span>
-          
-          {discountPercentage > 0 && (
-            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-              ${formatNumber(product.originalPrice || 0)}
-            </span>
-          )}
-        </div>
-      </CardContent>
-      
-      <CardFooter className="p-3 pt-0">
-        <Button 
-          onClick={handleAddToCart}
-          className="w-full"
-          size="sm"
-        >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
-        </Button>
-      </CardFooter>
-    </Card>
+    </div>
   );
 };
 
-export default ProductCard;
+export const ProductCardSkeleton: React.FC = () => {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse">
+      <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+      <div className="p-4 space-y-3">
+        <div className="flex justify-between">
+          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/5"></div>
+        </div>
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        <div className="flex gap-2">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default React.memo(ProductCard);

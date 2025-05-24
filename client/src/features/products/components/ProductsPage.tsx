@@ -9,7 +9,8 @@ import {
 import ProductGrid from './ProductGrid';
 import SearchBar from './SearchBar';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, RefreshCw, SlidersHorizontal, Star, ShoppingCart, Heart } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Sample product data with realistic names and working images
@@ -290,72 +291,11 @@ const ProductsPage: React.FC = () => {
                 </div>
                 
                 {/* Product grid with sample data */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {data.products.map((product) => (
-                    <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                      <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <img 
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
-                          loading="lazy"
-                        />
-                        
-                        {product.discountPrice && (
-                          <Badge className="absolute top-2 right-2 bg-red-500 text-white font-medium">
-                            {Math.round(((product.price - (product.discountPrice || 0)) / product.price) * 100)}% OFF
-                          </Badge>
-                        )}
-                        
-                        {product.isNew && (
-                          <Badge className="absolute top-2 left-2 bg-primary text-white font-medium">
-                            New
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-1">
-                          <Badge variant="outline" className="capitalize text-xs bg-primary/10">
-                            {product.category}
-                          </Badge>
-                          
-                          <div className="flex items-center">
-                            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 mr-1" />
-                            <span className="text-xs font-medium">{product.rating}</span>
-                          </div>
-                        </div>
-                        
-                        <h3 className="font-medium text-gray-800 dark:text-gray-200 line-clamp-2 h-12 mb-1">{product.name}</h3>
-                        
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="font-bold text-primary">${product.discountPrice || product.price}</span>
-                          {product.discountPrice && (
-                            <span className="text-gray-400 text-sm line-through">${product.price}</span>
-                          )}
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="flex-1 py-1 h-8"
-                          >
-                            <ShoppingCart className="h-3.5 w-3.5 mr-1" />
-                            <span className="text-xs">Add</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Heart className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <ProductGrid 
+                  filters={filters}
+                  columns={3}
+                  limit={12}
+                />
                 
                 {/* Pagination */}
                 <div className="mt-8 flex justify-center">
