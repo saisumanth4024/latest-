@@ -53,11 +53,21 @@ export default function LoginForm() {
       const resultAction = await dispatch(login(credentials));
       
       if (login.fulfilled.match(resultAction)) {
+        // Check if there's a redirect URL stored in session storage
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/';
+        
+        // Clear the redirect URL from session storage
+        sessionStorage.removeItem('redirectAfterLogin');
+        
+        // Show success toast
         toast({
-          title: "Login successful",
+          title: "Welcome back!",
           description: "You have been logged in successfully.",
+          variant: "success"
         });
-        setLocation('/');
+        
+        // Redirect to the stored path or home if none exists
+        setLocation(redirectPath);
       } else if (login.rejected.match(resultAction)) {
         toast({
           title: "Login failed",

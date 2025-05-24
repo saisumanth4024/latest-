@@ -236,10 +236,16 @@ function ProtectedRoute({
   const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-
-  // Redirect to login if not authenticated
+  
+  // Store the current path for redirection after login
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
+      // Save current path for redirection after login
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/signup') {
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+      }
+      // Redirect to login
       navigate("/login");
     }
   }, [isLoading, isAuthenticated, navigate]);

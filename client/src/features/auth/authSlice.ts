@@ -214,11 +214,11 @@ const authSlice = createSlice({
       })
       .addCase(signup.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken;
-        state.expiresAt = action.payload.expiresAt;
-        state.isAuthenticated = true;
+        // Don't set auth state on signup success
+        // The user should be redirected to login instead
+        // This is intentional as per requirements
+        state.isAuthenticated = false;
+        state.error = null;
       })
       .addCase(signup.rejected, (state, action) => {
         state.isLoading = false;
