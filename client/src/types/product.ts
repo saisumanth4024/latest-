@@ -116,11 +116,29 @@ export interface Product {
   /** Tags */
   tags: string[];
   /** Brand */
-  brand?: ProductBrand;
+  brand?: ProductBrand | string;
   /** Main product image */
   imageUrl: string;
+  /** Alternative image URL field (used in mock data) */
+  image?: string;
   /** All product images */
   images: ProductImage[];
+  /** Available product colors */
+  colors?: string[];
+  /** Price range (e.g., "0-50", "50-100", etc.) */
+  priceRange?: string;
+  /** Discount percentage */
+  discount?: number;
+  /** Discounted price */
+  discountPrice?: number;
+  /** Product category string (used in mock data) */
+  category?: string;
+  /** Detailed product specifications */
+  specs?: Record<string, string | number>;
+  /** Product creation date (string format for API response) */
+  createdAt?: string | Date;
+  /** Product update date (string format for API response) */
+  updatedAt?: string | Date;
   /** Product variants */
   variants: ProductVariant[];
   /** SEO metadata */

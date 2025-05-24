@@ -14,13 +14,16 @@ import {
   Share2,
   ShoppingCart,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Info,
+  Check
 } from 'lucide-react';
 import { useGetProductByIdQuery, useGetProductsQuery } from '../productsApi';
 import ProductImageGallery from './ProductImageGallery';
 import ProductReviews from './ProductReviews';
 import ProductRecommendations from './ProductRecommendations';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ProductDetails: React.FC = () => {
   const params = useParams<{ id: string }>();
@@ -171,7 +174,7 @@ const ProductDetails: React.FC = () => {
         <div>
           <ProductImageGallery 
             mainImage={product.image} 
-            images={[product.image]} 
+            images={product.images || [product.image]} 
             productName={product.name}
           />
         </div>
@@ -230,7 +233,7 @@ const ProductDetails: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium mb-3">Color</h3>
               <div className="flex flex-wrap gap-2">
-                {colors.map((color, idx) => (
+                {colors.map((color: string, idx: number) => (
                   <button
                     key={idx}
                     className={`w-8 h-8 rounded-full border-2 transition-all ${
@@ -410,6 +413,42 @@ const ProductDetails: React.FC = () => {
                   <td className="py-2 font-medium">Tags</td>
                   <td className="py-2">{product.tags.join(', ')}</td>
                 </tr>
+                {/* Show price range if available */}
+                {product.priceRange && (
+                  <tr className="border-b">
+                    <td className="py-2 font-medium">Price Range</td>
+                    <td className="py-2">{product.priceRange}</td>
+                  </tr>
+                )}
+                {/* Show available colors if available */}
+                {product.colors && product.colors.length > 0 && (
+                  <tr className="border-b">
+                    <td className="py-2 font-medium">Available Colors</td>
+                    <td className="py-2">
+                      <div className="flex flex-wrap gap-2">
+                        {product.colors.map((color, idx) => (
+                          <div 
+                            key={idx} 
+                            className="flex items-center"
+                          >
+                            <div 
+                              className="w-4 h-4 rounded-full mr-1" 
+                              style={{ backgroundColor: color.toLowerCase() }}
+                            ></div>
+                            <span>{color}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Show technical specifications if available */}
+                {product.specs && Object.entries(product.specs).map(([key, value]) => (
+                  <tr key={key} className="border-b">
+                    <td className="py-2 font-medium">{key.charAt(0).toUpperCase() + key.slice(1)}</td>
+                    <td className="py-2">{value as React.ReactNode}</td>
+                  </tr>
+                ))}
                 <tr>
                   <td className="py-2 font-medium">Release Date</td>
                   <td className="py-2">{new Date(product.createdAt).toLocaleDateString()}</td>
