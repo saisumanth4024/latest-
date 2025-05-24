@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     const selectedRole = e.target.value as UserRoleEnum;
     
     // Store the selected role in localStorage for demo purposes
-    localStorage.set('demoUserRole', { role: selectedRole });
+    window.localStorage.setItem('demoUserRole', JSON.stringify({ role: selectedRole }));
     
     // Reload the page to simulate a role change
     // In a real app, this would be handled by the auth system

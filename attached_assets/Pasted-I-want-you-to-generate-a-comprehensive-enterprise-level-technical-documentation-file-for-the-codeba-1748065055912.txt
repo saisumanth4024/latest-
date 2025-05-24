@@ -1,0 +1,64 @@
+I want you to generate a comprehensive, enterprise-level technical documentation file for the codebase you built so far, covering Parts 1 to 17 as per our instructions.
+
+**This documentation must include:**
+
+1. **Project Overview:**
+   - What is the app about? (E-commerce + content + admin, FAANG-level, scalable)
+   - Which tech stack is used and why (React.js, TypeScript, Redux Toolkit + RTK Query, Tailwind CSS, etc.)
+   - How features are architected to plug into a single global app shell, store, router, and UI provider stack.
+
+2. **Folder Structure Explained:**
+   - List every top-level folder and its purpose (app, features, ui, layout, utils, types, styles, tests, __mocks__, index.tsx)
+   - Describe the role and integration point of every subfolder (auth, products, cart, orders, dashboard, admin, profile, reviews, content, etc.)
+   - Confirm every folder/subfolder has barrels and uses absolute imports.
+
+3. **Redux Toolkit State Management:**
+   - List all feature slices and RTK Query endpoints created (auth, products, cart, orders, dashboard, admin, profile, reviews, notifications, etc.)
+   - Show how global state is composed, typed, persisted (localStorage), and how async flows (RTK Query/thunks) are wired up.
+   - Detail how role-based access (RBAC), toasts, modals, notifications, and UI state are all Redux-managed.
+
+4. **Routing & Navigation:**
+   - How the global router (React Router v6+) is set up
+   - Nested routes, protected routes, RBAC controls, lazy-loading where used
+   - Sidebar/menu config and how it adapts for roles and devices
+
+5. **UI System:**
+   - Describe how all UI primitives (modals, toasts, dropdowns, tabs, skeleton, error boundary) are global, accessible, and Redux-driven
+   - How forms, dialogs, notifications are standardized
+   - Theme system (dark/light mode, persisted via Redux/localStorage)
+
+6. **Features and Flows (For Each Major Feature up to Part 17):**
+   - Auth (login, signup, RBAC, SSO/social, protected routes, role switching)
+   - Products (search, filter, grid, sort, infinite scroll, detail/builder)
+   - Cart & Wishlist (multi-seller, guest/user, persistence, promo, etc)
+   - Orders (history, returns, tracking, invoices, polling)
+   - Profile & Preferences (avatar, 2FA, settings, accessibility)
+   - Reviews/Community (reviews, upvotes, replies, abuse, moderation)
+   - Dashboard & Analytics (charts, widgets, role-aware analytics)
+   - Admin (CRUD, roles, logs, impersonation, settings)
+   - Content/Media (CMS, banners, video player, categories)
+   - Notifications (system/user, toasts, queue, ARIA)
+   - Delivery/Logistics (address, tracking, ETA, geocode, etc)
+   - Help/Support (FAQ, tickets, chat, escalation, live agent)
+   - Accessibility (a11y patterns, ARIA, keyboard navigation, color contrast, responsive design)
+
+7. **Utilities & Types:**
+   - List all custom hooks, utils, validators, logger, debounce/throttle, API, analytics, localStorage/session, date/time utilities
+   - Explain centralized types/interfaces and how every slice/component uses them
+
+8. **Testing & Coverage:**
+   - Overview of all unit/integration tests per feature (__tests__ folder), global mocks (MSW), and test coverage achieved so far
+   - Lint, Prettier, strict TypeScript config, scripts present
+
+9. **CI, DevOps, and Deployment:**
+   - CI pipeline/scripts present (if up to that part)
+   - What’s needed to run/build/test/deploy (list all scripts)
+   - How to clone/zip and get started locally (step-by-step)
+
+10. **Roadmap/What’s Next:**
+    - List which advanced features (Payments, more analytics, advanced admin, future DevOps/monitoring, etc.) are *not* yet implemented (Parts 18–22)
+    - Show how the app can be extended, and why it’s easy to onboard/fork for future teams
+
+**Format this as a professional Markdown/README.md or architecture book.
+Make it clear, detailed, and ready for technical reviewers or onboarding.**
+

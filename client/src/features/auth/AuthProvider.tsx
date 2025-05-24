@@ -71,33 +71,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (authStatus === AuthStatus.UNAUTHENTICATED) {
       // Check if we previously had a valid session that expired
-      const lastSessionCheck = localStorage.get('lastSessionCheck');
+      const lastSessionCheck = window.localStorage.getItem('lastSessionCheck');
       const now = new Date().getTime();
       
-      if (lastSessionCheck && lastSessionCheck.wasAuthenticated) {
-        // Only show the session expired modal if the last check was recent
-        // and the user was previously authenticated
-        const timeSinceLastCheck = now - lastSessionCheck.timestamp;
-        
-        if (timeSinceLastCheck < 5 * 60 * 1000) { // 5 minutes
-          modal.alert({
-            title: 'Session Expired',
-            message: 'Your session has expired. Please log in again to continue.'
-          });
+      if (lastSessionCheck) {
+        const parsedCheck = JSON.parse(lastSessionCheck);
+        if (parsedCheck && parsedCheck.wasAuthenticated) {
+          // Only show the session expired modal if the last check was recent
+          // and the user was previously authenticated
+          const timeSinceLastCheck = now - parsedCheck.timestamp;
+          
+          if (timeSinceLastCheck < 5 * 60 * 1000) { // 5 minutes
+            modal.alert({
+              title: 'Session Expired',
+              message: 'Your session has expired. Please log in again to continue.'
+            });
+          }
         }
       }
       
       // Update last session check
-      localStorage.set('lastSessionCheck', {
+      window.localStorage.setItem('lastSessionCheck', JSON.stringify({
         timestamp: now,
         wasAuthenticated: false
-      });
+      }));
     } else if (authStatus === AuthStatus.AUTHENTICATED) {
       // Update last session check
-      localStorage.set('lastSessionCheck', {
+      window.localStorage.setItem('lastSessionCheck', JSON.stringify({
         timestamp: new Date().getTime(),
         wasAuthenticated: true
-      });
+      }));
     }
   }, [authStatus, modal]);
   
