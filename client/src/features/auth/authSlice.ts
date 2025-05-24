@@ -1,12 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
 import { apiRequest } from '@/lib/queryClient';
-
-// User roles in the system
-export type UserRole = 'guest' | 'user' | 'admin' | 'seller';
-
-// User status
-export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
+import { User, UserRole, UserStatus } from './types';
 
 // User profile interface
 export interface User {
@@ -146,7 +141,7 @@ export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenti
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
 export const selectAuthToken = (state: RootState) => state.auth.token;
-export const selectUserRole = (state: RootState) => state.auth.user?.role || 'guest';
+export const selectUserRole = (state: RootState) => state.auth.user?.role || UserRole.GUEST;
 export const selectAuthStatus = (state: RootState) => ({
   isAuthenticated: state.auth.isAuthenticated,
   isLoading: state.auth.isLoading,

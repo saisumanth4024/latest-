@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useAppDispatch } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
-import { User } from '@/features/auth/types';
+import { User, UserRole } from '@/features/auth/types';
 import { Link } from 'wouter';
 
 interface UserMenuProps {
-  user: UserProfile;
+  user: User;
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
@@ -29,17 +29,17 @@ export default function UserMenu({ user }: UserMenuProps) {
         className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
       >
         <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold">
-          {user.avatar ? (
+          {user.profileImageUrl ? (
             <img 
-              src={user.avatar} 
-              alt={user.username} 
+              src={user.profileImageUrl} 
+              alt={user.firstName || 'User'} 
               className="h-full w-full rounded-full object-cover"
             />
           ) : (
-            user.initials
+            (user.firstName?.[0] || '') + (user.lastName?.[0] || '')
           )}
         </div>
-        <span className="hidden md:inline-block">{user.username}</span>
+        <span className="hidden md:inline-block">{user.firstName || user.email || 'User'}</span>
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           className={cn(
@@ -86,7 +86,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </Link>
               </li>
               {/* Admin link - only visible to admins */}
-              {user.role === 'admin' && (
+              {user.role === UserRole.ADMIN && (
                 <li>
                   <Link href="/admin/dashboard">
                     <div
@@ -99,7 +99,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </li>
               )}
               {/* Seller link - only visible to sellers and admins */}
-              {(user.role === 'seller' || user.role === 'admin') && (
+              {(user.role === UserRole.SELLER || user.role === UserRole.ADMIN) && (
                 <li>
                   <Link href="/seller/dashboard">
                     <div
