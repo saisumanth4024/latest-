@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useAppDispatch } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
-import { User, UserRole } from '@/features/auth/types';
+import { User } from '@/features/auth/types';
+import { UserRole } from '@/config/navigation';
 import { Link } from 'wouter';
 
 interface UserMenuProps {
@@ -98,6 +99,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                   </Link>
                 </li>
               )}
+              
               {/* Seller link - only visible to sellers and admins */}
               {(user.role === 'seller' || user.role === 'admin') && (
                 <li>
@@ -107,6 +109,20 @@ export default function UserMenu({ user }: UserMenuProps) {
                       className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
                     >
                       Seller Dashboard
+                    </div>
+                  </Link>
+                </li>
+              )}
+              
+              {/* Moderator link - only visible to moderators and admins */}
+              {(user.role === ('moderator' as UserRole) || user.role === 'admin') && (
+                <li>
+                  <Link href="/moderation/reviews">
+                    <div
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                    >
+                      Content Moderation
                     </div>
                   </Link>
                 </li>

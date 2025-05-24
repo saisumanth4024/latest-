@@ -1,5 +1,5 @@
 // Authentication Types
-export type UserRole = 'guest' | 'user' | 'admin' | 'seller' | 'moderator';
+import { UserRole } from '@/config/navigation';
 
 export enum UserStatus {
   ACTIVE = 'active',

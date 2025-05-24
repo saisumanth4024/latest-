@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
 import { apiRequest } from '@/lib/queryClient';
-import { User, UserRole, UserStatus } from './types';
+import { User, UserStatus } from './types';
+import { UserRole } from '@/config/navigation';
 
 // Reference to imported User type from ./types.ts
 
