@@ -44,32 +44,24 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate a successful login with mock data
-      const response = {
-        user: {
-          id: '1',
-          email: credentials.email,
-          firstName: 'John',
-          lastName: 'Doe',
-          role: 'user' as UserRole,
-          profileImageUrl: 'https://via.placeholder.com/150',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        token: 'mock_token_' + Math.random().toString(36).substring(2),
-        refreshToken: 'mock_refresh_' + Math.random().toString(36).substring(2),
-        expiresAt: Date.now() + 3600 * 1000, // 1 hour from now
-      };
+      // Call our traditional login API endpoint
+      const response = await apiRequest('POST', '/api/auth/login', credentials);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData.message || 'Login failed');
+      }
+      
+      const data = await response.json();
       
       // Store auth data in localStorage for persistence
       if (credentials.rememberMe) {
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('auth_refresh_token', response.refreshToken);
-        localStorage.setItem('auth_expires_at', response.expiresAt.toString());
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('auth_refresh_token', data.refreshToken);
+        localStorage.setItem('auth_expires_at', data.expiresAt.toString());
       }
       
-      return response;
+      return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Login failed');
     }

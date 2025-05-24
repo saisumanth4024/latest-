@@ -175,7 +175,7 @@ export const routes = [
     roles: ['seller', 'admin'] as UserRole[],
     title: "Seller Dashboard",
   },
-  // Login and signup routes are replaced by Replit auth
+  // Login and signup routes are implemented with standard forms
   { 
     path: "*", 
     component: NotFound,
