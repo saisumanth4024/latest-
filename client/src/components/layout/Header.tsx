@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppSelector } from '@/app/hooks';
-import { selectUser } from '@/features/auth/authSlice';
+import { selectUser, selectIsAuthenticated } from '@/features/auth/authSlice';
 import NotificationMenu from '@/components/ui/NotificationMenu';
 import UserMenu from '@/components/ui/UserMenu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -14,6 +14,7 @@ interface HeaderProps {
 
 export default function Header({ toggleSidebar }: HeaderProps) {
   const user = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [searchOpen, setSearchOpen] = useState(false);
   
   return (
@@ -60,8 +61,12 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <GlobalSearch />
         </div>
         
-        <NotificationMenu />
-        {user && <UserMenu user={user} />}
+        {/* Only show NotificationMenu when authenticated */}
+        {isAuthenticated && <NotificationMenu />}
+        
+        {/* Only show UserMenu when user data is available */}
+        {isAuthenticated && user && <UserMenu user={user} />}
+        
         <ThemeToggle />
       </div>
     </header>

@@ -16,9 +16,12 @@ import reviewsReducer from '@/features/reviews/reviewsSlice';
 import { reviewsApi } from '@/features/reviews/reviewsApi';
 import searchReducer from '@/features/search/searchSlice';
 import { searchApi } from '@/features/search/searchApi';
+import authReducer from '@/features/auth/authSlice';
+import { apiSlice } from '@/features/api/apiSlice';
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     products: productsReducer,
     cart: cartReducer,
     wishlist: wishlistReducer,
@@ -29,6 +32,7 @@ export const store = configureStore({
     content: contentReducer,
     reviews: reviewsReducer,
     search: searchReducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
@@ -137,6 +141,7 @@ export const store = configureStore({
         ],
       },
     }).concat(
+      apiSlice.middleware,
       productsApi.middleware, 
       ordersApi.middleware, 
       dashboardApi.middleware, 
