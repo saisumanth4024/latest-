@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSelector } from '@/app/hooks';
-import { selectUser, selectIsAuthenticated } from '@/features/auth/authSlice';
+import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice';
+import LogoutButton from '@/features/auth/components/LogoutButton';
 import NotificationMenu from '@/components/ui/NotificationMenu';
 import UserMenu from '@/components/ui/UserMenu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -13,7 +14,7 @@ interface HeaderProps {
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
-  const user = useAppSelector(selectUser);
+  const user = useAppSelector(selectAuthUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [searchOpen, setSearchOpen] = useState(false);
   
@@ -67,24 +68,23 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* Only show UserMenu when user data is available */}
         {isAuthenticated && user && <UserMenu user={user} />}
         
-        {/* Explicit Logout Button */}
+        {/* Custom Logout Button */}
         {isAuthenticated && (
-          <a 
-            href="/api/logout"
-            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium hidden md:block"
-          >
-            Logout
-          </a>
+          <div className="hidden md:block">
+            <LogoutButton 
+              variant="outline" 
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border-red-200"
+            />
+          </div>
         )}
         
         {/* If not authenticated, show login button */}
         {!isAuthenticated && (
-          <a 
-            href="/api/login"
-            className="px-4 py-2 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 rounded-md text-sm font-medium"
-          >
-            Log In
-          </a>
+          <Link href="/login">
+            <div className="px-4 py-2 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 rounded-md text-sm font-medium cursor-pointer">
+              Log In
+            </div>
+          </Link>
         )}
         
         <ThemeToggle />

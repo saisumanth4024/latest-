@@ -2,6 +2,7 @@ import { Switch, Route, useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Landing from "@/pages/Landing";
+import LoginPage from "@/pages/LoginPage";
 import Layout from "@/components/layout/Layout";
 import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
@@ -49,6 +50,13 @@ export const routes = [
     exact: true,
     requireAuth: false,
     title: "Dashboard",
+  },
+  {
+    path: "/login",
+    component: LoginPage,
+    requireAuth: false,
+    title: "Login",
+    hideInMenu: true,
   },
   { 
     path: "/products", 
