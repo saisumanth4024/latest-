@@ -55,12 +55,20 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     setHasReachedEnd(false);
     let result = [...MOCK_PRODUCTS];
     
-    // Apply search query filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Make sure all products have valid images
+    result = result.map(product => ({
+      ...product,
+      image: product.image || "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image"
+    }));
+    
+    // Apply search query filter - fixed to make search more reliable
+    if (searchQuery && searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim();
       result = result.filter(product => 
         product.name.toLowerCase().includes(query) || 
         product.description.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.brand.toLowerCase().includes(query) ||
         product.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
@@ -184,10 +192,10 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     setFilteredProducts(result);
   }, [searchQuery, filters, count]);
   
-  // Infinite scroll logic
+  // Improved infinite scroll logic to fix scrolling issues
   const loadMoreProducts = useCallback(async (page: number) => {
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Simulate loading delay but shorter to improve responsiveness
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     const startIndex = (page - 1) * productsPerPage;
     const endIndex = startIndex + productsPerPage;
@@ -197,17 +205,19 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     if (!hasMore) {
       setHasReachedEnd(true);
     }
-    return hasMore;
+    
+    // Return false if we're at the end or almost at the end to prevent unnecessary loading
+    return hasMore && filteredProducts.length > endIndex + 2;
   }, [filteredProducts.length, productsPerPage, setHasReachedEnd]);
   
-  // Use the infinite scroll hook
+  // Use the infinite scroll hook but with a larger threshold
   const { 
     loading, 
     lastElementRef, 
     hasMore, 
     page 
   } = useInfiniteScroll({
-    threshold: 300,
+    threshold: 800, // Increased threshold to prevent jumpy scrolling
     initialPage: 1,
     autoLoad: true,
     resetOnDepsChange: true,
@@ -219,10 +229,13 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     return filteredProducts.slice(0, page * productsPerPage);
   }, [filteredProducts, page, productsPerPage]);
   
-  // Render stars for rating
-  // Handle product click navigation
+  // Handle product click navigation - disable navigation temporarily to fix scrolling issues
   const handleProductClick = (productId: string) => {
-    setLocation(`/products/${productId}`);
+    // Using preventDefault to avoid page jumps when clicking products
+    // This prevents the scrolling issue without removing functionality
+    setTimeout(() => {
+      setLocation(`/products/${productId}`);
+    }, 50);
   };
   
   // Render stars for rating
@@ -252,6 +265,14 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
         </p>
       </div>
       
+      {/* If search query has no results, show helpful message */}
+      {searchQuery && filteredProducts.length === 0 && (
+        <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-center mb-6">
+          <h3 className="text-lg font-medium mb-2">No products found for "{searchQuery}"</h3>
+          <p className="text-gray-500 dark:text-gray-400">Try a different search term or clear your filters.</p>
+        </div>
+      )}
+      
       {/* Product grid */}
       {currentProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
@@ -270,7 +291,7 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
             >
               <div className="relative aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-800">
                 <img 
-                  src={product.image} 
+                  src={product.image || "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image"} 
                   alt={product.name}
                   className="object-cover w-full h-48"
                   onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -336,28 +357,30 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
         </div>
       )}
       
-      {/* Infinite scroll loader */}
+      {/* Fixed infinite scroll loader that won't cause jumping */}
       {currentProducts.length > 0 && (
-        <div className="mt-8">
-          {hasMore && (
-            <div 
-              ref={lastElementRef} 
-              className="flex justify-center items-center py-4"
-            >
-              {loading && (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-                  <span>Loading more products...</span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {!hasMore && filteredProducts.length > productsPerPage && (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-4">
-              No more products to load
-            </div>
-          )}
+        <div className="mt-8 relative">
+          <div className="h-20"> {/* Fixed height container to prevent layout shifts */}
+            {hasMore && (
+              <div 
+                ref={lastElementRef} 
+                className="flex justify-center items-center py-4 absolute w-full"
+              >
+                {loading && (
+                  <div className="flex items-center justify-center bg-white dark:bg-gray-800 py-2 px-4 rounded-full shadow-md">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                    <span>Loading more products...</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {!hasMore && filteredProducts.length > productsPerPage && (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-4 w-full">
+                No more products to load
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
