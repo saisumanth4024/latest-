@@ -101,9 +101,6 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      // Store the auth method before clearing state
-      const authMethod = state.authMethod;
-      
       // Clear state
       state.user = null;
       state.token = null;
@@ -111,6 +108,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.expiresAt = null;
       state.authMethod = null;
+      state.error = null;
       
       // Clear auth data from localStorage
       localStorage.removeItem('auth_token');
@@ -119,11 +117,8 @@ const authSlice = createSlice({
       localStorage.removeItem('auth_method');
       localStorage.removeItem('demoUserRole');
       
-      // For any auth method, perform a hard redirect to the logout endpoint
-      // This ensures the session is properly cleared on the server
-      setTimeout(() => {
-        window.location.href = '/api/auth/logout';
-      }, 100);
+      // Don't redirect here - let the component handle the redirect
+      // This prevents race conditions and improves the user experience
     },
     setCredentials: (state, action: PayloadAction<{ 
       user: User; 

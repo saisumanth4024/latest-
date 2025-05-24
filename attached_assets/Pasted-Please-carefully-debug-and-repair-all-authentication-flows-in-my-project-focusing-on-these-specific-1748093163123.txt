@@ -1,0 +1,53 @@
+Please carefully debug and repair all authentication flows in my project, focusing on these specific files:
+
+- `src/features/auth/authSlice.ts` (Redux slice for auth state, token handling, login/logout/register actions)
+- `src/features/auth/components/LoginForm.tsx` (Login UI/form, validation, RTK Query/thunk trigger, error UI)
+- `src/features/auth/components/SignupForm.tsx` (Signup UI/form, validation, RTK Query/thunk trigger, error UI)
+- `src/layout/Header.tsx` or `src/components/Header.tsx` (Logout button, triggers logout, role switch, and navigation)
+- `src/features/auth/api.ts` or similar (RTK Query endpoints for login, register, logout)
+- `src/features/auth/utils.ts` (any helpers for localStorage/session or token decode)
+- `src/app/ProtectedRoute.tsx` (Protected route logic)
+- All other files directly used by these
+
+**The expected correct flow is:**
+
+**Signup**
+- User fills out and submits signup form.
+- Calls `/api/auth/signup` endpoint.
+- On success: show toast "Registration successful. Please sign in.", redirect to login, do NOT auto-login.
+- On error: show error message, do NOT clear form.
+
+**Login**
+- User fills out and submits login form.
+- Calls `/api/auth/login` endpoint.
+- On success: set auth state (user, token, role, isAuthenticated) in Redux, persist in localStorage, redirect to dashboard/protected route, show toast.
+- On error: show error message, keep form values.
+
+**Logout**
+- Clicking logout in header triggers Redux logout, clears all tokens/auth from state and storage, redirects to login, shows toast.
+- After logout, protected routes redirect to login.
+
+**Debug and Repair:**
+- Audit every auth-related file above for:
+  - Form state and validation errors
+  - RTK Query/thunk handling (loading, success, error)
+  - Redux auth state updates and localStorage persistence
+  - Proper redirects (useNavigate from react-router)
+  - Working logout (Redux + storage clear)
+  - Correct error messages and toasts for all flows
+  - ProtectedRoute correctly blocking non-authenticated users
+
+**Testing/Verification:**
+- Register, login, logout work as expected.
+- User can see dashboard only when logged in.
+- After logout, all protected pages redirect to login.
+- No other features/routes break.
+
+**Documentation:**
+- Add or update README in `src/features/auth/` with:
+  - Auth flow description
+  - Troubleshooting for common bugs
+  - How to extend or test
+
+**IMPORTANT:**  
+Do NOT rewrite or affect code ou

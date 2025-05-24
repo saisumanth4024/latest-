@@ -25,37 +25,45 @@ export default function LogoutButton({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // Show success toast
+      // Show initial toast
       toast({
         title: "Logging out...",
         description: "You are being logged out of your account.",
       });
       
-      // First clear Redux state
-      dispatch(logout());
-      
-      // Make a fetch request to the server logout endpoint
+      // First make a fetch request to the server logout endpoint to clear session
       const response = await fetch('/api/auth/logout');
       
-      // Check if the response was successful
+      // Then dispatch Redux action to clear client state
+      dispatch(logout());
+      
+      // Check if the server request was successful
       if (response.ok) {
-        // Redirect to login page with wouter
-        setLocation('/login');
-        
+        // Show success toast
         toast({
           title: "Logged out successfully",
           description: "You have been logged out of your account.",
           variant: "success"
         });
+        
+        // Redirect to login page with wouter
+        setLocation('/login');
       } else {
-        throw new Error("Failed to logout");
+        throw new Error("Server logout request failed");
       }
     } catch (error) {
+      // Even if server request fails, still clear local state
+      dispatch(logout());
+      
       toast({
-        title: "Logout failed",
-        description: "There was a problem logging you out. Please try again.",
-        variant: "destructive"
+        title: "Logout warning",
+        description: "There was an issue with the server logout. Your local session has been cleared.",
+        variant: "warning"
       });
+      
+      // Still redirect to login
+      setLocation('/login');
+    } finally {
       setIsLoggingOut(false);
     }
   };
