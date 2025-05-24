@@ -1,86 +1,19 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
   // Auth routes
-  // Traditional login endpoint
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      // Mock users for demonstration
-      const mockUsers = [
-        {
-          id: '1',
-          email: 'admin@example.com',
-          password: 'password123',
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'admin',
-          profileImageUrl: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff',
-          createdAt: new Date(2023, 0, 1).toISOString(),
-          updatedAt: new Date(2023, 0, 1).toISOString()
-        },
-        {
-          id: '2',
-          email: 'user@example.com',
-          password: 'password123',
-          firstName: 'Regular',
-          lastName: 'User',
-          role: 'user',
-          profileImageUrl: 'https://ui-avatars.com/api/?name=Regular+User&background=4CAF50&color=fff',
-          createdAt: new Date(2023, 1, 15).toISOString(),
-          updatedAt: new Date(2023, 1, 15).toISOString()
-        },
-        {
-          id: '3',
-          email: 'seller@example.com',
-          password: 'password123',
-          firstName: 'Seller',
-          lastName: 'User',
-          role: 'seller',
-          profileImageUrl: 'https://ui-avatars.com/api/?name=Seller+User&background=FF9800&color=fff',
-          createdAt: new Date(2023, 2, 10).toISOString(),
-          updatedAt: new Date(2023, 2, 10).toISOString()
-        }
-      ];
-      
-      // Find user by email
-      const user = mockUsers.find(u => u.email === email);
-      
-      // Check if user exists and password matches
-      if (user && password === 'password123') {
-        // Remove password before sending response
-        const { password, ...userWithoutPassword } = user;
-        
-        // Generate a simple token
-        const token = `mock-jwt-token-${user.id}-${Date.now()}`;
-        
-        res.json({
-          user: userWithoutPassword,
-          token,
-          refreshToken: `refresh-${token}`,
-          expiresAt: Date.now() + 3600000 // 1 hour from now
-        });
-      } else {
-        res.status(401).json({ message: 'Invalid email or password' });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "An error occurred during login" });
-    }
-  });
+  // Login is now handled in the auth.ts file
   
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // With traditional auth, we already have the user object in req.user
+      res.json(req.user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
