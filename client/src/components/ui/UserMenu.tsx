@@ -86,7 +86,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </Link>
               </li>
               {/* Admin link - only visible to admins */}
-              {user.role === UserRole.ADMIN && (
+              {user.role === 'admin' && (
                 <li>
                   <Link href="/admin/dashboard">
                     <div
@@ -99,7 +99,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </li>
               )}
               {/* Seller link - only visible to sellers and admins */}
-              {(user.role === UserRole.SELLER || user.role === UserRole.ADMIN) && (
+              {(user.role === 'seller' || user.role === 'admin') && (
                 <li>
                   <Link href="/seller/dashboard">
                     <div

@@ -3,17 +3,7 @@ import { RootState } from '@/app/store';
 import { apiRequest } from '@/lib/queryClient';
 import { User, UserRole, UserStatus } from './types';
 
-// User profile interface
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
-  profileImageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Reference to imported User type from ./types.ts
 
 // Login credentials interface
 export interface LoginCredentials {
@@ -59,7 +49,7 @@ export const login = createAsyncThunk(
           email: credentials.email,
           firstName: 'John',
           lastName: 'Doe',
-          role: 'user' as UserRole,
+          role: 'user',
           profileImageUrl: 'https://via.placeholder.com/150',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -141,7 +131,7 @@ export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenti
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
 export const selectAuthToken = (state: RootState) => state.auth.token;
-export const selectUserRole = (state: RootState) => state.auth.user?.role || UserRole.GUEST;
+export const selectUserRole = (state: RootState) => state.auth.user?.role || 'guest';
 export const selectAuthStatus = (state: RootState) => ({
   isAuthenticated: state.auth.isAuthenticated,
   isLoading: state.auth.isLoading,

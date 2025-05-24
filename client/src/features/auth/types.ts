@@ -1,22 +1,18 @@
 // Authentication Types
-export const UserRole = {
-  GUEST: 'guest',
-  USER: 'user',
-  ADMIN: 'admin',
-  SELLER: 'seller',
-  MODERATOR: 'moderator'
-} as const;
+export enum UserRole {
+  GUEST = 'guest',
+  USER = 'user',
+  ADMIN = 'admin',
+  SELLER = 'seller',
+  MODERATOR = 'moderator'
+}
 
-export type UserRoleType = typeof UserRole[keyof typeof UserRole];
-
-export const UserStatus = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  SUSPENDED: 'suspended',
-  PENDING: 'pending'
-} as const;
-
-export type UserStatusType = typeof UserStatus[keyof typeof UserStatus];
+export enum UserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending'
+}
 
 export interface User {
   id: string;

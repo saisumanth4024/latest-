@@ -144,7 +144,7 @@ export const routes = [
     path: "/moderation/reviews",
     component: () => (<ModerationPage userId="admin" />),
     requireAuth: true,
-    roles: [UserRole.ADMIN, UserRole.MODERATOR],
+    roles: ['admin', 'moderator'],
     title: "Review Moderation",
   },
   { 
