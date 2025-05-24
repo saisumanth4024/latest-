@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAppSelector } from '@/app/hooks';
 import LogoutButton from '@/features/auth/components/LogoutButton';
 import NotificationMenu from '@/components/ui/NotificationMenu';
 import UserMenu from '@/components/ui/UserMenu';
@@ -7,6 +8,8 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import GlobalSearch from '@/features/search/components/GlobalSearch';
 import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
+import { ShoppingCart } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -15,6 +18,9 @@ interface HeaderProps {
 export default function Header({ toggleSidebar }: HeaderProps) {
   const { user, isAuthenticated } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
+  
+  // Get cart items count from Redux store
+  const cartItemsCount = useAppSelector((state) => state.cart.cart?.items?.length || 0);
   
   return (
     <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm py-2 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
@@ -59,6 +65,20 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         <div className="relative hidden sm:block w-72">
           <GlobalSearch />
         </div>
+        
+        {/* Cart Icon */}
+        <Link href="/cart">
+          <div className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
+            <ShoppingCart className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            {cartItemsCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+              >
+                {cartItemsCount > 99 ? '99+' : cartItemsCount}
+              </Badge>
+            )}
+          </div>
+        </Link>
         
         {/* Only show NotificationMenu when authenticated */}
         {isAuthenticated && <NotificationMenu />}
