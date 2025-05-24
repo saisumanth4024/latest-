@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { UploadedImage } from './components/ImageUploader';
 import { RootState } from '@/app/store';
+import { setFilterTyped } from './setFilter';
 
 // Define filters interface
 export interface ProductFilters {
@@ -88,7 +89,7 @@ const productsSlice = createSlice({
     setFilter: (state, action: PayloadAction<{ key: keyof ProductFilters; value: string | number | boolean | string[] | null }>) => {
       const { key, value } = action.payload;
       
-      // Handle each filter type appropriately
+      // Handle each filter type appropriately based on the key
       switch(key) {
         case 'category':
         case 'priceRange':
