@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
 
   const cartItemsCount = useAppSelector((state) => state.cart.cart?.items?.length || 0);
   const wishlistItemsCount = useAppSelector((state: RootState) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
-  const userProfile = useAppSelector((state: RootState) => state.auth.user || {});
+  const userProfile = useAppSelector((state: RootState) => state.auth.user);
 
   const isLoggedIn = !!userProfile;
   const userRole = userProfile?.role || 'guest';
@@ -364,15 +364,15 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="ml-2 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={userProfile?.profileImageUrl} alt={userProfile?.username} />
-                    <AvatarFallback>{getInitials(userProfile?.username || '')}</AvatarFallback>
+                    <AvatarImage src={userProfile?.profileImageUrl} alt={`${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`} />
+                    <AvatarFallback>{getInitials(`${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{userProfile?.username}</p>
+                    <p className="text-sm font-medium leading-none">{`${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`}</p>
                     <p className="text-xs leading-none text-muted-foreground">{userProfile?.email}</p>
                   </div>
                 </DropdownMenuLabel>

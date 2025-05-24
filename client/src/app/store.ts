@@ -18,6 +18,7 @@ import searchReducer from '@/features/search/searchSlice';
 import { searchApi } from '@/features/search/searchApi';
 import authReducer from '@/features/auth/authSlice';
 import { apiSlice } from '@/features/api/apiSlice';
+import adminReducer from '@/features/admin/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -32,6 +33,7 @@ export const store = configureStore({
     content: contentReducer,
     reviews: reviewsReducer,
     search: searchReducer,
+    admin: adminReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
