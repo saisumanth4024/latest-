@@ -29,7 +29,7 @@ import Checkout from "@/features/checkout/components/Checkout";
 
 // Create components for each route
 const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
-const OrdersPage = () => <PlaceholderPage title="Orders" />;
+import OrdersPage from '@/features/orders/components/OrdersPage';
 const SearchPage = () => <PlaceholderPage title="Search" />;
 const AnalyticsPage = () => <PlaceholderPage title="Analytics" />;
 const SettingsPage = () => <PlaceholderPage title="Settings" />;
