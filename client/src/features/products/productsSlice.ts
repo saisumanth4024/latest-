@@ -1,168 +1,179 @@
-import { createSlice, createEntityAdapter, PayloadAction } from '@reduxjs/toolkit';
-import type { RootState } from '@/app/store';
-import { ProductFilters } from './productsApi';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '@/app/store';
 
-// Define types for our state
 interface SearchHistoryItem {
-  id: string;
   query: string;
   timestamp: number;
 }
 
-export interface ProductsState {
-  filters: ProductFilters;
-  searchHistory: SearchHistoryItem[];
-  selectedProductId: number | null;
-  recentlyViewedIds: number[];
-  viewHistory: {
-    productId: number;
-    timestamp: number;
-  }[];
+interface ComparisonItem {
+  productId: number;
+  addedAt: number;
 }
 
-// Create entity adapter for search history items
-const searchHistoryAdapter = createEntityAdapter<SearchHistoryItem>({
-  selectId: (item) => item.id,
-  sortComparer: (a, b) => b.timestamp - a.timestamp,
-});
+interface RecentlyViewedItem {
+  productId: number;
+  viewedAt: number;
+}
 
-// Initial state
+interface ProductsState {
+  filters: {
+    category: string | null;
+    priceRange: [number, number] | null;
+    rating: number | null;
+    sort: 'price-asc' | 'price-desc' | 'rating' | 'newest' | null;
+  };
+  searchHistory: SearchHistoryItem[];
+  comparison: ComparisonItem[];
+  recentlyViewed: RecentlyViewedItem[];
+  currentSearchQuery: string;
+}
+
 const initialState: ProductsState = {
   filters: {
-    page: 1,
-    limit: 12,
-    sortBy: 'newest',
-    sortOrder: 'desc',
+    category: null,
+    priceRange: null,
+    rating: null,
+    sort: null,
   },
   searchHistory: [],
-  selectedProductId: null,
-  recentlyViewedIds: [],
-  viewHistory: [],
+  comparison: [],
+  recentlyViewed: [],
+  currentSearchQuery: '',
 };
 
-// Create the slice
+// Maximum number of items to keep in each list
+const MAX_SEARCH_HISTORY = 10;
+const MAX_COMPARISON_ITEMS = 4;
+const MAX_RECENTLY_VIEWED = 12;
+
 export const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    // Update filters
-    updateFilters: (state, action: PayloadAction<Partial<ProductFilters>>) => {
-      state.filters = { ...state.filters, ...action.payload };
-      
-      // Reset to page 1 when filters change (except when explicitly changing page)
-      if (!action.payload.page) {
-        state.filters.page = 1;
-      }
-    },
-    
-    // Reset filters to defaults except for any specified to keep
-    resetFilters: (state, action: PayloadAction<string[] | undefined>) => {
-      const keysToKeep = action.payload || [];
-      const currentFilters = { ...state.filters };
-      
-      // Reset to initial filters
-      state.filters = { ...initialState.filters };
-      
-      // Restore values for keys we want to keep
-      keysToKeep.forEach(key => {
-        if (key in currentFilters) {
-          state.filters[key as keyof ProductFilters] = currentFilters[key as keyof ProductFilters];
-        }
-      });
-    },
-    
     // Search actions
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.currentSearchQuery = action.payload;
+    },
+    
     addSearchQuery: (state, action: PayloadAction<string>) => {
       const query = action.payload.trim();
       if (!query) return;
       
-      // Add to search history if it doesn't already exist
-      const existingIndex = state.searchHistory.findIndex(item => item.query.toLowerCase() === query.toLowerCase());
+      // Remove if exists already (to move to top)
+      state.searchHistory = state.searchHistory.filter(
+        item => item.query.toLowerCase() !== query.toLowerCase()
+      );
       
-      if (existingIndex >= 0) {
-        // Move to top if exists
-        const existing = state.searchHistory[existingIndex];
-        state.searchHistory.splice(existingIndex, 1);
-        state.searchHistory.unshift({
-          ...existing,
-          timestamp: Date.now(),
-        });
-      } else {
-        // Add new entry
-        state.searchHistory.unshift({
-          id: Date.now().toString(),
-          query,
-          timestamp: Date.now(),
-        });
+      // Add to beginning
+      state.searchHistory.unshift({
+        query,
+        timestamp: Date.now()
+      });
+      
+      // Trim list if needed
+      if (state.searchHistory.length > MAX_SEARCH_HISTORY) {
+        state.searchHistory = state.searchHistory.slice(0, MAX_SEARCH_HISTORY);
       }
       
-      // Keep only the most recent 10 searches
-      if (state.searchHistory.length > 10) {
-        state.searchHistory.pop();
-      }
+      // Update current search query
+      state.currentSearchQuery = query;
     },
     
     clearSearchHistory: (state) => {
       state.searchHistory = [];
     },
     
-    // Product selection
-    selectProduct: (state, action: PayloadAction<number>) => {
+    // Filter actions
+    setFilter: (state, action: PayloadAction<{
+      key: keyof ProductsState['filters']; 
+      value: any;
+    }>) => {
+      const { key, value } = action.payload;
+      // @ts-ignore - we know this is a valid key
+      state.filters[key] = value;
+    },
+    
+    resetFilters: (state) => {
+      state.filters = initialState.filters;
+    },
+    
+    // Comparison actions
+    addToComparison: (state, action: PayloadAction<number>) => {
       const productId = action.payload;
-      state.selectedProductId = productId;
       
-      // Add to view history
-      state.viewHistory.push({
+      // Check if already exists
+      if (state.comparison.some(item => item.productId === productId)) {
+        return;
+      }
+      
+      // Add to beginning
+      state.comparison.unshift({
         productId,
-        timestamp: Date.now(),
+        addedAt: Date.now()
       });
       
-      // Keep most recent 20 viewed products
-      if (state.viewHistory.length > 20) {
-        state.viewHistory.shift();
+      // Trim list if needed
+      if (state.comparison.length > MAX_COMPARISON_ITEMS) {
+        state.comparison = state.comparison.slice(0, MAX_COMPARISON_ITEMS);
       }
+    },
+    
+    removeFromComparison: (state, action: PayloadAction<number>) => {
+      const productId = action.payload;
+      state.comparison = state.comparison.filter(item => item.productId !== productId);
+    },
+    
+    clearComparison: (state) => {
+      state.comparison = [];
+    },
+    
+    // Recently viewed actions
+    addToRecentlyViewed: (state, action: PayloadAction<number>) => {
+      const productId = action.payload;
       
-      // Update recently viewed IDs (no duplicates)
-      if (!state.recentlyViewedIds.includes(productId)) {
-        state.recentlyViewedIds.push(productId);
-        if (state.recentlyViewedIds.length > 10) {
-          state.recentlyViewedIds.shift();
-        }
-      } else {
-        // Move to end of array if already exists
-        const index = state.recentlyViewedIds.indexOf(productId);
-        state.recentlyViewedIds.splice(index, 1);
-        state.recentlyViewedIds.push(productId);
+      // Remove if exists already (to move to top)
+      state.recentlyViewed = state.recentlyViewed.filter(
+        item => item.productId !== productId
+      );
+      
+      // Add to beginning
+      state.recentlyViewed.unshift({
+        productId,
+        viewedAt: Date.now()
+      });
+      
+      // Trim list if needed
+      if (state.recentlyViewed.length > MAX_RECENTLY_VIEWED) {
+        state.recentlyViewed = state.recentlyViewed.slice(0, MAX_RECENTLY_VIEWED);
       }
     },
     
-    clearSelectedProduct: (state) => {
-      state.selectedProductId = null;
-    },
-    
-    clearViewHistory: (state) => {
-      state.viewHistory = [];
-      state.recentlyViewedIds = [];
-    },
+    clearRecentlyViewed: (state) => {
+      state.recentlyViewed = [];
+    }
   },
 });
 
 // Export actions
 export const {
-  updateFilters,
-  resetFilters,
+  setSearchQuery,
   addSearchQuery,
   clearSearchHistory,
-  selectProduct,
-  clearSelectedProduct,
-  clearViewHistory,
+  setFilter,
+  resetFilters,
+  addToComparison,
+  removeFromComparison,
+  clearComparison,
+  addToRecentlyViewed,
+  clearRecentlyViewed
 } = productsSlice.actions;
 
 // Export selectors
-export const selectProductFilters = (state: RootState) => state.products.filters;
 export const selectSearchHistory = (state: RootState) => state.products.searchHistory;
-export const selectSelectedProductId = (state: RootState) => state.products.selectedProductId;
-export const selectRecentlyViewedIds = (state: RootState) => state.products.recentlyViewedIds;
-export const selectViewHistory = (state: RootState) => state.products.viewHistory;
+export const selectCurrentSearchQuery = (state: RootState) => state.products.currentSearchQuery;
+export const selectFilters = (state: RootState) => state.products.filters;
+export const selectComparison = (state: RootState) => state.products.comparison;
+export const selectRecentlyViewed = (state: RootState) => state.products.recentlyViewed;
 
 export default productsSlice.reducer;
