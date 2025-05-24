@@ -29,7 +29,8 @@ export default function LogoutButton({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       });
-      setLocation('/');
+      // Redirect to login page instead of homepage
+      setLocation('/login');
     } catch (error) {
       toast({
         title: "Logout failed",
