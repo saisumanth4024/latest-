@@ -3,7 +3,6 @@ import { useLocation } from 'wouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToast } from '@/hooks/use-toast';
 import { navigateTo, selectCurrentPath } from './navigationSlice';
-import { routes } from '@/App';
 
 /**
  * Component that shows toast notifications when navigating between pages
@@ -20,32 +19,35 @@ const NavigationToast = () => {
     // Default name if route not found
     let routeName = 'Unknown Page';
     
-    // Look up the name in the routes array
-    const route = routes.find(r => {
-      // Exact match
-      if (r.path === path) return true;
-      
-      // Dynamic route with parameters (e.g., /products/:id)
-      if (r.path?.includes(':')) {
-        const routeParts = r.path.split('/');
-        const pathParts = path.split('/');
-        
-        // Must have same number of parts
-        if (routeParts.length !== pathParts.length) return false;
-        
-        // Check each part, allowing parameters to match anything
-        return routeParts.every((part, i) => {
-          return part.startsWith(':') || part === pathParts[i];
-        });
-      }
-      
-      return false;
-    });
+    // Define routes map
+    const pathToTitle: Record<string, string> = {
+      "/": "Dashboard",
+      "/login": "Login",
+      "/signup": "Sign Up",
+      "/products": "Products",
+      "/extended-products": "Extended Catalog",
+      "/cart": "Cart",
+      "/checkout": "Checkout",
+      "/orders": "Orders",
+      "/profile": "Profile",
+      "/wishlists": "Wishlists",
+      "/settings": "Settings",
+      "/analytics": "Analytics",
+      "/admin/dashboard": "Admin Dashboard",
+      "/search": "Search Results"
+    };
     
-    if (route) {
-      routeName = route.title || 'Page';
+    // First check for exact match
+    if (pathToTitle[path]) {
+      return pathToTitle[path];
     }
     
+    // Handle dynamic routes
+    if (path.startsWith('/products/') && path.split('/').length === 3) {
+      return "Product Details";
+    }
+    
+    // Return the default if no matches
     return routeName;
   };
   

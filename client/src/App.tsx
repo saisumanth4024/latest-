@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from "react";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, useRoute, Redirect } from "wouter";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { UserRole } from "@/config/navigation";
@@ -23,6 +23,7 @@ const GlobalLoadingFallback = () => (
 const Landing = lazy(() => import("@/pages/Landing"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const SignupPage = lazy(() => import("@/pages/SignupPage"));
 const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
 const ProfilePageLegacy = lazy(() => import("@/pages/ProfilePage"));
 const ProductsPage = lazy(() => import("@/features/products/components/ProductsPage"));
@@ -59,23 +60,9 @@ export const routes = [
     path: "/",
     component: Dashboard,
     exact: true,
-    requireAuth: false,
+    requireAuth: true,
     title: "Dashboard",
-    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
-  },
-  {
-    path: "/forms-advanced",
-    component: AdvancedFormPage,
-    requireAuth: false,
-    title: "Advanced Forms",
-    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
-  },
-  {
-    path: "/ts-patterns-demo",
-    component: TypeScriptPatternsDemo,
-    requireAuth: false,
-    title: "TypeScript Patterns Demo",
-    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
     path: "/login",
@@ -84,6 +71,28 @@ export const routes = [
     title: "Login",
     hideInMenu: true,
     roles: ['guest'] as UserRole[],
+  },
+  {
+    path: "/signup",
+    component: SignupPage,
+    requireAuth: false,
+    title: "Sign Up",
+    hideInMenu: true,
+    roles: ['guest'] as UserRole[],
+  },
+  {
+    path: "/forms-advanced",
+    component: AdvancedFormPage,
+    requireAuth: true,
+    title: "Advanced Forms",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
+  },
+  {
+    path: "/ts-patterns-demo",
+    component: TypeScriptPatternsDemo,
+    requireAuth: true,
+    title: "TypeScript Patterns Demo",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   { 
     path: "/products", 
@@ -228,6 +237,13 @@ function ProtectedRoute({
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isLoading, isAuthenticated, navigate]);
+
   // If still loading, show loading indicator
   if (isLoading) {
     return (
@@ -237,28 +253,13 @@ function ProtectedRoute({
     );
   }
 
-  // If not authenticated, show login prompt
+  // If not authenticated, don't render anything (redirection happens in useEffect)
   if (!isAuthenticated) {
-    return (
-      <div className="max-w-md mx-auto mt-12 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Login Required</h2>
-        <p className="mb-6 text-gray-600 dark:text-gray-300">
-          You need to be logged in to access this page. Please log in to continue.
-        </p>
-        <Button 
-          className="w-full"
-          onClick={() => navigate("/login")}
-        >
-          Log in
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   // If roles are specified, check if user has required role
-  // Safety checks to avoid errors with undefined user or roles
   if (roles && roles.length > 0 && user) {
-    // Get the user's role from the authenticated user object
     const userRole = user.role as UserRole;
     
     if (!roles.includes(userRole)) {
@@ -275,13 +276,24 @@ function ProtectedRoute({
   return <>{children}</>;
 }
 
-// Router Component that handles auth
+// Redirect to login if not on login page
+function RedirectToLogin() {
+  const [, navigate] = useLocation();
+  
+  useEffect(() => {
+    navigate("/login");
+  }, [navigate]);
+  
+  return <GlobalLoadingFallback />;
+}
+
+// Main Router Component
 function AppRouter() {
-  // Get current path and auth status
-  const [location] = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
-  const noLayoutPaths: string[] = ['/'];
-  const shouldShowLayout = !noLayoutPaths.includes(location) || isAuthenticated;
+  const [location] = useLocation();
+  const [isRootMatch] = useRoute("/");
+  const [isLoginMatch] = useRoute("/login");
+  const [isSignupMatch] = useRoute("/signup");
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
 
   // Track online/offline status
@@ -306,60 +318,71 @@ function AppRouter() {
       </div>
     );
   }
-  
-  // Redirect to login page for non-authenticated users at root path
-  if (!isAuthenticated && location === '/') {
-    // Redirect to login page
-    window.location.href = '/login';
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  // Generate routes with the appropriate protection
-  const routeElements = routes.map((route, index) => {
-    // Wrap component in Suspense and ErrorBoundary
-    const Component = route.component;
-    const WrappedComponent = () => (
-      <ErrorBoundary boundary={route.title}>
-        <Suspense fallback={<GlobalLoadingFallback />}>
-          <Component />
-        </Suspense>
-      </ErrorBoundary>
-    );
 
-    // Non-auth routes or special paths
-    if (!route.requireAuth || route.path === "*" || noLayoutPaths.includes(route.path)) {
-      return (
-        <Route 
-          key={index} 
-          path={route.path === "*" ? undefined : route.path} 
-          component={WrappedComponent} 
-        />
-      );
-    }
-    
-    // Protected routes (with roles if specified)
-    return (
-      <Route key={index} path={route.path}>
-        <ProtectedRoute roles={route.roles}>
-          <WrappedComponent />
-        </ProtectedRoute>
-      </Route>
-    );
-  });
-  
+  // Always wrap content with ErrorBoundary
   const content = (
     <ErrorBoundary>
-      <Switch>{routeElements}</Switch>
+      <Switch>
+        {/* Special handling for the root path - redirect to login if not authenticated */}
+        <Route path="/">
+          {isAuthenticated ? (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <Dashboard />
+            </Suspense>
+          ) : (
+            <RedirectToLogin />
+          )}
+        </Route>
+
+        {/* Login and Signup routes should not require auth */}
+        <Route path="/login">
+          <Suspense fallback={<GlobalLoadingFallback />}>
+            <LoginPage />
+          </Suspense>
+        </Route>
+
+        <Route path="/signup">
+          <Suspense fallback={<GlobalLoadingFallback />}>
+            <SignupPage />
+          </Suspense>
+        </Route>
+
+        {/* All other routes */}
+        {routes
+          .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup")
+          .map((route, index) => {
+            const Component = route.component;
+            const WrappedComponent = () => (
+              <ErrorBoundary boundary={route.title}>
+                <Suspense fallback={<GlobalLoadingFallback />}>
+                  <Component />
+                </Suspense>
+              </ErrorBoundary>
+            );
+
+            return route.requireAuth ? (
+              <Route key={index} path={route.path}>
+                <ProtectedRoute roles={route.roles}>
+                  <WrappedComponent />
+                </ProtectedRoute>
+              </Route>
+            ) : (
+              <Route 
+                key={index} 
+                path={route.path} 
+                component={WrappedComponent} 
+              />
+            );
+          })}
+      </Switch>
       <OfflineIndicator />
     </ErrorBoundary>
   );
   
-  // Wrap with layout for most pages, except landing page for non-authenticated users
-  return shouldShowLayout ? <Layout>{content}</Layout> : content;
+  // Only show Layout if user is authenticated and not on login/signup pages
+  const showLayout = isAuthenticated && !isLoginMatch && !isSignupMatch;
+  
+  return showLayout ? <Layout>{content}</Layout> : content;
 }
 
 function App() {
