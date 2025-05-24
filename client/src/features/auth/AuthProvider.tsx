@@ -3,7 +3,8 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { 
   selectAuthError, 
   selectIsAuthenticated,
-  setCredentials
+  setCredentials,
+  fetchReplitUser
 } from './authSlice';
 import { useToast } from '@/hooks/use-toast';
 import { useModal } from '@/hooks/useModal';
