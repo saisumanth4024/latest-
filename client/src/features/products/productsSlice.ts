@@ -7,21 +7,21 @@ interface SearchHistoryItem {
 }
 
 interface ComparisonItem {
-  productId: number;
+  productId: string;
   addedAt: number;
 }
 
 interface RecentlyViewedItem {
-  productId: number;
+  productId: string;
   viewedAt: number;
 }
 
 interface ProductsState {
   filters: {
     category: string | null;
-    priceRange: [number, number] | null;
-    rating: number | null;
-    sort: 'price-asc' | 'price-desc' | 'rating' | 'newest' | null;
+    priceRange: string | null; // Changed from tuple to string for mock component compatibility
+    rating: string | null; // Changed from number to string for mock component compatibility
+    sort: string | null;
   };
   searchHistory: SearchHistoryItem[];
   comparison: ComparisonItem[];
@@ -84,14 +84,24 @@ export const productsSlice = createSlice({
       state.searchHistory = [];
     },
     
-    // Filter actions
-    setFilter: (state, action: PayloadAction<{
-      key: keyof ProductsState['filters']; 
-      value: any;
-    }>) => {
-      const { key, value } = action.payload;
-      // @ts-ignore - we know this is a valid key
-      state.filters[key] = value;
+    // Filter actions - supports both object and key-value format
+    setFilter: (state, action: PayloadAction<
+      | { [key: string]: any } 
+      | { key: keyof ProductsState['filters']; value: any }
+    >) => {
+      // Check if it's the key-value format
+      if ('key' in action.payload && 'value' in action.payload) {
+        const { key, value } = action.payload;
+        // @ts-ignore - we know this is a valid key
+        state.filters[key] = value;
+      } else {
+        // It's the object format with direct values
+        const filterUpdates = action.payload;
+        state.filters = {
+          ...state.filters,
+          ...filterUpdates
+        };
+      }
     },
     
     resetFilters: (state) => {
@@ -99,7 +109,7 @@ export const productsSlice = createSlice({
     },
     
     // Comparison actions
-    addToComparison: (state, action: PayloadAction<number>) => {
+    addToComparison: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
       
       // Check if already exists
@@ -119,7 +129,7 @@ export const productsSlice = createSlice({
       }
     },
     
-    removeFromComparison: (state, action: PayloadAction<number>) => {
+    removeFromComparison: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
       state.comparison = state.comparison.filter(item => item.productId !== productId);
     },
@@ -129,7 +139,7 @@ export const productsSlice = createSlice({
     },
     
     // Recently viewed actions
-    addToRecentlyViewed: (state, action: PayloadAction<number>) => {
+    addToRecentlyViewed: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
       
       // Remove if exists already (to move to top)

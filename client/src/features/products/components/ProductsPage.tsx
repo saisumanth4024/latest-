@@ -61,17 +61,23 @@ const ProductsPage: React.FC = () => {
   
   // Handle category filter change
   const handleCategoryChange = (categoryId: string) => {
-    dispatch(setFilter({ category: categoryId }));
+    dispatch(setFilter({ 
+      category: filters.category === categoryId ? null : categoryId 
+    }));
   };
   
   // Handle price range filter change
   const handlePriceRangeChange = (priceRangeId: string) => {
-    dispatch(setFilter({ priceRange: priceRangeId }));
+    dispatch(setFilter({ 
+      priceRange: filters.priceRange === priceRangeId ? null : priceRangeId 
+    }));
   };
   
   // Handle rating filter change
   const handleRatingChange = (ratingId: string) => {
-    dispatch(setFilter({ rating: ratingId }));
+    dispatch(setFilter({ 
+      rating: filters.rating === ratingId ? null : ratingId 
+    }));
   };
   
   // Handle search query change
@@ -82,6 +88,7 @@ const ProductsPage: React.FC = () => {
   // Handle sort change
   const handleSortChange = (value: string) => {
     setSortValue(value);
+    dispatch(setFilter({ sort: value }));
   };
   
   // Reset all filters
@@ -145,7 +152,7 @@ const ProductsPage: React.FC = () => {
                 {categories.find(c => c.id === filters.category)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: "category", value: null }))}
+                  onClick={() => dispatch(setFilter({ category: null }))}
                 >
                   ×
                 </button>
@@ -156,7 +163,7 @@ const ProductsPage: React.FC = () => {
                 {priceRanges.find(p => p.id === filters.priceRange)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: "priceRange", value: null }))}
+                  onClick={() => dispatch(setFilter({ priceRange: null }))}
                 >
                   ×
                 </button>
@@ -167,7 +174,7 @@ const ProductsPage: React.FC = () => {
                 {ratings.find(r => r.id === filters.rating)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: "rating", value: null }))}
+                  onClick={() => dispatch(setFilter({ rating: null }))}
                 >
                   ×
                 </button>
@@ -270,25 +277,6 @@ const ProductsPage: React.FC = () => {
               }}
               searchQuery={searchQuery}
             />
-            
-            {/* Pagination */}
-            <div className="mt-8 flex justify-center">
-              <div className="flex space-x-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={true}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

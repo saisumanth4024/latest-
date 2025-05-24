@@ -2,8 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Filter, ArrowLeft } from 'lucide-react';
+import { Filter, ArrowLeft } from 'lucide-react';
 import MockProductsComponent from '../../products/MockProductsComponent';
+
+// Type definition for the filters
+interface SelectedFilters {
+  category: string | null;
+  price: string | null;
+  rating: string | null;
+  sort: string;
+}
 
 const SearchResults: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -13,7 +21,7 @@ const SearchResults: React.FC = () => {
   
   // Parse the search query from the URL
   useEffect(() => {
-    const query = new URLSearchParams(location.split('?')[1]);
+    const query = new URLSearchParams(location.split('?')[1] || '');
     const q = query.get('q');
     if (q) {
       setSearchQuery(q);
@@ -54,7 +62,7 @@ const SearchResults: React.FC = () => {
   };
   
   // State for selected filters
-  const [selectedFilters, setSelectedFilters] = useState({
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     category: null,
     price: null,
     rating: null,
@@ -72,10 +80,10 @@ const SearchResults: React.FC = () => {
   };
   
   // Handle filter changes
-  const handleFilterChange = (type: string, value: string) => {
+  const handleFilterChange = (type: keyof SelectedFilters, value: string) => {
     setSelectedFilters(prev => ({
       ...prev,
-      [type]: prev[type as keyof typeof prev] === value ? null : value
+      [type]: prev[type] === value ? null : value
     }));
   };
   
@@ -149,7 +157,7 @@ const SearchResults: React.FC = () => {
                 Category: {filters.categories.find(c => c.id === selectedFilters.category)?.name}
                 <button 
                   className="ml-2" 
-                  onClick={() => handleFilterChange('category', selectedFilters.category as string)}
+                  onClick={() => handleFilterChange('category', selectedFilters.category)}
                 >
                   ×
                 </button>
@@ -161,7 +169,7 @@ const SearchResults: React.FC = () => {
                 Price: {filters.price.find(p => p.id === selectedFilters.price)?.name}
                 <button 
                   className="ml-2" 
-                  onClick={() => handleFilterChange('price', selectedFilters.price as string)}
+                  onClick={() => handleFilterChange('price', selectedFilters.price)}
                 >
                   ×
                 </button>
@@ -173,7 +181,7 @@ const SearchResults: React.FC = () => {
                 Rating: {filters.rating.find(r => r.id === selectedFilters.rating)?.name}
                 <button 
                   className="ml-2" 
-                  onClick={() => handleFilterChange('rating', selectedFilters.rating as string)}
+                  onClick={() => handleFilterChange('rating', selectedFilters.rating)}
                 >
                   ×
                 </button>
@@ -280,7 +288,7 @@ const SearchResults: React.FC = () => {
             columns={3}
             filters={{
               category: selectedFilters.category,
-              price: selectedFilters.price,
+              priceRange: selectedFilters.price,
               rating: selectedFilters.rating,
               sort: selectedFilters.sort
             }}
