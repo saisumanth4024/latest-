@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createAction, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
 import { apiRequest } from '@/lib/queryClient';
 import { User, UserStatus } from './types';
@@ -193,6 +193,18 @@ const authSlice = createSlice({
 
 // Actions
 export const { logout, setCredentials } = authSlice.actions;
+// Create a setFormError action from the authSlice actions
+export const setFormError = (error: string) => ({
+  type: 'auth/setFormError',
+  payload: error
+});
+
+// Create a clearError action
+export const clearError = () => ({
+  type: 'auth/clearError',
+  payload: null
+});
+
 export const setAuthState = (role: UserRole) => (dispatch: any) => {
   const mockUser = {
     id: '1',
@@ -206,6 +218,9 @@ export const setAuthState = (role: UserRole) => (dispatch: any) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+  
+  // Store user data and tokens in localStorage
+  localStorage.setItem('demoUserRole', JSON.stringify({ role: role }));
   
   dispatch(setCredentials({
     user: mockUser,
@@ -353,6 +368,7 @@ export const revokeSession = createAsyncThunk(
 // Selectors
 export const selectAuthUser = (state: RootState) => state.auth.user;
 export const selectUser = (state: RootState) => state.auth.user;
+export const selectToken = (state: RootState) => state.auth.token;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;

@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         </div>
 
         {/* Role Selector (Demo) */}
-        <div className="mb-6">
+        <div className="mb-6 p-3 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/50">
           <label htmlFor="role-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Switch Role (Demo)
           </label>
@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             id="role-select"
             value={userRole}
             onChange={handleRoleChange}
-            className="w-full py-2 px-3 rounded-md bg-slate-100 dark:bg-slate-700 border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-0 text-sm"
+            className="w-full py-2 px-3 rounded-md bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 focus:border-primary-500 focus:ring-primary-500 text-sm"
           >
             <option value="guest">Guest</option>
             <option value="user">User</option>
@@ -100,6 +100,18 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <option value="seller">Seller</option>
             <option value="moderator">Moderator</option>
           </select>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            For demonstration purposes only. Change role to see different navigation options.
+          </div>
+          
+          <div className="mt-3">
+            <button
+              onClick={handleLogout}
+              className="w-full px-3 py-2 text-xs rounded-md bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition duration-200"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
 
         <nav className="space-y-8">
