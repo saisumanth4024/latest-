@@ -1,15 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   selectFilters, 
   setFilter,
-  resetFilters 
+  resetFilters,
+  ProductFilters 
 } from '../productsSlice';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MockProductsComponent from '../MockProductsComponent';
+import FilterSidebar from './FilterSidebar';
 
 const ProductsPage: React.FC = () => {
   const dispatch = useDispatch();

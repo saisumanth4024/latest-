@@ -8,6 +8,14 @@ export interface ProductFilters {
   priceRange: string | null;
   rating: string | null;
   sort: string;
+  brand: string[] | null;
+  colors: string[] | null;
+  tags: string[] | null;
+  discount: boolean | null;
+  inStock: boolean | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  minRating: number | null;
 }
 
 // Define the state type
@@ -31,7 +39,15 @@ const initialState: ProductsState = {
     category: null,
     priceRange: null,
     rating: null,
-    sort: 'newest'
+    sort: 'newest',
+    brand: null,
+    colors: null,
+    tags: null,
+    discount: null,
+    inStock: null,
+    minPrice: null,
+    maxPrice: null,
+    minRating: null
   }
 };
 
