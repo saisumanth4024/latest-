@@ -6,7 +6,7 @@ import LoginPage from "@/pages/LoginPage";
 import Layout from "@/components/layout/Layout";
 import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
-import { UserRole } from "@/features/auth/types";
+import { UserRole } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -131,12 +131,14 @@ export const routes = [
     requireAuth: true,
     title: "Profile (Legacy)",
     hideInMenu: true,
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   { 
     path: "/settings", 
     component: ProfilePage, 
     requireAuth: true,
     title: "Settings",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   { 
     path: "/reviews/:contentType/:contentId", 
@@ -149,27 +151,28 @@ export const routes = [
     ), 
     requireAuth: false,
     title: "Reviews",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
     hideInMenu: true,
   },
   {
     path: "/moderation/reviews",
     component: () => (<ModerationPage userId="admin" />),
     requireAuth: true,
-    roles: ['admin', 'moderator'],
+    roles: ['admin', 'moderator'] as UserRole[],
     title: "Review Moderation",
   },
   { 
     path: "/admin/dashboard", 
     component: AdminDashboardPage, 
     requireAuth: true,
-    roles: ['admin'],
+    roles: ['admin'] as UserRole[],
     title: "Admin Dashboard",
   },
   { 
     path: "/seller/dashboard", 
     component: SellerDashboardPage, 
     requireAuth: true,
-    roles: ['seller', 'admin'],
+    roles: ['seller', 'admin'] as UserRole[],
     title: "Seller Dashboard",
   },
   // Login and signup routes are replaced by Replit auth
@@ -225,7 +228,7 @@ function ProtectedRoute({
   // Safety checks to avoid errors with undefined user or roles
   if (roles && roles.length > 0 && user) {
     // Get the user's role from the authenticated user object
-    const userRole = user.role;
+    const userRole = user.role as UserRole;
     
     if (!roles.includes(userRole)) {
       toast({
