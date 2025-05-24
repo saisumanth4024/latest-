@@ -36,6 +36,7 @@ const DashboardPage = lazy(() => import('@/features/dashboard').then(m => ({ def
 const ReviewsPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ReviewsPage })));
 const ModerationPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ModerationPage })));
 const AdvancedFormPage = lazy(() => import("@/features/formsAdvanced/AdvancedFormPage"));
+const TypeScriptPatternsDemo = lazy(() => import("@/features/tsPatterns/TypeScriptPatternsDemo"));
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -66,6 +67,13 @@ export const routes = [
     component: AdvancedFormPage,
     requireAuth: false,
     title: "Advanced Forms",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
+  },
+  {
+    path: "/ts-patterns-demo",
+    component: TypeScriptPatternsDemo,
+    requireAuth: false,
+    title: "TypeScript Patterns Demo",
     roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
