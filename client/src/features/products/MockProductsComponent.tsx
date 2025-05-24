@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,9 @@ import {
   Heart, 
   Star, 
   StarHalf, 
-  ChevronRight, 
-  ChevronLeft 
+  Loader2
 } from 'lucide-react';
+import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import { formatCurrency } from '@/lib/utils';
 
 // Mock product data with realistic details
@@ -428,25 +428,36 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, filters, count]);
   
-  // Pagination logic
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const currentProducts = filteredProducts.slice(
-    (currentPage - 1) * productsPerPage,
-    currentPage * productsPerPage
-  );
+  // Infinite scroll logic
+  const loadMoreProducts = useCallback(async (page: number) => {
+    // Simulate loading delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const startIndex = (page - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    
+    // Check if there are more products to load
+    return endIndex < filteredProducts.length;
+  }, [filteredProducts.length, productsPerPage]);
   
-  // Handle page changes
-  const nextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
+  // Use the infinite scroll hook
+  const { 
+    loading, 
+    lastElementRef, 
+    hasMore, 
+    page 
+  } = useInfiniteScroll({
+    threshold: 300,
+    initialPage: 1,
+    autoLoad: true,
+    resetOnDepsChange: true,
+    onLoadMore: loadMoreProducts
+  });
   
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
+  // Get products for the current page
+  const currentProducts = useMemo(() => {
+    return filteredProducts.slice(0, page * productsPerPage);
+  }, [filteredProducts, page, productsPerPage]);
   
   // Render stars for rating
   // Handle product click navigation
