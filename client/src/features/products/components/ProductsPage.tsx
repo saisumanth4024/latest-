@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetProductsQuery } from '../productsApi';
 import { 
@@ -10,10 +10,10 @@ import ProductGrid from './ProductGrid';
 import SearchBar from './SearchBar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, SlidersHorizontal, Star, ShoppingCart, Heart } from 'lucide-react';
+import { Loader2, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-// Sample product data with realistic names and working images
+// Sample product data with realistic names
 const productNames = [
   "Ultra Wireless Headphones",
   "Premium Running Shoes",
@@ -25,222 +25,289 @@ const productNames = [
   "Noise-Cancelling Headset",
   "Performance Athletic Shoes",
   "Ergonomic Office Chair",
-  "Modern LED Desk Lamp",
-  "Sectional Sofa"
+  "4K Ultra HD Monitor",
+  "Smartphone Pro Max"
 ];
-
-const productImages = [
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80", // Headphones
-  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80", // Red shoes
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80", // Watch
-  "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80", // Sunglasses
-  "https://images.unsplash.com/photo-1600086827875-a63b01f1335c?w=400&q=80", // Earbuds
-  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80", // Laptop
-  "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=400&q=80", // Keyboard
-  "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&q=80", // Headset
-  "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=80", // Shoes
-  "https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&q=80", // Chair
-  "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&q=80", // Lamp
-  "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80"  // Sofa
-];
-
-const descriptions = [
-  "Experience premium sound quality with deep bass and noise isolation",
-  "Engineered for comfort and performance with breathable materials",
-  "Track your fitness goals and stay connected with smart notifications",
-  "Polarized lenses with UV protection in a stylish, durable frame",
-  "Crystal clear audio with 30-hour battery life and water resistance",
-  "Ultra-fast performance with 16GB RAM and 512GB SSD storage",
-  "Precision typing experience with customizable RGB lighting",
-  "Block out distractions with advanced noise cancellation technology",
-  "Maximum comfort and support for high-intensity training",
-  "Adjustable lumbar support and breathable mesh for all-day comfort",
-  "Adjustable brightness with multiple color temperatures",
-  "Premium fabric with modular design for flexible arrangements"
-];
-
-const sampleProducts = Array(12).fill(0).map((_, i) => ({
-  id: i + 1,
-  name: productNames[i],
-  description: descriptions[i],
-  price: (79 + (i * 30)) + 0.99,
-  discountPrice: i % 3 === 0 ? ((79 + (i * 30)) + 0.99) * 0.8 : undefined,
-  image: productImages[i],
-  category: i % 3 === 0 ? "Electronics" : i % 3 === 1 ? "Clothing" : "Home & Kitchen",
-  brand: i % 4 === 0 ? "SoundMaster" : i % 4 === 1 ? "TechVision" : i % 4 === 2 ? "FitTech" : "HomeConnect",
-  rating: (Math.floor((3 + Math.random() * 2) * 10) / 10).toFixed(1),
-  reviews: Math.floor(10 + Math.random() * 490),
-  inStock: i % 7 !== 0,
-  isNew: i % 5 === 0,
-  tags: ["premium", i % 3 === 0 ? "electronics" : i % 3 === 1 ? "clothing" : "home", `${i % 2 === 0 ? "featured" : "bestseller"}`],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-}));
-
-// Simple Filter Sidebar component (can be moved to its own file later)
-const FilterSidebar: React.FC<{
-  onClose: () => void;
-}> = ({ onClose }) => {
-  return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium text-lg">Filters</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>✕</Button>
-      </div>
-      <div className="space-y-6">
-        <div>
-          <h4 className="font-medium mb-2">Categories</h4>
-          <div className="space-y-2">
-            {['Electronics', 'Clothing', 'Home & Kitchen'].map(category => (
-              <div key={category} className="flex items-center">
-                <input type="checkbox" id={category} className="mr-2" />
-                <label htmlFor={category}>{category}</label>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h4 className="font-medium mb-2">Price Range</h4>
-          <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              placeholder="Min" 
-              className="w-1/2 p-2 border rounded" 
-            />
-            <span>-</span>
-            <input 
-              type="number" 
-              placeholder="Max" 
-              className="w-1/2 p-2 border rounded" 
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Simple Sort Options component
-const SortOptions: React.FC<{
-  onChange: (value: string) => void;
-  value?: string;
-}> = ({ onChange, value = 'newest' }) => {
-  return (
-    <select 
-      value={value} 
-      onChange={(e) => onChange(e.target.value)}
-      className="p-2 border rounded bg-white dark:bg-gray-800"
-    >
-      <option value="newest">Newest</option>
-      <option value="price-asc">Price: Low to High</option>
-      <option value="price-desc">Price: High to Low</option>
-      <option value="rating">Top Rated</option>
-    </select>
-  );
-};
 
 const ProductsPage: React.FC = () => {
   const dispatch = useDispatch();
-  const filters = useSelector(selectFilters);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortValue, setSortValue] = useState('newest');
+  const [showFilters, setShowFilters] = useState(false);
+  const filters = useSelector(selectFilters);
   
-  // Create params object for API request
-  const params = {
+  // Initial fetch params
+  const [params, setParams] = useState({
     page: 1,
     limit: 12,
+    sort: sortValue,
     search: searchQuery,
-    sortBy: sortValue.includes('price') ? 'price' : sortValue,
-    sortOrder: sortValue === 'price-asc' ? 'asc' as const : 'desc' as const,
+    ...filters
+  });
+  
+  // Sample filter categories for the sidebar
+  const categories = [
+    { id: 'electronics', name: 'Electronics' },
+    { id: 'clothing', name: 'Clothing & Apparel' },
+    { id: 'home', name: 'Home & Kitchen' },
+    { id: 'beauty', name: 'Beauty & Personal Care' },
+    { id: 'books', name: 'Books & Media' },
+    { id: 'sports', name: 'Sports & Outdoors' },
+    { id: 'toys', name: 'Toys & Games' },
+    { id: 'automotive', name: 'Automotive' },
+    { id: 'health', name: 'Health & Wellness' },
+    { id: 'jewelry', name: 'Jewelry & Watches' }
+  ];
+  
+  // Price ranges for filtering
+  const priceRanges = [
+    { id: '0-50', name: 'Under $50' },
+    { id: '50-100', name: '$50 to $100' },
+    { id: '100-200', name: '$100 to $200' },
+    { id: '200-500', name: '$200 to $500' },
+    { id: '500-1000', name: '$500 to $1000' },
+    { id: '1000+', name: 'Over $1000' }
+  ];
+  
+  // Ratings for filtering
+  const ratings = [
+    { id: '4+', name: '4★ & Above' },
+    { id: '3+', name: '3★ & Above' },
+    { id: '2+', name: '2★ & Above' },
+    { id: '1+', name: '1★ & Above' }
+  ];
+  
+  // Sorting options
+  const sortOptions = [
+    { id: 'newest', name: 'Newest Arrivals' },
+    { id: 'popular', name: 'Most Popular' },
+    { id: 'price-low', name: 'Price: Low to High' },
+    { id: 'price-high', name: 'Price: High to Low' },
+    { id: 'rating', name: 'Highest Rated' }
+  ];
+  
+  // Create search params for API call
+  const createSearchParams = useCallback(() => {
+    return {
+      page: params.page,
+      limit: params.limit,
+      sort: sortValue,
+      search: searchQuery,
+      ...filters
+    };
+  }, [params.page, params.limit, sortValue, searchQuery, filters]);
+  
+  // Update params when filters change
+  useEffect(() => {
+    setParams(prev => ({
+      ...prev,
+      page: 1, // Reset to first page on filter change
+      sort: sortValue,
+      search: searchQuery,
+      ...filters
+    }));
+  }, [filters, sortValue, searchQuery]);
+  
+  // Fetch products with the current params
+  const { data, error, isLoading } = useGetProductsQuery(createSearchParams());
+  
+  // Handle category filter change
+  const handleCategoryChange = (categoryId: string) => {
+    dispatch(setFilter({ category: categoryId }));
   };
   
-  // For demo purposes, we'll use sample data instead of the API
-  // const { data, isLoading, error } = useGetProductsQuery(params);
-  const isLoading = false;
-  const error = null;
-  const data = {
-    products: sampleProducts,
-    total: 48,
-    page: 1,
-    limit: 12,
-    totalPages: 4
+  // Handle price range filter change
+  const handlePriceRangeChange = (priceRangeId: string) => {
+    dispatch(setFilter({ priceRange: priceRangeId }));
   };
   
-  const toggleMobileSidebar = () => {
-    setMobileSidebarOpen(!mobileSidebarOpen);
+  // Handle rating filter change
+  const handleRatingChange = (ratingId: string) => {
+    dispatch(setFilter({ rating: ratingId }));
   };
   
-  const handleSearch = useCallback((query: string) => {
+  // Handle search query change
+  const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-  }, []);
+  };
   
-  const handleSortChange = useCallback((value: string) => {
+  // Handle sort change
+  const handleSortChange = (value: string) => {
     setSortValue(value);
-  }, []);
+  };
+  
+  // Reset all filters
+  const handleResetFilters = () => {
+    dispatch(resetFilters());
+    setSearchQuery('');
+    setSortValue('newest');
+  };
+  
+  // Toggle filter sidebar on mobile
+  const toggleFilters = () => {
+    setShowFilters(prev => !prev);
+  };
   
   return (
     <ErrorBoundary>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Products</h1>
         
-        {/* Search and Filters UI */}
-        <div className="flex flex-col space-y-4 mb-6">
-          <div className="w-full">
-            <SearchBar onSearch={handleSearch} initialQuery={searchQuery} />
-          </div>
-          
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            {/* Mobile filter toggle */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="lg:hidden flex items-center gap-2"
-              onClick={toggleMobileSidebar}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-            </Button>
-            
-            {/* Clear filters button - shown when filters are active */}
-            {(searchQuery || sortValue !== 'newest') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSortValue('newest');
-                }}
-                className="text-sm flex items-center gap-1"
-              >
-                <RefreshCw className="h-3 w-3" />
-                Clear Filters
-              </Button>
-            )}
-            
-            {/* Sort options */}
-            <div className="ml-auto">
-              <SortOptions 
-                value={sortValue}
-                onChange={handleSortChange} 
+        {/* Search and filter UI */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <SearchBar 
+                value={searchQuery} 
+                onChange={handleSearchChange} 
+                placeholder="Search products..." 
               />
             </div>
+            <div className="flex gap-2">
+              <div className="w-full md:w-48">
+                <select 
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                  value={sortValue}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                >
+                  {sortOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleFilters}
+                className="md:hidden"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Active filters */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {filters.category && (
+              <Badge variant="secondary" className="px-3 py-1">
+                {categories.find(c => c.id === filters.category)?.name}
+                <button 
+                  className="ml-2"
+                  onClick={() => dispatch(setFilter({ category: null }))}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.priceRange && (
+              <Badge variant="secondary" className="px-3 py-1">
+                {priceRanges.find(p => p.id === filters.priceRange)?.name}
+                <button 
+                  className="ml-2"
+                  onClick={() => dispatch(setFilter({ priceRange: null }))}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.rating && (
+              <Badge variant="secondary" className="px-3 py-1">
+                {ratings.find(r => r.id === filters.rating)?.name}
+                <button 
+                  className="ml-2"
+                  onClick={() => dispatch(setFilter({ rating: null }))}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {(filters.category || filters.priceRange || filters.rating || searchQuery) && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleResetFilters}
+                className="h-7 gap-1"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
           </div>
         </div>
         
-        {/* Main content area with sidebar and products */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters sidebar - hidden on mobile unless toggled */}
-          <div className={`${
-            mobileSidebarOpen ? 'block' : 'hidden'
-          } lg:block lg:w-1/4 p-4 bg-card rounded-lg border shadow-sm`}>
-            <FilterSidebar
-              onClose={() => setMobileSidebarOpen(false)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Filter sidebar (hidden on mobile unless toggled) */}
+          <div className={`bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm md:block ${showFilters ? 'block' : 'hidden'}`}>
+            <h2 className="font-semibold text-xl mb-4">Filters</h2>
+            
+            {/* Categories */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Categories</h3>
+              <div className="space-y-2">
+                {categories.map(category => (
+                  <div key={category.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`category-${category.id}`}
+                      checked={filters.category === category.id}
+                      onChange={() => handleCategoryChange(category.id)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
+                      {category.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Price ranges */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Price</h3>
+              <div className="space-y-2">
+                {priceRanges.map(range => (
+                  <div key={range.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`price-${range.id}`}
+                      checked={filters.priceRange === range.id}
+                      onChange={() => handlePriceRangeChange(range.id)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`price-${range.id}`} className="text-sm cursor-pointer">
+                      {range.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Ratings */}
+            <div>
+              <h3 className="font-medium mb-2">Rating</h3>
+              <div className="space-y-2">
+                {ratings.map(rating => (
+                  <div key={rating.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`rating-${rating.id}`}
+                      checked={filters.rating === rating.id}
+                      onChange={() => handleRatingChange(rating.id)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`rating-${rating.id}`} className="text-sm cursor-pointer">
+                      {rating.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           
-          {/* Products grid */}
-          <div className="flex-1">
+          {/* Product listing */}
+          <div className="md:col-span-3">
             {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -307,21 +374,9 @@ const ProductsPage: React.FC = () => {
                     >
                       Previous
                     </Button>
-                    
-                    {[1, 2, 3, 4].map((page) => (
-                      <Button
-                        key={page}
-                        variant={params.page === page ? "default" : "outline"}
-                        size="sm"
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={params.page >= data.totalPages}
                     >
                       Next
                     </Button>

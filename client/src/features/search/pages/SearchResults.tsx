@@ -23,7 +23,13 @@ import {
   setSortOrder
 } from '../searchSlice';
 import { useGetCategoriesQuery, useGetBrandsQuery, useGetTagsQuery } from '../searchApi';
-import { ProductFilters } from '@/features/products/productsApi';
+// Define the ProductFilters interface here to avoid import issues
+interface ProductFilters {
+  category: string | null;
+  priceRange: [number, number] | null;
+  rating: number | null;
+  sort: 'price-asc' | 'price-desc' | 'rating' | 'newest' | null;
+}
 import { CategoryData, BrandData, TagData } from '../searchApi';
 
 import { Input } from '@/components/ui/input';
@@ -166,7 +172,7 @@ export default function SearchResults() {
         "Smart Watch Pro",
         "Designer Sunglasses",
         "Wireless Earbuds",
-        "Ultrabook Laptop 15"",
+        "Ultrabook Laptop 15\"",
         "Mechanical Keyboard",
         "Noise-Cancelling Headset",
         "Performance Athletic Shoes",
