@@ -613,8 +613,8 @@ const generateDescription = (productName: string, category: string, subcategory:
   const template = templates[Math.floor(Math.random() * templates.length)];
   
   // Get category-specific feature lists
-  const categoryFeatures = features[category] || features.electronics;
-  const categoryBenefits = benefits[category] || benefits.electronics;
+  const categoryFeatures = features[category] || features.default;
+  const categoryBenefits = benefits[category] || benefits.default;
   
   // Select random features and benefits without repetition
   const shuffledFeatures = [...categoryFeatures].sort(() => 0.5 - Math.random());
@@ -684,7 +684,7 @@ const generateTags = (category: string, subcategory: string, productName: string
   if (Math.random() > 0.85) baseTags.push('bestseller');
   
   // Filter out any duplicates and return
-  return [...new Set(baseTags)];
+  return Array.from(new Set(baseTags));
 };
 
 // Generate an array of mock products
