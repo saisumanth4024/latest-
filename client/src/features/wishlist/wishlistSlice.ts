@@ -348,7 +348,8 @@ export const {
   setDefaultWishlist,
   updateItemNotes,
   moveItem,
-  clearWishlist
+  clearWishlist,
+  setActiveWishlist
 } = wishlistSlice.actions;
 
 // Initialize wishlists (middleware action for app start)
