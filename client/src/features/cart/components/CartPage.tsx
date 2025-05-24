@@ -1,272 +1,452 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useLocation } from 'wouter';
-import { 
-  ArrowLeft, 
-  Loader2, 
-  ShoppingCart, 
-  ArchiveRestore, 
-  Trash2
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect } from 'react';
+import { Link } from 'wouter';
+import { useDispatch } from 'react-redux';
+import { useAppSelector } from '@/app/hooks';
 import { RootState } from '@/app/store';
-import { fetchCart, clearCart } from '../cartSlice';
-import { fetchWishlists, selectDefaultWishlist } from '@/features/wishlist/wishlistSlice';
-import CartItem from './CartItem';
-import CartSummary from './CartSummary';
-import PromoCodeForm from './PromoCodeForm';
-import EmptyCart from './EmptyCart';
+import { fetchCart, removeFromCart, updateQuantity, saveForLater, moveToCart, clearCart } from '../cartSlice';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import {
+  ShoppingCart,
+  Trash,
+  Heart,
+  Plus,
+  Minus,
+  ShoppingBag,
+  AlertCircle,
+  ArrowRight,
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export function CartPage() {
+const CartPage: React.FC = () => {
   const dispatch = useDispatch();
-  const [location, navigate] = useLocation();
+  const { cart, savedItems, status, error } = useAppSelector((state: RootState) => state.cart);
   const { toast } = useToast();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  
-  // Get cart state from Redux
-  const { cart, status, error, savedItems } = useSelector((state: RootState) => state.cart);
-  
-  // Get default wishlist
-  const defaultWishlist = useSelector(selectDefaultWishlist);
-  
-  // Load cart and wishlists
+
   useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchCart());
-      dispatch(fetchWishlists());
-    }
-  }, [dispatch, status]);
-  
-  // Handle checkout
-  const handleCheckout = () => {
-    setIsCheckingOut(true);
-    
-    // Simulate checkout process
-    setTimeout(() => {
-      toast({
-        title: 'Checkout temporarily unavailable',
-        description: 'This is a demo application. Checkout functionality is not fully implemented.',
-        variant: 'default',
-      });
-      setIsCheckingOut(false);
-    }, 1500);
+    // Fetch cart on component mount
+    dispatch(fetchCart() as any);
+  }, [dispatch]);
+
+  const handleRemoveItem = (itemId: string | number) => {
+    dispatch(removeFromCart(itemId));
+    toast({
+      title: 'Item removed',
+      description: 'The item has been removed from your cart.',
+    });
   };
-  
-  // Handle clear cart
+
+  const handleUpdateQuantity = (itemId: string | number, quantity: number) => {
+    if (quantity < 1) return;
+    dispatch(updateQuantity({ itemId, quantity }));
+  };
+
+  const handleSaveForLater = (itemId: string | number) => {
+    dispatch(saveForLater(itemId));
+    toast({
+      title: 'Item saved',
+      description: 'The item has been saved for later.',
+    });
+  };
+
+  const handleMoveToCart = (itemId: string | number) => {
+    dispatch(moveToCart(itemId));
+    toast({
+      title: 'Item moved to cart',
+      description: 'The item has been moved to your cart.',
+    });
+  };
+
   const handleClearCart = () => {
-    if (window.confirm('Are you sure you want to clear your cart? This action cannot be undone.')) {
-      dispatch(clearCart());
-      
-      toast({
-        title: 'Cart cleared',
-        description: 'All items have been removed from your cart.',
-      });
-    }
+    dispatch(clearCart());
+    toast({
+      title: 'Cart cleared',
+      description: 'All items have been removed from your cart.',
+    });
   };
-  
+
   // Loading state
-  if (status === 'loading' || !cart) {
+  if (status === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-lg text-muted-foreground">Loading your cart...</p>
+      <div className="container mx-auto p-4 max-w-6xl">
+        <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+        <div className="flex flex-col space-y-4">
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <div className="bg-gray-200 h-96 rounded animate-pulse"></div>
+            </div>
+            <div className="md:col-span-1">
+              <div className="bg-gray-200 h-64 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
-  
+
   // Error state
-  if (status === 'failed' && error) {
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] py-12">
-        <div className="text-center max-w-md mx-auto">
-          <ShoppingCart className="h-12 w-12 text-destructive mb-4 mx-auto" />
-          <h2 className="text-2xl font-semibold mb-2">Something went wrong</h2>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => dispatch(fetchCart())}>
-            Try Again
-          </Button>
-        </div>
+      <div className="container mx-auto p-4 max-w-6xl">
+        <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            There was an error loading your cart. Please try again later.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
-  
-  // Empty cart
-  if (cart.items.length === 0) {
+
+  // Empty cart state
+  if (!cart || cart.items.length === 0) {
     return (
-      <div className="container py-8 max-w-5xl mx-auto">
-        <div className="mb-6">
-          <Button variant="ghost" asChild className="p-0 mb-4">
-            <Link href="/products">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Continue Shopping
-            </Link>
-          </Button>
-          <h1 className="text-3xl font-bold">Your Cart</h1>
-        </div>
-        
-        <EmptyCart />
-        
+      <div className="container mx-auto p-4 max-w-6xl">
+        <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+        <Card className="text-center p-8">
+          <CardContent className="pt-6 flex flex-col items-center">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
+            <CardTitle className="text-xl mb-2">Your cart is empty</CardTitle>
+            <CardDescription className="mb-6">
+              Looks like you haven't added any products to your cart yet.
+            </CardDescription>
+            <Button asChild>
+              <Link href="/products">Browse Products</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         {savedItems.length > 0 && (
           <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Saved For Later ({savedItems.length})</h2>
-            </div>
-            
-            <div className="space-y-4">
-              {savedItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden bg-white">
-                    {item.product.imageUrl ? (
-                      <img 
-                        src={item.product.imageUrl} 
-                        alt={item.product.name || 'Product'} 
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        <ShoppingCart className="w-6 h-6 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.product.name}</h3>
-                    <p className="text-sm text-muted-foreground">${item.unitPrice.toFixed(2)}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        dispatch({
-                          type: 'cart/moveToCart',
-                          payload: item.id
-                        });
-                        toast({
-                          title: 'Item moved to cart',
-                          description: 'The item has been moved to your cart.',
-                          variant: 'success',
-                        });
-                      }}
-                    >
-                      <ArchiveRestore className="mr-1 h-3.5 w-3.5" />
-                      Move to Cart
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-xl font-semibold mb-4">Saved for Later ({savedItems.length})</h2>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {savedItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <div className="h-16 w-16 bg-gray-100 rounded mr-4 flex items-center justify-center">
+                              {item.product.imageUrl ? (
+                                <img
+                                  src={item.product.imageUrl}
+                                  alt={item.product.name}
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              ) : (
+                                <ShoppingBag className="h-8 w-8 text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">{item.product.name}</div>
+                              <div className="text-sm text-muted-foreground">{item.product.brand}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMoveToCart(item.id)}
+                            >
+                              Move to Cart
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveItem(item.id)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
     );
   }
-  
-  // Render cart with items
+
+  // Populated cart
   return (
-    <div className="container py-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <Button variant="ghost" asChild className="p-0 mb-4">
-          <Link href="/products">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Continue Shopping
-          </Link>
-        </Button>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Your Cart</h1>
-          <Button 
-            variant="outline" 
-            onClick={handleClearCart}
-            className="text-red-500 border-red-200 hover:text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Clear Cart
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <h1 className="text-2xl font-bold mb-6">Shopping Cart ({cart.items.length})</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          {/* Cart Items */}
-          <div className="space-y-4">
-            {cart.items.map((item) => (
-              <CartItem 
-                key={item.id} 
-                item={item} 
-                defaultWishlistId={defaultWishlist?.id}
-              />
-            ))}
-          </div>
-          
-          {/* Saved Items */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Cart Items */}
+        <div className="md:col-span-2">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cart.items.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <div className="h-20 w-20 bg-gray-100 rounded mr-4 flex items-center justify-center">
+                            {item.product.imageUrl ? (
+                              <img
+                                src={item.product.imageUrl}
+                                alt={item.product.name}
+                                className="max-h-full max-w-full object-contain"
+                              />
+                            ) : (
+                              <ShoppingBag className="h-10 w-10 text-gray-400" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium">{item.product.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {item.product.brand}
+                              {item.options && Object.entries(item.options).length > 0 && (
+                                <div className="mt-1">
+                                  {Object.entries(item.options).map(([key, value]) => (
+                                    <span key={key} className="text-xs">
+                                      {key}: {value}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value, 10))}
+                            className="w-12 h-8 text-center"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div>{formatCurrency(item.subtotal)}</div>
+                          {item.discountTotal > 0 && (
+                            <div className="text-sm text-green-600">
+                              Save {formatCurrency(item.discountTotal)}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSaveForLater(item.id)}
+                          >
+                            <Heart className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveItem(item.id)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+            <CardFooter className="flex justify-between p-4">
+              <Button variant="outline" onClick={handleClearCart}>
+                Clear Cart
+              </Button>
+              <Button asChild>
+                <Link href="/products">Continue Shopping</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
           {savedItems.length > 0 && (
             <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Saved For Later ({savedItems.length})</h2>
-              </div>
-              
-              <div className="space-y-4">
-                {savedItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
-                    <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden bg-white">
-                      {item.product.imageUrl ? (
-                        <img 
-                          src={item.product.imageUrl} 
-                          alt={item.product.name || 'Product'} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <ShoppingCart className="w-6 h-6 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.product.name}</h3>
-                      <p className="text-sm text-muted-foreground">${item.unitPrice.toFixed(2)}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          dispatch({
-                            type: 'cart/moveToCart',
-                            payload: item.id
-                          });
-                          toast({
-                            title: 'Item moved to cart',
-                            description: 'The item has been moved to your cart.',
-                            variant: 'success',
-                          });
-                        }}
-                      >
-                        <ArchiveRestore className="mr-1 h-3.5 w-3.5" />
-                        Move to Cart
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-xl font-semibold mb-4">Saved for Later ({savedItems.length})</h2>
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {savedItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <div className="h-16 w-16 bg-gray-100 rounded mr-4 flex items-center justify-center">
+                                {item.product.imageUrl ? (
+                                  <img
+                                    src={item.product.imageUrl}
+                                    alt={item.product.name}
+                                    className="max-h-full max-w-full object-contain"
+                                  />
+                                ) : (
+                                  <ShoppingBag className="h-8 w-8 text-gray-400" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-medium">{item.product.name}</div>
+                                <div className="text-sm text-muted-foreground">{item.product.brand}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMoveToCart(item.id)}
+                              >
+                                Move to Cart
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveItem(item.id)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
-        
-        <div className="space-y-6">
-          {/* Promo Code Form */}
-          <div>
-            <PromoCodeForm appliedCoupons={cart.coupons} />
-          </div>
-          
-          <Separator />
-          
-          {/* Cart Summary */}
-          <CartSummary cart={cart} onCheckout={handleCheckout} />
+
+        {/* Order Summary */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(cart.totals.subtotal)}</span>
+                </div>
+                
+                {cart.totals.discountTotal > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>-{formatCurrency(cart.totals.discountTotal)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span>
+                    {cart.totals.shippingTotal === 0 
+                      ? 'Free' 
+                      : formatCurrency(cart.totals.shippingTotal)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span>Tax</span>
+                  <span>{formatCurrency(cart.totals.taxTotal)}</span>
+                </div>
+                
+                <Separator />
+                
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>{formatCurrency(cart.totals.total)}</span>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" asChild>
+                <Link href="/checkout">
+                  Proceed to Checkout
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default CartPage;

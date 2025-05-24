@@ -17,9 +17,9 @@ import {
   Moon
 } from 'lucide-react';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
-import { selectCartItemsCount } from '@/features/cart/cartSlice';
-import { selectWishlistItemsCount } from '@/features/wishlist/wishlistSlice';
-import { selectUserProfile } from '@/features/profile/profileSlice';
+// Import cart and wishlist state from Redux store
+import { RootState } from '@/app/store';
+import { useAppSelector } from '@/app/hooks';
 import { UserRole } from '@/config/navigation';
 
 import {
@@ -57,9 +57,9 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const cartItemsCount = useSelector(selectCartItemsCount);
-  const wishlistItemsCount = useSelector(selectWishlistItemsCount);
-  const userProfile = useSelector(selectUserProfile);
+  const cartItemsCount = useAppSelector((state: RootState) => state.cart.cart?.items.length || 0);
+  const wishlistItemsCount = useAppSelector((state: RootState) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
+  const userProfile = useAppSelector((state: RootState) => state.auth.user || {});
 
   const isLoggedIn = !!userProfile;
   const userRole = userProfile?.role || 'guest';
