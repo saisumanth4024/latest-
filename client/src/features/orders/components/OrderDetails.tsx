@@ -79,7 +79,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
 // Helper component for tracking status
-const OrderTrackingStatus = ({ status }: { status: OrderTrackingStatus }) => {
+const OrderTrackingStatusComponent = ({ status }: { status: OrderTrackingStatus }) => {
   // Function to determine progress percentage based on status
   const getProgressPercentage = (status: OrderTrackingStatus) => {
     const statusOrder = [
@@ -500,7 +500,7 @@ export default function OrderDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <OrderTrackingStatus status={currentTracking.status} />
+            <OrderTrackingStatusComponent status={currentTracking.status} />
             
             {currentTracking.trackingNumber && (
               <div className="bg-muted/30 p-4 rounded-md">
