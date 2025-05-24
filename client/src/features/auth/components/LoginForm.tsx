@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,11 @@ export default function LoginForm() {
   // Get pre-filled email from signup process if available
   const savedEmail = sessionStorage.getItem('signupEmail') || '';
   
+  // Remove the saved email immediately
+  if (savedEmail) {
+    sessionStorage.removeItem('signupEmail');
+  }
+  
   // Initialize form with default values
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -44,13 +49,6 @@ export default function LoginForm() {
       rememberMe: false,
     },
   });
-  
-  // Clear the saved email after form initialization
-  useEffect(() => {
-    if (savedEmail) {
-      sessionStorage.removeItem('signupEmail');
-    }
-  }, [savedEmail]);
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
