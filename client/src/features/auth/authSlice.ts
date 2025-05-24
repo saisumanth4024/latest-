@@ -117,6 +117,7 @@ const authSlice = createSlice({
       localStorage.removeItem('auth_refresh_token');
       localStorage.removeItem('auth_expires_at');
       localStorage.removeItem('auth_method');
+      localStorage.removeItem('demoUserRole');
       
       // For Replit auth, redirect to the logout endpoint
       if (authMethod === 'replit') {
