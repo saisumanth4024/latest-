@@ -253,11 +253,14 @@ export default function OrderList() {
   
   // Error state
   if (error) {
-    toast({
-      title: 'Error loading orders',
-      description: 'There was a problem fetching your orders. Please try again.',
-      variant: 'destructive',
-    });
+    // Don't show error toast for 401 Unauthorized errors
+    if ((error as any)?.status !== 401) {
+      toast({
+        title: 'Error loading orders',
+        description: 'There was a problem fetching your orders. Please try again.',
+        variant: 'destructive',
+      });
+    }
   }
   
   // Empty state
