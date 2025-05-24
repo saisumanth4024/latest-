@@ -85,13 +85,35 @@ const productsSlice = createSlice({
         uploadedImageUrls: []
       };
     },
-    setFilter: (state, action: PayloadAction<{ key: keyof ProductFilters; value: string | null }>) => {
+    setFilter: (state, action: PayloadAction<{ key: keyof ProductFilters; value: string | number | boolean | string[] | null }>) => {
       const { key, value } = action.payload;
-      // Ensure type safety by checking for each specific key
-      if (key === 'category' || key === 'priceRange' || key === 'rating') {
-        state.filters[key] = value;
-      } else if (key === 'sort' && typeof value === 'string') {
-        state.filters.sort = value;
+      
+      // Handle each filter type appropriately
+      switch(key) {
+        case 'category':
+        case 'priceRange':
+        case 'rating':
+          state.filters[key] = value as string | null;
+          break;
+        case 'sort':
+          if (typeof value === 'string') {
+            state.filters.sort = value;
+          }
+          break;
+        case 'brand':
+        case 'colors':
+        case 'tags':
+          state.filters[key] = value as string[] | null;
+          break;
+        case 'discount':
+        case 'inStock':
+          state.filters[key] = value as boolean | null;
+          break;
+        case 'minPrice':
+        case 'maxPrice':
+        case 'minRating':
+          state.filters[key] = value as number | null;
+          break;
       }
     },
     resetFilters: (state) => {

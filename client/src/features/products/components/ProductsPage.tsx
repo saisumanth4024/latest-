@@ -23,34 +23,74 @@ const ProductsPage: React.FC = () => {
   
   // Sample filter categories for the sidebar
   const categories = [
-    { id: 'electronics', name: 'Electronics' },
-    { id: 'clothing', name: 'Clothing & Apparel' },
-    { id: 'home', name: 'Home & Kitchen' },
-    { id: 'beauty', name: 'Beauty & Personal Care' },
-    { id: 'books', name: 'Books & Media' },
-    { id: 'sports', name: 'Sports & Outdoors' },
-    { id: 'toys', name: 'Toys & Games' },
-    { id: 'automotive', name: 'Automotive' },
-    { id: 'health', name: 'Health & Wellness' },
-    { id: 'jewelry', name: 'Jewelry & Watches' }
+    'Electronics',
+    'Clothing & Apparel',
+    'Home & Kitchen',
+    'Beauty & Personal Care',
+    'Books & Media',
+    'Sports & Outdoors',
+    'Toys & Games',
+    'Automotive',
+    'Health & Wellness',
+    'Jewelry & Watches'
   ];
   
-  // Price ranges for filtering
-  const priceRanges = [
-    { id: '0-50', name: 'Under $50' },
-    { id: '50-100', name: '$50 to $100' },
-    { id: '100-200', name: '$100 to $200' },
-    { id: '200-500', name: '$200 to $500' },
-    { id: '500-1000', name: '$500 to $1000' },
-    { id: '1000+', name: 'Over $1000' }
+  // Brands for filtering
+  const brands = [
+    'Apple',
+    'Samsung',
+    'Sony',
+    'Nike',
+    'Adidas',
+    'LG',
+    'Dell',
+    'HP',
+    'Lenovo',
+    'Bose',
+    'Canon',
+    'Dyson',
+    'KitchenAid',
+    'Philips',
+    'Levi\'s',
+    'Under Armour'
   ];
   
-  // Ratings for filtering
-  const ratings = [
-    { id: '4+', name: '4★ & Above' },
-    { id: '3+', name: '3★ & Above' },
-    { id: '2+', name: '2★ & Above' },
-    { id: '1+', name: '1★ & Above' }
+  // Colors for filtering
+  const colors = [
+    'Black',
+    'White',
+    'Gray',
+    'Red',
+    'Blue',
+    'Green',
+    'Yellow',
+    'Purple',
+    'Pink',
+    'Brown',
+    'Orange',
+    'Silver',
+    'Gold'
+  ];
+  
+  // Tags for filtering
+  const tags = [
+    'Wireless',
+    'Bluetooth',
+    'Waterproof',
+    'Portable',
+    'Smart Home',
+    'Eco-Friendly',
+    'Limited Edition',
+    'High Performance',
+    'Noise Cancelling',
+    'Fast Charging',
+    'Handmade',
+    'Premium',
+    'Compact',
+    'Lightweight',
+    'Organic',
+    'Sustainable',
+    'Bestseller'
   ];
   
   // Sorting options
@@ -59,32 +99,32 @@ const ProductsPage: React.FC = () => {
     { id: 'popular', name: 'Most Popular' },
     { id: 'price-low', name: 'Price: Low to High' },
     { id: 'price-high', name: 'Price: High to Low' },
-    { id: 'rating', name: 'Highest Rated' }
+    { id: 'rating', name: 'Highest Rated' },
+    { id: 'discount', name: 'Best Discount' }
   ];
   
-  // Handle category filter change
-  const handleCategoryChange = (categoryId: string) => {
-    dispatch(setFilter({ 
-      key: 'category', 
-      value: filters.category === categoryId ? null : categoryId 
-    }));
-  };
+  // Handle filter updates
+  const handleUpdateFilters = useCallback((newFilters: Partial<ProductFilters>) => {
+    // Loop through each filter property and update
+    Object.entries(newFilters).forEach(([key, value]) => {
+      dispatch(setFilter({ 
+        key: key as keyof ProductFilters, 
+        value 
+      }));
+    });
+  }, [dispatch]);
   
-  // Handle price range filter change
-  const handlePriceRangeChange = (priceRangeId: string) => {
-    dispatch(setFilter({ 
-      key: 'priceRange', 
-      value: filters.priceRange === priceRangeId ? null : priceRangeId 
-    }));
-  };
-  
-  // Handle rating filter change
-  const handleRatingChange = (ratingId: string) => {
-    dispatch(setFilter({ 
-      key: 'rating', 
-      value: filters.rating === ratingId ? null : ratingId 
-    }));
-  };
+  // Handle clearing a specific filter
+  const handleClearFilter = useCallback((key: keyof ProductFilters) => {
+    let value: any = null;
+    
+    // For array filters, set to empty array instead of null
+    if (key === 'brand' || key === 'colors' || key === 'tags') {
+      value = null;
+    }
+    
+    dispatch(setFilter({ key, value }));
+  }, [dispatch]);
   
   // Handle search query change
   const handleSearchChange = (query: string) => {
@@ -155,10 +195,10 @@ const ProductsPage: React.FC = () => {
           <div className="flex flex-wrap gap-2 mt-4">
             {filters.category && (
               <Badge variant="secondary" className="px-3 py-1">
-                {categories.find(c => c.id === filters.category)?.name}
+                Category: {filters.category}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: 'category', value: null }))}
+                  onClick={() => handleClearFilter('category')}
                 >
                   ×
                 </button>
@@ -166,27 +206,84 @@ const ProductsPage: React.FC = () => {
             )}
             {filters.priceRange && (
               <Badge variant="secondary" className="px-3 py-1">
-                {priceRanges.find(p => p.id === filters.priceRange)?.name}
+                Price: ${filters.priceRange}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: 'priceRange', value: null }))}
+                  onClick={() => handleClearFilter('priceRange')}
                 >
                   ×
                 </button>
               </Badge>
             )}
-            {filters.rating && (
+            {filters.minRating && (
               <Badge variant="secondary" className="px-3 py-1">
-                {ratings.find(r => r.id === filters.rating)?.name}
+                Rating: {filters.minRating}+ stars
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ key: 'rating', value: null }))}
+                  onClick={() => handleClearFilter('minRating')}
                 >
                   ×
                 </button>
               </Badge>
             )}
-            {(filters.category || filters.priceRange || filters.rating || searchQuery) && (
+            {filters.brand && filters.brand.length > 0 && (
+              <Badge variant="secondary" className="px-3 py-1">
+                Brands: {filters.brand.length} selected
+                <button 
+                  className="ml-2"
+                  onClick={() => handleClearFilter('brand')}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.colors && filters.colors.length > 0 && (
+              <Badge variant="secondary" className="px-3 py-1">
+                Colors: {filters.colors.length} selected
+                <button 
+                  className="ml-2"
+                  onClick={() => handleClearFilter('colors')}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.tags && filters.tags.length > 0 && (
+              <Badge variant="secondary" className="px-3 py-1">
+                Tags: {filters.tags.length} selected
+                <button 
+                  className="ml-2"
+                  onClick={() => handleClearFilter('tags')}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.discount && (
+              <Badge variant="secondary" className="px-3 py-1">
+                On Sale
+                <button 
+                  className="ml-2"
+                  onClick={() => handleClearFilter('discount')}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {filters.inStock && (
+              <Badge variant="secondary" className="px-3 py-1">
+                In Stock Only
+                <button 
+                  className="ml-2"
+                  onClick={() => handleClearFilter('inStock')}
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {(filters.category || filters.priceRange || filters.minRating || 
+              filters.brand || filters.colors || filters.tags || 
+              filters.discount || filters.inStock || searchQuery) && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -194,80 +291,50 @@ const ProductsPage: React.FC = () => {
                 className="h-7 gap-1"
               >
                 <RefreshCw className="h-3 w-3" />
-                Reset
+                Reset All
               </Button>
             )}
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Filter sidebar (hidden on mobile unless toggled) */}
-          <div className={`bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm md:block ${showFilters ? 'block' : 'hidden'}`}>
-            <h2 className="font-semibold text-xl mb-4">Filters</h2>
-            
-            {/* Categories */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2">Categories</h3>
-              <div className="space-y-2">
-                {categories.map(category => (
-                  <div key={category.id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`category-${category.id}`}
-                      checked={filters.category === category.id}
-                      onChange={() => handleCategoryChange(category.id)}
-                      className="mr-2"
-                    />
-                    <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
-                      {category.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Price ranges */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2">Price</h3>
-              <div className="space-y-2">
-                {priceRanges.map(range => (
-                  <div key={range.id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`price-${range.id}`}
-                      checked={filters.priceRange === range.id}
-                      onChange={() => handlePriceRangeChange(range.id)}
-                      className="mr-2"
-                    />
-                    <label htmlFor={`price-${range.id}`} className="text-sm cursor-pointer">
-                      {range.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Ratings */}
-            <div>
-              <h3 className="font-medium mb-2">Rating</h3>
-              <div className="space-y-2">
-                {ratings.map(rating => (
-                  <div key={rating.id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`rating-${rating.id}`}
-                      checked={filters.rating === rating.id}
-                      onChange={() => handleRatingChange(rating.id)}
-                      className="mr-2"
-                    />
-                    <label htmlFor={`rating-${rating.id}`} className="text-sm cursor-pointer">
-                      {rating.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Filter sidebar for desktop */}
+          <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <FilterSidebar 
+              categories={categories}
+              brands={brands}
+              colors={colors}
+              tags={tags}
+              filters={filters}
+              onUpdateFilters={handleUpdateFilters}
+              onClose={() => {}}
+            />
           </div>
+          
+          {/* Mobile filter sidebar using Sheet component */}
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <SheetTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="md:hidden fixed bottom-4 right-4 z-10 shadow-lg"
+              >
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Filters
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[350px]">
+              <FilterSidebar 
+                categories={categories}
+                brands={brands}
+                colors={colors}
+                tags={tags}
+                filters={filters}
+                onUpdateFilters={handleUpdateFilters}
+                onClose={() => setShowFilters(false)}
+              />
+            </SheetContent>
+          </Sheet>
           
           {/* Product listing */}
           <div className="md:col-span-3">
@@ -279,7 +346,15 @@ const ProductsPage: React.FC = () => {
                 category: filters.category,
                 priceRange: filters.priceRange,
                 rating: filters.rating,
-                sort: sortValue
+                sort: sortValue,
+                brand: filters.brand,
+                colors: filters.colors,
+                tags: filters.tags,
+                discount: filters.discount,
+                inStock: filters.inStock,
+                minPrice: filters.minPrice,
+                maxPrice: filters.maxPrice,
+                minRating: filters.minRating
               }}
               searchQuery={searchQuery}
             />

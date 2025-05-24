@@ -26,6 +26,14 @@ interface MockProductsComponentProps {
     rating?: string | null;
     sort?: string;
     price?: string | null; // For search page compatibility
+    brand?: string[] | null;
+    colors?: string[] | null;
+    tags?: string[] | null;
+    discount?: boolean | null;
+    inStock?: boolean | null;
+    minPrice?: number | null;
+    maxPrice?: number | null;
+    minRating?: number | null;
   };
   searchQuery?: string;
 }
@@ -62,8 +70,51 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       result = result.filter(product => product.category === filters.category);
     }
     
-    // Apply price range filter
-    if (filters.priceRange || filters.price) {
+    // Apply brand filter
+    if (filters.brand && filters.brand.length > 0) {
+      result = result.filter(product => 
+        filters.brand!.includes(product.brand)
+      );
+    }
+    
+    // Apply color filter
+    if (filters.colors && filters.colors.length > 0) {
+      result = result.filter(product => 
+        product.colors && product.colors.some(color => 
+          filters.colors!.includes(color)
+        )
+      );
+    }
+    
+    // Apply tags filter
+    if (filters.tags && filters.tags.length > 0) {
+      result = result.filter(product => 
+        product.tags.some(tag => 
+          filters.tags!.includes(tag)
+        )
+      );
+    }
+    
+    // Apply discount filter
+    if (filters.discount === true) {
+      result = result.filter(product => product.discount > 0);
+    }
+    
+    // Apply in-stock filter
+    if (filters.inStock === true) {
+      result = result.filter(product => product.inStock === true);
+    }
+    
+    // Apply precise price range filter using min/max values
+    if (filters.minPrice !== null || filters.maxPrice !== null) {
+      const minPrice = filters.minPrice ?? 0;
+      const maxPrice = filters.maxPrice ?? Number.MAX_VALUE;
+      result = result.filter(product => 
+        product.price >= minPrice && product.price <= maxPrice
+      );
+    }
+    // Or apply price range filter using predefined ranges
+    else if (filters.priceRange || filters.price) {
       const priceFilter = filters.priceRange || filters.price;
       switch(priceFilter) {
         case '0-50':
@@ -90,8 +141,12 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       }
     }
     
-    // Apply rating filter
-    if (filters.rating) {
+    // Apply precise rating filter
+    if (filters.minRating !== null) {
+      result = result.filter(product => product.rating >= filters.minRating!);
+    }
+    // Or apply rating filter using predefined ranges
+    else if (filters.rating) {
       const ratingValue = filters.rating === '4+' || filters.rating === '4-up' ? 4 :
                          filters.rating === '3+' || filters.rating === '3-up' ? 3 :
                          filters.rating === '2+' || filters.rating === '2-up' ? 2 : 1;
@@ -118,6 +173,10 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
         case 'relevance':
           // Simulate popularity by using review count
           result.sort((a, b) => b.reviews - a.reviews);
+          break;
+        case 'discount':
+          // Sort by highest discount percentage
+          result.sort((a, b) => b.discount - a.discount);
           break;
       }
     }
