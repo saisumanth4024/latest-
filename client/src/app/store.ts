@@ -99,7 +99,10 @@ export const store = configureStore({
           'payload.author',
           'payload.attachments',
           'payload.reports',
-          'payload.moderation'
+          'payload.moderation',
+          // Fix for RTK Query non-serializable values
+          'meta.baseQueryMeta.request',
+          'meta.baseQueryMeta.response'
         ],
         // Ignore these paths in the state
         ignoredPaths: [
