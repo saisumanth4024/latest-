@@ -291,10 +291,18 @@ function RedirectToLogin() {
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
   const [location] = useLocation();
+  const [, navigate] = useLocation();
   const [isRootMatch] = useRoute("/");
   const [isLoginMatch] = useRoute("/login");
   const [isSignupMatch] = useRoute("/signup");
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+
+  // Redirect to login if not authenticated and not already on login/signup page
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && !isLoginMatch && !isSignupMatch) {
+      navigate("/login");
+    }
+  }, [isLoading, isAuthenticated, isLoginMatch, isSignupMatch, navigate, location]);
 
   // Track online/offline status
   useEffect(() => {
@@ -336,15 +344,23 @@ function AppRouter() {
 
         {/* Login and Signup routes should not require auth */}
         <Route path="/login">
-          <Suspense fallback={<GlobalLoadingFallback />}>
-            <LoginPage />
-          </Suspense>
+          {isAuthenticated ? (
+            <Redirect to="/" />
+          ) : (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <LoginPage />
+            </Suspense>
+          )}
         </Route>
 
         <Route path="/signup">
-          <Suspense fallback={<GlobalLoadingFallback />}>
-            <SignupPage />
-          </Suspense>
+          {isAuthenticated ? (
+            <Redirect to="/" />
+          ) : (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <SignupPage />
+            </Suspense>
+          )}
         </Route>
 
         {/* All other routes */}
