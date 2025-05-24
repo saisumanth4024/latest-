@@ -2,6 +2,16 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getOrders, getOrderDetails, getOrderTracking, getOrderInvoice } from "./routes/orders";
+import { 
+  getProducts, 
+  getProductById, 
+  getProductsByCategory, 
+  searchProducts, 
+  getFeaturedProducts, 
+  getNewArrivals, 
+  getBestSellers, 
+  getProductRecommendations 
+} from "./routes/products";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -167,6 +177,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/orders/:id', getOrderDetails);
   app.get('/api/orders/:id/tracking', getOrderTracking);
   app.get('/api/orders/:id/invoice', getOrderInvoice);
+
+  // Products API routes
+  app.get('/api/products', getProducts);
+  app.get('/api/products/:id', getProductById);
+  app.get('/api/products/category/:category', getProductsByCategory);
+  app.get('/api/products/search', searchProducts);
+  app.get('/api/products/featured', getFeaturedProducts);
+  app.get('/api/products/new-arrivals', getNewArrivals);
+  app.get('/api/products/best-sellers', getBestSellers);
+  app.get('/api/products/:id/recommendations', getProductRecommendations);
 
   const httpServer = createServer(app);
   return httpServer;
