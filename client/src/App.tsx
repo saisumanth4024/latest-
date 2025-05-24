@@ -88,36 +88,42 @@ export const routes = [
     requireAuth: false,
     title: "Checkout",
     hideInMenu: true,
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
     path: "/wishlists",
     component: WishlistPage,
     requireAuth: true,
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
     title: "Wishlists"
   },
   { 
     path: "/orders", 
     component: OrdersPage, 
     requireAuth: true,
-    title: "Orders"
+    title: "Orders",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[]
   },
   { 
     path: "/search", 
     component: SearchResults, 
     requireAuth: false,
-    title: "Search"
+    title: "Search",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
   },
   { 
     path: "/analytics", 
     component: AnalyticsPage, 
     requireAuth: true,
     title: "Analytics",
+    roles: ['admin', 'seller'] as UserRole[],
   },
   { 
     path: "/profile", 
     component: ProfilePage, 
     requireAuth: true,
     title: "Profile",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   { 
     path: "/profile-legacy", 
