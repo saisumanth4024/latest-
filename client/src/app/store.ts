@@ -21,6 +21,7 @@ import { apiSlice } from '@/features/api/apiSlice';
 import adminReducer from '@/features/admin/adminSlice';
 import navigationReducer from '@/features/navigation/navigationSlice';
 import formsAdvancedReducer from '@/features/formsAdvanced/store/formsAdvancedSlice';
+import signupWizardReducer from '@/features/auth/components/signup/signupWizardSlice';
 
 export const store = configureStore({
   reducer: {
@@ -38,6 +39,7 @@ export const store = configureStore({
     admin: adminReducer,
     navigation: navigationReducer,
     formsAdvanced: formsAdvancedReducer,
+    signupWizard: signupWizardReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
