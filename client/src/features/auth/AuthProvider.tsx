@@ -23,6 +23,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { toast } = useToast();
   const modal = useModal();
   
+  // Check for Replit authentication on initial load
+  useEffect(() => {
+    if (!isAuthenticated) {
+      dispatch(fetchReplitUser());
+    }
+  }, [dispatch]);
+  
   // Handle authentication errors
   useEffect(() => {
     if (authError) {
