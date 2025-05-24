@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const cartItemsCount = useAppSelector(selectCartItemsCount);
+  const cartItemsCount = useAppSelector((state) => state.cart.cart?.items?.length || 0);
   const wishlistItemsCount = useAppSelector((state: RootState) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
   const userProfile = useAppSelector((state: RootState) => state.auth.user || {});
 
