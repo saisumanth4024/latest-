@@ -403,6 +403,44 @@ const ProductDetailPage: React.FC = () => {
                       label="Product Images"
                       helpText="Upload high-quality images of your product. First image will be used as the main product image."
                     />
+                    
+                    {/* Upload status message */}
+                    {uploadStatus === 'loading' && (
+                      <Alert className="mt-4">
+                        <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        <AlertTitle>Uploading Images...</AlertTitle>
+                        <AlertDescription>
+                          Please wait while your images are being processed.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {/* Action buttons */}
+                    <div className="flex justify-end gap-3 mt-6">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsEditMode(false)}
+                        disabled={uploadStatus === 'loading'}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSaveImages}
+                        disabled={uploadedImages.length === 0 || uploadStatus === 'loading'}
+                      >
+                        {uploadStatus === 'loading' ? (
+                          <>
+                            <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4 mr-2" />
+                            Save Images
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
