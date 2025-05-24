@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { getNavigationByRole, type UserRole, type NavItem as NavItemType, type NavSection } from '@/config/navigation';
 import { NavIcon } from '@/components/icons/NavIcons';
 // Import directly from types for the demo role selector
-import { UserRole as UserRoleEnum } from '@/types';
+import { UserRole as UserRoleEnum } from '@/features/auth/types';
 
 interface NavItemProps {
   href: string;
@@ -99,6 +99,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <option value="user">User</option>
             <option value="admin">Admin</option>
             <option value="seller">Seller</option>
+            <option value="moderator">Moderator</option>
           </select>
         </div>
 

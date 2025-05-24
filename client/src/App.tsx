@@ -151,14 +151,14 @@ export const routes = [
     path: "/admin/dashboard", 
     component: AdminDashboardPage, 
     requireAuth: true,
-    roles: [UserRole.ADMIN],
+    roles: ['admin'],
     title: "Admin Dashboard",
   },
   { 
     path: "/seller/dashboard", 
     component: SellerDashboardPage, 
     requireAuth: true,
-    roles: [UserRole.SELLER, UserRole.ADMIN],
+    roles: ['seller', 'admin'],
     title: "Seller Dashboard",
   },
   // Login and signup routes are replaced by Replit auth
@@ -177,7 +177,7 @@ function ProtectedRoute({
   roles 
 }: { 
   children: React.ReactNode; 
-  roles?: UserRole[] 
+  roles?: string[] 
 }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
@@ -215,7 +215,7 @@ function ProtectedRoute({
   if (roles && roles.length > 0 && user) {
     // For Replit auth, we might not have a role field explicitly set
     // So assume regular user role as a fallback
-    const userRole = (user as any).role || UserRole.USER;
+    const userRole = (user as any).role || 'user';
     
     if (!roles.includes(userRole)) {
       toast({

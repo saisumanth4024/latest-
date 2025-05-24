@@ -49,7 +49,7 @@ export const login = createAsyncThunk(
           email: credentials.email,
           firstName: 'John',
           lastName: 'Doe',
-          role: 'user',
+          role: 'user' as UserRole,
           profileImageUrl: 'https://via.placeholder.com/150',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -131,7 +131,7 @@ export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenti
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
 export const selectAuthToken = (state: RootState) => state.auth.token;
-export const selectUserRole = (state: RootState) => state.auth.user?.role || 'guest';
+export const selectUserRole = (state: RootState) => state.auth.user?.role || ('guest' as UserRole);
 export const selectAuthStatus = (state: RootState) => ({
   isAuthenticated: state.auth.isAuthenticated,
   isLoading: state.auth.isLoading,

@@ -1,4 +1,4 @@
-export type UserRole = 'guest' | 'user' | 'admin' | 'seller';
+export type UserRole = 'guest' | 'user' | 'admin' | 'seller' | 'moderator';
 
 export interface NavItem {
   title: string;

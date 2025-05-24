@@ -1,11 +1,5 @@
 // Authentication Types
-export enum UserRole {
-  GUEST = 'guest',
-  USER = 'user',
-  ADMIN = 'admin',
-  SELLER = 'seller',
-  MODERATOR = 'moderator'
-}
+export type UserRole = 'guest' | 'user' | 'admin' | 'seller' | 'moderator';
 
 export enum UserStatus {
   ACTIVE = 'active',
