@@ -21,6 +21,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import { RootState } from '@/app/store';
 import { useAppSelector } from '@/app/hooks';
 import { UserRole } from '@/config/navigation';
+import { selectCartItemsCount } from '@/features/cart/cartSlice';
 
 import {
   DropdownMenu,
@@ -57,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const cartItemsCount = useAppSelector((state: RootState) => state.cart.cart?.items.length || 0);
+  const cartItemsCount = useAppSelector(selectCartItemsCount);
   const wishlistItemsCount = useAppSelector((state: RootState) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
   const userProfile = useAppSelector((state: RootState) => state.auth.user || {});
 

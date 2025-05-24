@@ -408,5 +408,15 @@ export const {
   updateShipping
 } = cartSlice.actions;
 
+// Export selectors
+export const selectCart = (state: any) => state.cart.cart;
+export const selectCartItems = (state: any) => state.cart.cart?.items || [];
+export const selectCartItemsCount = (state: any) => state.cart.cart?.items?.length || 0;
+export const selectCartTotal = (state: any) => state.cart.cart?.totals.total || 0;
+export const selectCartSubtotal = (state: any) => state.cart.cart?.totals.subtotal || 0;
+export const selectCartStatus = (state: any) => state.cart.status;
+export const selectCartError = (state: any) => state.cart.error;
+export const selectSavedItems = (state: any) => state.cart.savedItems;
+
 // Export reducer
 export default cartSlice.reducer;
