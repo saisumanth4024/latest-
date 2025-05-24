@@ -135,6 +135,8 @@ export interface Product {
   category?: string;
   /** Detailed product specifications */
   specs?: Record<string, string | number>;
+  /** Reviews count (separate from reviewCount for mock data compatibility) */
+  reviews?: number;
   /** Product variants */
   variants: ProductVariant[];
   /** SEO metadata */
