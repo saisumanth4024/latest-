@@ -31,6 +31,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+  
+  // Login route
+  app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    
+    // For demo purposes, any valid-looking credentials will work
+    if (email && password && password.length >= 6) {
+      res.json({
+        user: {
+          id: "1", 
+          role: "admin",
+          email: email,
+          firstName: "John",
+          lastName: "Doe",
+          profileImageUrl: "https://randomuser.me/api/portraits/men/1.jpg"
+        },
+        token: "demo-token-12345",
+      });
+    } else {
+      res.status(401).json({ message: "Invalid credentials" });
+    }
+  });
+  
+  // For traditional login form
+  app.get('/api/auth/signin', (req, res) => {
+    res.json({ redirectUrl: '/login' });
+  });
+  
+  // Logout route - redirects to login page
+  app.get('/api/auth/logout', (req, res) => {
+    // In a real implementation, this would clear the session
+    res.redirect('/login');
+  });
 
   // API Status endpoint
   app.get('/api/status', (req, res) => {

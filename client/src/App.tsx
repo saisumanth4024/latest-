@@ -307,15 +307,14 @@ function AppRouter() {
     );
   }
   
-  // Show landing page for non-authenticated users at root path
+  // Redirect to login page for non-authenticated users at root path
   if (!isAuthenticated && location === '/') {
+    // Redirect to login page
+    window.location.href = '/login';
     return (
-      <ErrorBoundary>
-        <Suspense fallback={<GlobalLoadingFallback />}>
-          <Landing />
-          <OfflineIndicator />
-        </Suspense>
-      </ErrorBoundary>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
     );
   }
   
