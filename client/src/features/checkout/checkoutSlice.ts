@@ -1,385 +1,367 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { v4 as uuidv4 } from 'uuid';
-import { 
-  CheckoutState, 
-  CheckoutStep, 
-  DeliveryTimeSlot, 
-  PaymentMethod, 
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { RootState } from '@/app/store';
+import {
+  CheckoutStep,
+  PaymentMethod,
+  DeliveryTimeSlot,
   PaymentDetails,
-  Order,
-  OrderStatus,
-  PaymentStatus,
   OTPVerification,
-  SavedPaymentMethod
+  PaymentStatus,
+  OrderStatus,
+  Order,
+  Transaction,
+  SavedPaymentMethod,
 } from '@/types/checkout';
 import { Address } from '@/types/cart';
-import { RootState } from '@/app/store';
+import { apiRequest } from '@/lib/queryClient';
 
-// Initial state
-const initialState: CheckoutState = {
-  activeStep: CheckoutStep.ADDRESS,
-  completedSteps: [],
-  sameAddress: true,
-  availableDeliverySlots: [],
-  savedPaymentMethods: [],
-  orderTotal: 0,
-  processingPayment: false,
-  placingOrder: false
-};
+// Initial mock data for delivery slots - in a real app, this would come from the API
+const mockDeliverySlots: DeliveryTimeSlot[] = [
+  {
+    id: 'slot-1',
+    date: '2025-05-25',
+    startTime: '9:00 AM',
+    endTime: '12:00 PM',
+    available: true,
+  },
+  {
+    id: 'slot-2',
+    date: '2025-05-25',
+    startTime: '1:00 PM',
+    endTime: '3:00 PM',
+    available: true,
+  },
+  {
+    id: 'slot-3',
+    date: '2025-05-25',
+    startTime: '4:00 PM',
+    endTime: '6:00 PM',
+    available: true,
+  },
+  {
+    id: 'slot-4',
+    date: '2025-05-26',
+    startTime: '9:00 AM',
+    endTime: '12:00 PM',
+    available: true,
+  },
+  {
+    id: 'slot-5',
+    date: '2025-05-26',
+    startTime: '1:00 PM',
+    endTime: '3:00 PM',
+    fee: 4.99,
+    available: true,
+  },
+  {
+    id: 'slot-6',
+    date: '2025-05-26',
+    startTime: '4:00 PM',
+    endTime: '6:00 PM',
+    available: false,
+  },
+  {
+    id: 'slot-7',
+    date: '2025-05-27',
+    startTime: '9:00 AM',
+    endTime: '12:00 PM',
+    fee: 7.99,
+    available: true,
+  },
+  {
+    id: 'slot-8',
+    date: '2025-05-27',
+    startTime: '1:00 PM',
+    endTime: '3:00 PM',
+    available: true,
+  },
+  {
+    id: 'slot-9',
+    date: '2025-05-27',
+    startTime: '4:00 PM',
+    endTime: '6:00 PM',
+    available: true,
+  },
+];
 
-// Generate mockup delivery slots for the next 7 days
+// Initial mock data for saved payment methods - in a real app, this would come from the API
+const mockSavedPaymentMethods: SavedPaymentMethod[] = [
+  {
+    id: 'pm-1',
+    userId: '1',
+    type: PaymentMethod.CREDIT_CARD,
+    cardBrand: 'Visa',
+    maskedNumber: '**** **** **** 4242',
+    cardExpiry: '09/27',
+    lastUsed: '2025-04-15T14:22:36Z',
+    isDefault: true,
+  },
+  {
+    id: 'pm-2',
+    userId: '1',
+    type: PaymentMethod.UPI,
+    upiId: 'user@bank',
+    lastUsed: '2025-03-21T09:12:45Z',
+    isDefault: false,
+  },
+];
+
+// Async thunk for fetching delivery slots
 export const fetchDeliverySlots = createAsyncThunk(
   'checkout/fetchDeliverySlots',
   async (_, { rejectWithValue }) => {
     try {
       // In a real app, this would be an API call
-      const slots: DeliveryTimeSlot[] = [];
-      const now = new Date();
+      // const response = await apiRequest('GET', '/api/delivery-slots');
+      // return response.data;
       
-      // Generate slots for the next 7 days
-      for (let i = 1; i <= 7; i++) {
-        const date = new Date(now);
-        date.setDate(date.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        // Morning slot
-        slots.push({
-          id: uuidv4(),
-          date: dateStr,
-          startTime: '09:00',
-          endTime: '12:00',
-          available: Math.random() > 0.2, // 80% chance of availability
-        });
-        
-        // Afternoon slot
-        slots.push({
-          id: uuidv4(),
-          date: dateStr,
-          startTime: '13:00',
-          endTime: '16:00',
-          available: Math.random() > 0.3,
-        });
-        
-        // Evening slot
-        slots.push({
-          id: uuidv4(),
-          date: dateStr,
-          startTime: '17:00',
-          endTime: '20:00',
-          available: Math.random() > 0.4,
-          fee: i <= 2 ? 5 : undefined, // Express delivery fee for next 2 days
-        });
-      }
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return slots;
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
+      // For demo, we'll just return the mock data after a short delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return mockDeliverySlots;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch delivery slots');
     }
   }
 );
 
-// Fetch saved payment methods
-export const fetchSavedPaymentMethods = createAsyncThunk(
-  'checkout/fetchSavedPaymentMethods',
-  async (userId: string | number, { rejectWithValue }) => {
-    try {
-      // In a real app, this would be an API call
-      // Here we'll return mock data
-      const savedMethods: SavedPaymentMethod[] = [
-        {
-          id: uuidv4(),
-          type: PaymentMethod.CREDIT_CARD,
-          isDefault: true,
-          lastUsed: new Date().toISOString(),
-          nickname: 'Personal Card',
-          maskedNumber: '•••• •••• •••• 4242',
-          cardBrand: 'Visa',
-          cardExpiry: '12/25',
-        },
-        {
-          id: uuidv4(),
-          type: PaymentMethod.UPI,
-          isDefault: false,
-          lastUsed: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          upiId: 'user@okbank',
-        },
-        {
-          id: uuidv4(),
-          type: PaymentMethod.WALLET,
-          isDefault: false,
-          walletProvider: 'PayEase',
-        }
-      ];
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return savedMethods;
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
-    }
-  }
-);
-
-// Process payment
-export const processPayment = createAsyncThunk(
-  'checkout/processPayment',
-  async (
-    { paymentDetails, amount }: { paymentDetails: PaymentDetails; amount: number },
-    { rejectWithValue, dispatch }
-  ) => {
-    try {
-      // Simulate processing payment
-      dispatch(setProcessingPayment(true));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Randomly simulate failure (10% chance)
-      if (Math.random() < 0.1) {
-        throw new Error('Payment processing failed. Please try again.');
-      }
-      
-      // Return success response
-      const transactionId = `txn_${Math.random().toString(36).substring(2, 15)}`;
-      
-      return {
-        id: transactionId,
-        paymentMethod: paymentDetails.method,
-        status: PaymentStatus.COMPLETED,
-        amount,
-        currency: 'USD',
-        timestamp: new Date().toISOString(),
-        processorId: `proc_${Math.random().toString(36).substring(2, 10)}`,
-        processorResponse: 'Approved',
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
-    } finally {
-      dispatch(setProcessingPayment(false));
-    }
-  }
-);
-
-// Place order
-export const placeOrder = createAsyncThunk(
-  'checkout/placeOrder',
-  async (
-    { 
-      cartId, 
-      orderData 
-    }: { 
-      cartId: string | number; 
-      orderData: Partial<Order>;
-    },
-    { rejectWithValue, dispatch }
-  ) => {
-    try {
-      dispatch(setPlacingOrder(true));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate unique order ID
-      const orderId = `ORD-${Math.random().toString(36).substring(2, 6)}-${Date.now().toString().substring(9)}`;
-      
-      // Create order object
-      const order: Order = {
-        ...orderData,
-        id: orderId,
-        status: OrderStatus.CONFIRMED,
-        placedAt: new Date().toISOString(),
-        estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        trackingNumber: `TRK${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-        trackingUrl: `https://trackingsystem.com/track/${orderId}`,
-      } as Order;
-      
-      return order;
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
-    } finally {
-      dispatch(setPlacingOrder(false));
-    }
-  }
-);
-
-// Request OTP for verification
+// Async thunk for requesting OTP
 export const requestOTP = createAsyncThunk(
   'checkout/requestOTP',
-  async (
-    { phoneNumber, email }: { phoneNumber: string; email?: string },
-    { rejectWithValue }
-  ) => {
+  async ({ phoneNumber, email }: { phoneNumber: string; email?: string }, { rejectWithValue }) => {
     try {
-      // Simulate API call to request OTP
+      // In a real app, this would be an API call
+      // const response = await apiRequest('POST', '/api/request-otp', { phoneNumber, email });
+      // return response.data;
+      
+      // For demo, we'll just create a mock OTP verification object
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Generate a mock request ID
-      const requestId = `req_${Math.random().toString(36).substring(2, 15)}`;
-      
-      // Set expiry time (5 minutes from now)
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       
       return {
         phoneNumber,
         email,
-        requestId,
-        otp: '',
-        expiresAt,
+        requestId: 'req-' + Math.random().toString(36).substring(2, 10),
+        otp: '', // This will be filled in by the user
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
         attempts: 0,
         maxAttempts: 3,
         isVerified: false,
       };
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to request OTP');
     }
   }
 );
 
-// Verify OTP
+// Async thunk for verifying OTP
 export const verifyOTP = createAsyncThunk(
   'checkout/verifyOTP',
-  async (
-    { requestId, otp }: { requestId: string; otp: string },
-    { getState, rejectWithValue }
-  ) => {
+  async ({ requestId, otp }: { requestId: string; otp: string }, { getState, rejectWithValue }) => {
     try {
+      // In a real app, this would be an API call
+      // const response = await apiRequest('POST', '/api/verify-otp', { requestId, otp });
+      // return response.data;
+      
+      // For demo, we'll just verify if the OTP is '123456'
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       const state = getState() as RootState;
-      const { otpVerification } = state.checkout;
+      const otpVerification = state.checkout.otpVerification;
       
       if (!otpVerification) {
         throw new Error('No active OTP verification session');
       }
       
       if (otpVerification.attempts >= otpVerification.maxAttempts) {
-        throw new Error('Maximum verification attempts exceeded');
+        throw new Error('Maximum attempts exceeded');
       }
       
-      // Simulate API call to verify OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (new Date(otpVerification.expiresAt) < new Date()) {
+        throw new Error('OTP has expired');
+      }
       
-      // For demo purposes, any 6-digit OTP is considered valid
-      const isValid = /^\d{6}$/.test(otp);
-      
-      if (!isValid) {
+      // For demo purposes, any 6-digit OTP is valid
+      if (otp.length !== 6 || !/^\d+$/.test(otp)) {
         throw new Error('Invalid OTP format');
       }
       
-      // Demo validation (in real app, this would be server-side)
-      // For demo, we'll accept "123456" as the valid OTP
-      if (otp !== '123456') {
-        throw new Error('Incorrect OTP');
-      }
-      
+      // For demo, we'll accept any 6-digit OTP
       return true;
-    } catch (error) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('An unknown error occurred');
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to verify OTP');
     }
   }
 );
 
+// Async thunk for processing payment
+export const processPayment = createAsyncThunk(
+  'checkout/processPayment',
+  async (
+    { paymentDetails, amount }: { paymentDetails: PaymentDetails; amount: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      // In a real app, this would be an API call to a payment gateway
+      // const response = await apiRequest('POST', '/api/process-payment', { paymentDetails, amount });
+      // return response.data;
+      
+      // For demo, we'll just simulate a payment process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Create a mock transaction result
+      const transaction: Transaction = {
+        id: 'tx-' + Math.random().toString(36).substring(2, 10),
+        paymentMethod: paymentDetails.method,
+        status: PaymentStatus.AUTHORIZED,
+        amount,
+        currency: 'USD',
+        timestamp: new Date().toISOString(),
+        processorId: 'processor-' + Math.random().toString(36).substring(2, 10),
+        processorResponse: 'Payment authorized successfully',
+      };
+      
+      return transaction;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Payment processing failed');
+    }
+  }
+);
+
+// Async thunk for placing an order
+export const placeOrder = createAsyncThunk(
+  'checkout/placeOrder',
+  async (
+    { cartId, orderData }: { cartId: string | number; orderData: Partial<Order> },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      // In a real app, this would be an API call
+      // const response = await apiRequest('POST', '/api/orders', { cartId, ...orderData });
+      // return response.data;
+      
+      // For demo, we'll just simulate creating an order
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Create a mock order
+      const order: Order = {
+        id: 'ord-' + Math.random().toString(36).substring(2, 10),
+        userId: orderData.userId,
+        guestId: orderData.guestId,
+        status: OrderStatus.CONFIRMED,
+        items: orderData.items || [],
+        totals: orderData.totals || { subtotal: 0, discountTotal: 0, taxTotal: 0, shippingTotal: 0, total: 0, currency: 'USD' },
+        billingAddress: orderData.billingAddress!,
+        shippingAddress: orderData.shippingAddress!,
+        shippingMethod: orderData.shippingMethod!,
+        deliverySlot: orderData.deliverySlot,
+        paymentMethod: orderData.paymentMethod!,
+        placedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        transaction: (getState() as RootState).checkout.transaction,
+        notes: orderData.notes,
+      };
+      
+      return order;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to place order');
+    }
+  }
+);
+
+// Define checkout state interface
+interface CheckoutState {
+  activeStep: CheckoutStep;
+  completedSteps: CheckoutStep[];
+  billingAddress: Address | null;
+  shippingAddress: Address | null;
+  sameAddress: boolean;
+  deliverySlots: DeliveryTimeSlot[];
+  selectedDeliverySlot: DeliveryTimeSlot | null;
+  selectedPaymentMethod: PaymentMethod | null;
+  paymentDetails: PaymentDetails | null;
+  savedPaymentMethods: SavedPaymentMethod[];
+  otpVerification: OTPVerification | null;
+  orderTotal: number;
+  order: Order | null;
+  transaction: Transaction | null;
+  processingPayment: boolean;
+  placingOrder: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
+// Initial state
+const initialState: CheckoutState = {
+  activeStep: CheckoutStep.ADDRESS,
+  completedSteps: [],
+  billingAddress: null,
+  shippingAddress: null,
+  sameAddress: true,
+  deliverySlots: [],
+  selectedDeliverySlot: null,
+  selectedPaymentMethod: null,
+  paymentDetails: null,
+  savedPaymentMethods: mockSavedPaymentMethods,
+  otpVerification: null,
+  orderTotal: 0,
+  order: null,
+  transaction: null,
+  processingPayment: false,
+  placingOrder: false,
+  loading: false,
+  error: null,
+};
+
+// Create checkout slice
 const checkoutSlice = createSlice({
   name: 'checkout',
   initialState,
   reducers: {
-    // Set active checkout step
     setActiveStep: (state, action: PayloadAction<CheckoutStep>) => {
+      const prevStep = state.activeStep;
       state.activeStep = action.payload;
       
-      // If going backwards, don't modify completed steps
-      if (!state.completedSteps.includes(action.payload)) {
-        state.completedSteps.push(action.payload);
+      // Add the previous step to completed steps if moving forward
+      const stepOrder = Object.values(CheckoutStep);
+      const prevIndex = stepOrder.indexOf(prevStep);
+      const newIndex = stepOrder.indexOf(action.payload);
+      
+      if (newIndex > prevIndex && !state.completedSteps.includes(prevStep)) {
+        state.completedSteps.push(prevStep);
       }
     },
     
-    // Reset checkout state
-    resetCheckout: (state) => {
-      return {
-        ...initialState,
-        // Keep saved addresses and payment methods
-        billingAddress: state.billingAddress,
-        shippingAddress: state.shippingAddress,
-        savedPaymentMethods: state.savedPaymentMethods,
-      };
-    },
-    
-    // Set billing address
     setBillingAddress: (state, action: PayloadAction<Address>) => {
       state.billingAddress = action.payload;
-      
-      // If same address is true, also update shipping address
       if (state.sameAddress) {
         state.shippingAddress = action.payload;
       }
     },
     
-    // Set shipping address
     setShippingAddress: (state, action: PayloadAction<Address>) => {
       state.shippingAddress = action.payload;
+      state.sameAddress = false;
     },
     
-    // Toggle same address flag
-    toggleSameAddress: (state, action: PayloadAction<boolean>) => {
+    setSameAddress: (state, action: PayloadAction<boolean>) => {
       state.sameAddress = action.payload;
-      
-      // If toggling to true, copy billing address to shipping
       if (action.payload && state.billingAddress) {
         state.shippingAddress = state.billingAddress;
       }
     },
     
-    // Set selected delivery slot
     setSelectedDeliverySlot: (state, action: PayloadAction<DeliveryTimeSlot>) => {
       state.selectedDeliverySlot = action.payload;
     },
     
-    // Set selected payment method
     setSelectedPaymentMethod: (state, action: PayloadAction<PaymentMethod>) => {
       state.selectedPaymentMethod = action.payload;
     },
     
-    // Set payment details
     setPaymentDetails: (state, action: PayloadAction<PaymentDetails>) => {
       state.paymentDetails = action.payload;
     },
     
-    // Set order total
-    setOrderTotal: (state, action: PayloadAction<number>) => {
-      state.orderTotal = action.payload;
-    },
-    
-    // Set processing payment flag
-    setProcessingPayment: (state, action: PayloadAction<boolean>) => {
-      state.processingPayment = action.payload;
-    },
-    
-    // Set placing order flag
-    setPlacingOrder: (state, action: PayloadAction<boolean>) => {
-      state.placingOrder = action.payload;
-    },
-    
-    // Update OTP verification state
     updateOTPVerification: (state, action: PayloadAction<Partial<OTPVerification>>) => {
       if (state.otpVerification) {
         state.otpVerification = {
@@ -389,75 +371,110 @@ const checkoutSlice = createSlice({
       }
     },
     
-    // Clear error
+    setOrderTotal: (state, action: PayloadAction<number>) => {
+      state.orderTotal = action.payload;
+    },
+    
     clearError: (state) => {
-      state.error = undefined;
+      state.error = null;
+    },
+    
+    resetCheckout: (state) => {
+      return {
+        ...initialState,
+        // Preserve the saved payment methods
+        savedPaymentMethods: state.savedPaymentMethods,
+      };
     },
   },
   extraReducers: (builder) => {
+    // Handle fetchDeliverySlots
     builder
-      // Fetch delivery slots
+      .addCase(fetchDeliverySlots.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchDeliverySlots.fulfilled, (state, action) => {
-        state.availableDeliverySlots = action.payload;
+        state.loading = false;
+        state.deliverySlots = action.payload;
       })
       .addCase(fetchDeliverySlots.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
+      });
+    
+    // Handle requestOTP
+    builder
+      .addCase(requestOTP.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      
-      // Fetch saved payment methods
-      .addCase(fetchSavedPaymentMethods.fulfilled, (state, action) => {
-        state.savedPaymentMethods = action.payload;
-      })
-      .addCase(fetchSavedPaymentMethods.rejected, (state, action) => {
-        state.error = action.payload as string;
-      })
-      
-      // Process payment
-      .addCase(processPayment.fulfilled, (state, action) => {
-        state.processingPayment = false;
-        if (state.order) {
-          state.order.transaction = action.payload;
-        }
-      })
-      .addCase(processPayment.rejected, (state, action) => {
-        state.processingPayment = false;
-        state.error = action.payload as string;
-      })
-      
-      // Place order
-      .addCase(placeOrder.fulfilled, (state, action) => {
-        state.placingOrder = false;
-        state.order = action.payload;
-        state.activeStep = CheckoutStep.CONFIRMATION;
-        state.completedSteps.push(CheckoutStep.SUMMARY);
-        state.completedSteps.push(CheckoutStep.CONFIRMATION);
-      })
-      .addCase(placeOrder.rejected, (state, action) => {
-        state.placingOrder = false;
-        state.error = action.payload as string;
-      })
-      
-      // Request OTP
       .addCase(requestOTP.fulfilled, (state, action) => {
+        state.loading = false;
         state.otpVerification = action.payload;
         state.activeStep = CheckoutStep.OTP_VERIFICATION;
       })
       .addCase(requestOTP.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
+      });
+    
+    // Handle verifyOTP
+    builder
+      .addCase(verifyOTP.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      
-      // Verify OTP
       .addCase(verifyOTP.fulfilled, (state) => {
+        state.loading = false;
         if (state.otpVerification) {
           state.otpVerification.isVerified = true;
+          state.activeStep = CheckoutStep.SUMMARY;
         }
-        state.activeStep = CheckoutStep.PAYMENT;
-        state.completedSteps.push(CheckoutStep.OTP_VERIFICATION);
       })
       .addCase(verifyOTP.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        
+        // Increment attempts
         if (state.otpVerification) {
           state.otpVerification.attempts += 1;
         }
+      });
+    
+    // Handle processPayment
+    builder
+      .addCase(processPayment.pending, (state) => {
+        state.processingPayment = true;
+        state.error = null;
+      })
+      .addCase(processPayment.fulfilled, (state, action) => {
+        state.processingPayment = false;
+        state.transaction = action.payload;
+      })
+      .addCase(processPayment.rejected, (state, action) => {
+        state.processingPayment = false;
+        state.error = action.payload as string;
+      });
+    
+    // Handle placeOrder
+    builder
+      .addCase(placeOrder.pending, (state) => {
+        state.placingOrder = true;
+        state.error = null;
+      })
+      .addCase(placeOrder.fulfilled, (state, action) => {
+        state.placingOrder = false;
+        state.order = action.payload;
+        state.activeStep = CheckoutStep.CONFIRMATION;
+        
+        // Mark all previous steps as completed
+        state.completedSteps = Object.values(CheckoutStep).filter(
+          (step) => step !== CheckoutStep.CONFIRMATION
+        );
+      })
+      .addCase(placeOrder.rejected, (state, action) => {
+        state.placingOrder = false;
         state.error = action.payload as string;
       });
   },
@@ -466,38 +483,37 @@ const checkoutSlice = createSlice({
 // Export actions
 export const {
   setActiveStep,
-  resetCheckout,
   setBillingAddress,
   setShippingAddress,
-  toggleSameAddress,
+  setSameAddress,
   setSelectedDeliverySlot,
   setSelectedPaymentMethod,
   setPaymentDetails,
-  setOrderTotal,
-  setProcessingPayment,
-  setPlacingOrder,
   updateOTPVerification,
+  setOrderTotal,
   clearError,
+  resetCheckout,
 } = checkoutSlice.actions;
 
 // Export selectors
-export const selectCheckout = (state: RootState) => state.checkout;
 export const selectActiveStep = (state: RootState) => state.checkout.activeStep;
 export const selectCompletedSteps = (state: RootState) => state.checkout.completedSteps;
 export const selectBillingAddress = (state: RootState) => state.checkout.billingAddress;
 export const selectShippingAddress = (state: RootState) => state.checkout.shippingAddress;
 export const selectSameAddress = (state: RootState) => state.checkout.sameAddress;
-export const selectDeliverySlots = (state: RootState) => state.checkout.availableDeliverySlots;
+export const selectDeliverySlots = (state: RootState) => state.checkout.deliverySlots;
 export const selectSelectedDeliverySlot = (state: RootState) => state.checkout.selectedDeliverySlot;
 export const selectSelectedPaymentMethod = (state: RootState) => state.checkout.selectedPaymentMethod;
 export const selectPaymentDetails = (state: RootState) => state.checkout.paymentDetails;
 export const selectSavedPaymentMethods = (state: RootState) => state.checkout.savedPaymentMethods;
-export const selectOrderTotal = (state: RootState) => state.checkout.orderTotal;
 export const selectOTPVerification = (state: RootState) => state.checkout.otpVerification;
+export const selectOrderTotal = (state: RootState) => state.checkout.orderTotal;
 export const selectOrder = (state: RootState) => state.checkout.order;
-export const selectCheckoutError = (state: RootState) => state.checkout.error;
+export const selectTransaction = (state: RootState) => state.checkout.transaction;
 export const selectProcessingPayment = (state: RootState) => state.checkout.processingPayment;
 export const selectPlacingOrder = (state: RootState) => state.checkout.placingOrder;
+export const selectCheckoutLoading = (state: RootState) => state.checkout.loading;
+export const selectCheckoutError = (state: RootState) => state.checkout.error;
 
 // Export reducer
 export default checkoutSlice.reducer;

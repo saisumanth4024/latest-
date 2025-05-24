@@ -24,6 +24,9 @@ import { ProductsPage as ProductsPageImpl } from "@/features/products";
 import CartPage from "@/features/cart/components/CartPage";
 import WishlistPage from "@/features/wishlist/components/WishlistPage";
 
+// Import checkout page
+import Checkout from "@/features/checkout/components/Checkout";
+
 // Create components for each route
 const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
 const OrdersPage = () => <PlaceholderPage title="Orders" />;
@@ -53,6 +56,13 @@ export const routes = [
     component: CartPage,
     requireAuth: false,
     title: "Cart"
+  },
+  {
+    path: "/checkout",
+    component: Checkout,
+    requireAuth: false,
+    title: "Checkout",
+    hideInMenu: true,
   },
   {
     path: "/wishlists",

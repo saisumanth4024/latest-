@@ -1,32 +1,30 @@
-import { Address, Cart, CartTotals, ShippingOption } from './cart';
-import { UserProfile } from './index';
+import { Cart, CartItem, CartTotals, Address, ShippingOption } from './cart';
 
 /**
- * Available payment methods
+ * Enum for checkout steps
+ */
+export enum CheckoutStep {
+  ADDRESS = 'address',
+  DELIVERY = 'delivery',
+  PAYMENT = 'payment',
+  OTP_VERIFICATION = 'otp_verification',
+  SUMMARY = 'summary',
+  CONFIRMATION = 'confirmation',
+}
+
+/**
+ * Enum for payment methods
  */
 export enum PaymentMethod {
   CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
   UPI = 'upi',
-  COD = 'cod',
   WALLET = 'wallet',
-  BANK_TRANSFER = 'bank_transfer'
+  BANK_TRANSFER = 'bank_transfer',
+  COD = 'cod',
 }
 
 /**
- * Payment status
- */
-export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-  CANCELED = 'canceled',
-}
-
-/**
- * Order status types
+ * Enum for order status
  */
 export enum OrderStatus {
   PENDING = 'pending',
@@ -40,165 +38,207 @@ export enum OrderStatus {
 }
 
 /**
- * Delivery time slot
+ * Enum for payment status
+ */
+export enum PaymentStatus {
+  PENDING = 'pending',
+  AUTHORIZED = 'authorized',
+  CAPTURED = 'captured',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  PARTIALLY_REFUNDED = 'partially_refunded',
+}
+
+/**
+ * Interface for delivery time slot
  */
 export interface DeliveryTimeSlot {
+  /** Unique identifier for the delivery slot */
   id: string;
+  /** Date (YYYY-MM-DD format) */
   date: string;
+  /** Start time (HH:MM format) */
   startTime: string;
+  /** End time (HH:MM format) */
   endTime: string;
-  available: boolean;
+  /** Delivery fee (if any) */
   fee?: number;
+  /** Whether the slot is available */
+  available: boolean;
 }
 
 /**
- * Card details for payment
+ * Interface for credit card payment details
  */
 export interface CardDetails {
+  /** Card number */
   cardNumber: string;
+  /** Name on card */
   nameOnCard: string;
+  /** Expiry month (MM format) */
   expiryMonth: string;
+  /** Expiry year (YYYY format) */
   expiryYear: string;
+  /** CVV */
   cvv: string;
+  /** Whether to save for later */
   saveForLater?: boolean;
+  /** Saved method ID (if using a saved method) */
+  savedMethodId?: string;
 }
 
 /**
- * UPI details for payment
+ * Interface for UPI payment details
  */
 export interface UPIDetails {
+  /** UPI ID */
   upiId: string;
+  /** UPI provider */
   provider?: string;
 }
 
 /**
- * Bank transfer details
+ * Interface for wallet payment details
+ */
+export interface WalletDetails {
+  /** Wallet provider */
+  provider: string;
+  /** Mobile number */
+  mobileNumber: string;
+}
+
+/**
+ * Interface for bank transfer details
  */
 export interface BankTransferDetails {
+  /** Bank account number */
   accountNumber: string;
+  /** Bank name */
   bankName: string;
+  /** IFSC code */
   ifscCode: string;
 }
 
 /**
- * Wallet details
+ * Interface for payment details
  */
-export interface WalletDetails {
-  provider: string;
-  mobileNumber?: string;
-  email?: string;
+export interface PaymentDetails {
+  /** Payment method */
+  method: PaymentMethod;
+  /** Payment details (card, UPI, etc.) */
+  details?: CardDetails | UPIDetails | WalletDetails | BankTransferDetails;
 }
 
 /**
- * Payment details - union type based on method
- */
-export type PaymentDetails = 
-  | { method: PaymentMethod.CREDIT_CARD | PaymentMethod.DEBIT_CARD; details: CardDetails }
-  | { method: PaymentMethod.UPI; details: UPIDetails }
-  | { method: PaymentMethod.COD; details?: never }
-  | { method: PaymentMethod.WALLET; details: WalletDetails }
-  | { method: PaymentMethod.BANK_TRANSFER; details: BankTransferDetails };
-
-/**
- * Saved payment method
+ * Interface for saved payment method
  */
 export interface SavedPaymentMethod {
+  /** Unique identifier for the payment method */
   id: string;
+  /** User ID */
+  userId: string | number;
+  /** Payment method type */
   type: PaymentMethod;
-  isDefault: boolean;
-  lastUsed?: string;
-  nickname?: string;
-  
-  // Masked details
-  maskedNumber?: string;
+  /** Card details (if card) */
   cardBrand?: string;
+  /** Masked card number (if card) */
+  maskedNumber?: string;
+  /** Card expiry (if card) */
   cardExpiry?: string;
+  /** UPI ID (if UPI) */
   upiId?: string;
+  /** Wallet provider (if wallet) */
   walletProvider?: string;
+  /** Last used timestamp */
+  lastUsed?: string;
+  /** Is default payment method */
+  isDefault?: boolean;
 }
 
 /**
- * Checkout steps
- */
-export enum CheckoutStep {
-  ADDRESS = 'address',
-  DELIVERY = 'delivery',
-  PAYMENT = 'payment',
-  SUMMARY = 'summary',
-  CONFIRMATION = 'confirmation',
-  OTP_VERIFICATION = 'otp_verification'
-}
-
-/**
- * OTP verification
+ * Interface for OTP verification
  */
 export interface OTPVerification {
+  /** Phone number to which OTP is sent */
   phoneNumber: string;
+  /** Email to which OTP is sent (optional) */
   email?: string;
+  /** Request ID to track OTP verification */
   requestId: string;
+  /** OTP code */
   otp: string;
+  /** Expiry timestamp */
   expiresAt: string;
+  /** Number of attempts */
   attempts: number;
+  /** Maximum allowed attempts */
   maxAttempts: number;
+  /** Whether OTP is verified */
   isVerified: boolean;
 }
 
 /**
- * Transaction details
+ * Interface for transaction
  */
-export interface TransactionDetails {
+export interface Transaction {
+  /** Transaction ID */
   id: string;
+  /** Payment method */
   paymentMethod: PaymentMethod;
+  /** Payment status */
   status: PaymentStatus;
+  /** Transaction amount */
   amount: number;
+  /** Currency */
   currency: string;
-  fee?: number;
-  processorId?: string;
-  processorResponse?: string;
+  /** Transaction timestamp */
   timestamp: string;
+  /** Processor ID (e.g., Stripe, PayPal) */
+  processorId: string;
+  /** Processor response */
+  processorResponse: string;
 }
 
 /**
- * Order interface
+ * Interface for order
  */
 export interface Order {
+  /** Unique identifier for the order */
   id: string;
+  /** User ID (if user is logged in) */
   userId?: string | number;
+  /** Guest ID (if user is not logged in) */
+  guestId?: string;
+  /** Order status */
   status: OrderStatus;
-  items: Array<any>; // Cart items
+  /** Order items */
+  items: CartItem[];
+  /** Order totals */
   totals: CartTotals;
+  /** Billing address */
   billingAddress: Address;
+  /** Shipping address */
   shippingAddress: Address;
+  /** Selected shipping method */
   shippingMethod: ShippingOption;
-  paymentMethod: PaymentMethod;
-  transaction?: TransactionDetails;
-  placedAt: string;
-  estimatedDelivery?: string;
+  /** Delivery slot */
   deliverySlot?: DeliveryTimeSlot;
+  /** Payment method */
+  paymentMethod: PaymentMethod;
+  /** Tracking number */
   trackingNumber?: string;
+  /** Tracking URL */
   trackingUrl?: string;
+  /** Order placed timestamp */
+  placedAt: string;
+  /** Order updated timestamp */
+  updatedAt: string;
+  /** Estimated delivery date */
+  estimatedDelivery?: string;
+  /** Transaction information */
+  transaction?: Transaction;
+  /** Customer notes */
   notes?: string;
+  /** Order metadata */
   metadata?: Record<string, any>;
-}
-
-/**
- * Checkout state
- */
-export interface CheckoutState {
-  activeStep: CheckoutStep;
-  completedSteps: CheckoutStep[];
-  billingAddress?: Address;
-  shippingAddress?: Address;
-  sameAddress: boolean;
-  selectedDeliverySlot?: DeliveryTimeSlot;
-  availableDeliverySlots: DeliveryTimeSlot[];
-  selectedPaymentMethod?: PaymentMethod;
-  paymentDetails?: PaymentDetails;
-  savedPaymentMethods: SavedPaymentMethod[];
-  orderTotal: number;
-  otpVerification?: OTPVerification;
-  order?: Order;
-  error?: string;
-  processingPayment: boolean;
-  placingOrder: boolean;
 }
