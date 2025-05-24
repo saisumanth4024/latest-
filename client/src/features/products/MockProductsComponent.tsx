@@ -55,22 +55,25 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     setHasReachedEnd(false);
     let result = [...MOCK_PRODUCTS];
     
-    // Make sure all products have valid images
-    result = result.map(product => ({
-      ...product,
-      image: product.image || "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image"
-    }));
-    
-    // Apply search query filter - fixed to make search more reliable
+    // Apply search query filter with relaxed matching for better results
     if (searchQuery && searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase().trim();
-      result = result.filter(product => 
-        product.name.toLowerCase().includes(query) || 
-        product.description.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query) ||
-        product.brand.toLowerCase().includes(query) ||
-        product.tags.some(tag => tag.toLowerCase().includes(query))
-      );
+      
+      // Log what we're searching for to help debug
+      console.log('Searching for:', query);
+      console.log('Total products before search:', result.length);
+      
+      result = result.filter(product => {
+        const nameMatch = product.name.toLowerCase().includes(query);
+        const descMatch = product.description.toLowerCase().includes(query);
+        const categoryMatch = product.category.toLowerCase().includes(query);
+        const brandMatch = product.brand.toLowerCase().includes(query);
+        const tagMatch = product.tags.some(tag => tag.toLowerCase().includes(query));
+        
+        return nameMatch || descMatch || categoryMatch || brandMatch || tagMatch;
+      });
+      
+      console.log('Products found after search:', result.length);
     }
     
     // Apply category filter
@@ -291,12 +294,10 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
             >
               <div className="relative aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-800">
                 <img 
-                  src={product.image || "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image"} 
+                  src={`https://source.unsplash.com/random/400x300?${product.category.toLowerCase().replace(/\s+/g, '-')}`}
                   alt={product.name}
                   className="object-cover w-full h-48"
-                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                    e.currentTarget.src = "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image";
-                  }}
+                  loading="lazy"
                 />
                 {product.discount > 0 && (
                   <Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600">
