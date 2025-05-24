@@ -87,7 +87,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </Link>
               </li>
               {/* Admin link - only visible to admins */}
-              {user.role === 'admin' && (
+              {(['admin'].includes(user.role as string)) && (
                 <li>
                   <Link href="/admin/dashboard">
                     <div
@@ -101,7 +101,7 @@ export default function UserMenu({ user }: UserMenuProps) {
               )}
               
               {/* Seller link - only visible to sellers and admins */}
-              {(user.role === 'seller' || user.role === 'admin') && (
+              {(['seller', 'admin'].includes(user.role as string)) && (
                 <li>
                   <Link href="/seller/dashboard">
                     <div
@@ -115,7 +115,7 @@ export default function UserMenu({ user }: UserMenuProps) {
               )}
               
               {/* Moderator link - only visible to moderators and admins */}
-              {(user.role === ('moderator' as UserRole) || user.role === 'admin') && (
+              {(['moderator', 'admin'].includes(user.role as string)) && (
                 <li>
                   <Link href="/moderation/reviews">
                     <div

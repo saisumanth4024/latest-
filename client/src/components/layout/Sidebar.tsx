@@ -5,8 +5,7 @@ import { selectUserRole } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
 import { getNavigationByRole, type UserRole, type NavItem as NavItemType, type NavSection } from '@/config/navigation';
 import { NavIcon } from '@/components/icons/NavIcons';
-// Import directly from types for the demo role selector
-import { UserRole as UserRoleEnum } from '@/features/auth/types';
+// Using UserRole from navigation config for consistency
 
 interface NavItemProps {
   href: string;
@@ -49,7 +48,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   // Demo role selector - in a real app, this would be based on user permissions/login
   // For demo purposes, we'll use localStorage to simulate role changes
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedRole = e.target.value as UserRoleEnum;
+    const selectedRole = e.target.value as UserRole;
     
     // Store the selected role in localStorage for demo purposes
     window.localStorage.setItem('demoUserRole', JSON.stringify({ role: selectedRole }));

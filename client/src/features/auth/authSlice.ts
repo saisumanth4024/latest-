@@ -126,6 +126,18 @@ const authSlice = createSlice({
 // Actions
 export const { logout, setCredentials } = authSlice.actions;
 
+// Token expiration check function
+export const checkTokenExpiration = () => (dispatch: any, getState: () => RootState) => {
+  const state = getState();
+  const expiresAt = state.auth.expiresAt;
+  
+  if (expiresAt && Date.now() > expiresAt * 1000) {
+    dispatch(logout());
+    return true;
+  }
+  return false;
+};
+
 // Selectors
 export const selectAuthUser = (state: RootState) => state.auth.user;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
