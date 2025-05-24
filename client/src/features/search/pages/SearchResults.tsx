@@ -142,23 +142,86 @@ export default function SearchResults() {
         sortOrder: sortOrder || undefined,
       };
       
-      // Use placeholders for now, this will be connected to real API in future
+      // Use our improved sample product data for search results
+      // Product image collection with working URLs
+      const productImages = [
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80", // Headphones
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80", // Red shoes
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80", // Watch
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80", // Sunglasses
+        "https://images.unsplash.com/photo-1600086827875-a63b01f1335c?w=400&q=80", // Earbuds
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80", // Laptop
+        "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=400&q=80", // Keyboard
+        "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&q=80", // Headset
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=80", // Shoes
+        "https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&q=80", // Chair
+        "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&q=80", // Lamp
+        "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80"  // Sofa
+      ];
+
+      // Product name collection
+      const productNames = [
+        "Ultra Wireless Headphones",
+        "Premium Running Shoes",
+        "Smart Watch Pro",
+        "Designer Sunglasses",
+        "Wireless Earbuds",
+        "Ultrabook Laptop 15"",
+        "Mechanical Keyboard",
+        "Noise-Cancelling Headset",
+        "Performance Athletic Shoes",
+        "Ergonomic Office Chair",
+        "Modern LED Desk Lamp",
+        "Sectional Sofa"
+      ];
+
+      // Product descriptions
+      const descriptions = [
+        "Experience premium sound quality with deep bass and noise isolation",
+        "Engineered for comfort and performance with breathable materials",
+        "Track your fitness goals and stay connected with smart notifications",
+        "Polarized lenses with UV protection in a stylish, durable frame",
+        "Crystal clear audio with 30-hour battery life and water resistance",
+        "Ultra-fast performance with 16GB RAM and 512GB SSD storage",
+        "Precision typing experience with customizable RGB lighting",
+        "Block out distractions with advanced noise cancellation technology",
+        "Maximum comfort and support for high-intensity training",
+        "Adjustable lumbar support and breathable mesh for all-day comfort",
+        "Adjustable brightness with multiple color temperatures",
+        "Premium fabric with modular design for flexible arrangements"
+      ];
+
+      // Create enhanced product data
       return {
-        products: Array(12).fill(null).map((_, index) => ({
-          id: `product-${index}`,
-          name: `Product ${index + 1} ${query ? `matching "${query}"` : ''}`,
-          description: 'This is a sample product description. It would contain details about the product features and benefits.',
-          price: Math.floor(Math.random() * (priceRange[1] - priceRange[0])) + priceRange[0],
-          originalPrice: Math.floor(Math.random() * (priceRange[1] - priceRange[0] + 100)) + priceRange[0] + 50,
-          imageUrl: `https://source.unsplash.com/random/300x300?product&sig=${index}`,
-          rating: (Math.random() * 5).toFixed(1),
-          reviewCount: Math.floor(Math.random() * 500),
-          inStock: Math.random() > 0.2,
-          onSale: Math.random() > 0.7,
-          brandId: selectedBrands.length > 0 ? selectedBrands[Math.floor(Math.random() * selectedBrands.length)] : `brand-${Math.floor(Math.random() * 8) + 1}`,
-          categoryId: selectedCategory || `category-${Math.floor(Math.random() * 3) + 1}`,
-          tags: selectedTags.length > 0 ? selectedTags : Array(3).fill(null).map(() => `tag-${Math.floor(Math.random() * 10) + 1}`),
-        })),
+        products: Array(12).fill(null).map((_, index) => {
+          const basePrice = (79 + (index * 30)) + 0.99;
+          const discountPercent = Math.random() > 0.7 ? 0.2 : 0;
+          const hasDiscount = discountPercent > 0;
+          
+          return {
+            id: `product-${index}`,
+            name: productNames[index],
+            description: descriptions[index],
+            price: hasDiscount ? basePrice * (1 - discountPercent) : basePrice,
+            originalPrice: hasDiscount ? basePrice : undefined,
+            imageUrl: productImages[index],
+            rating: (3 + Math.random() * 2).toFixed(1),
+            reviewCount: Math.floor(10 + Math.random() * 490),
+            inStock: index % 7 !== 0, // Most products in stock
+            onSale: hasDiscount,
+            brandId: selectedBrands.length > 0 ? 
+              selectedBrands[Math.floor(Math.random() * selectedBrands.length)] : 
+              index % 4 === 0 ? "SoundMaster" : 
+              index % 4 === 1 ? "TechVision" : 
+              index % 4 === 2 ? "FitTech" : "HomeConnect",
+            categoryId: selectedCategory || 
+              index % 3 === 0 ? "Electronics" : 
+              index % 3 === 1 ? "Clothing" : "Home & Kitchen",
+            tags: selectedTags.length > 0 ? 
+              selectedTags : 
+              ["premium", index % 3 === 0 ? "electronics" : index % 3 === 1 ? "clothing" : "home", index % 2 === 0 ? "featured" : "bestseller"],
+          };
+        }),
         totalCount: 120,
         pageCount: 10,
       };
