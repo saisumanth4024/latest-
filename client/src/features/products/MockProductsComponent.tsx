@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -340,6 +341,7 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState(MOCK_PRODUCTS);
   const productsPerPage = count;
+  const [, setLocation] = useLocation(); // Add this for navigation
   
   // Filter and sort products based on criteria
   useEffect(() => {
@@ -447,6 +449,12 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
   };
   
   // Render stars for rating
+  // Handle product click navigation
+  const handleProductClick = (productId: string) => {
+    setLocation(`/products/${productId}`);
+  };
+  
+  // Render stars for rating
   const renderRating = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -484,7 +492,11 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${columns} gap-4`}>
           {currentProducts.map(product => (
-            <Card key={product.id} className="overflow-hidden flex flex-col h-full">
+            <Card 
+              key={product.id} 
+              className="overflow-hidden flex flex-col h-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleProductClick(product.id)}
+            >
               <div className="relative aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-800">
                 <img 
                   src={product.image} 
