@@ -64,22 +64,69 @@ export const fetchCart = createAsyncThunk(
         return JSON.parse(storedCart) as Cart;
       }
       
-      // Create a new cart
+      // Create a new cart with sample items
       const newCart: Cart = {
         id: uuidv4(),
-        items: [],
+        items: [
+          {
+            id: uuidv4(),
+            productId: '101',
+            product: {
+              name: 'Premium Headphones',
+              brand: 'AudioTech',
+              imageUrl: null
+            },
+            variantId: 'v1',
+            quantity: 1,
+            unitPrice: 129.99,
+            subtotal: 129.99,
+            discountTotal: 0,
+            total: 129.99,
+            options: {
+              color: 'Black',
+              warranty: '2 years'
+            },
+            sku: 'AUD-HP-101-BLK',
+            isDigital: false,
+            requiresShipping: true,
+            weight: 0.5,
+            isTaxExempt: false,
+            addedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: uuidv4(),
+            productId: '102',
+            product: {
+              name: 'Wireless Mouse',
+              brand: 'TechGear',
+              imageUrl: null
+            },
+            quantity: 1,
+            unitPrice: 49.99,
+            subtotal: 49.99,
+            discountTotal: 10.00,
+            total: 39.99,
+            sku: 'TG-WM-102',
+            isDigital: false,
+            requiresShipping: true,
+            isTaxExempt: false,
+            addedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ],
         totals: {
-          subtotal: 0,
-          discountTotal: 0,
-          taxTotal: 0,
-          shippingTotal: 0,
-          total: 0,
+          subtotal: 179.98,
+          discountTotal: 10.00,
+          taxTotal: 13.50,
+          shippingTotal: 5.99,
+          total: 189.47,
           currency: 'USD'
         },
         coupons: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isDigitalOnly: true,
+        isDigitalOnly: false,
         convertedToOrder: false
       };
       
