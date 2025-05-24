@@ -101,6 +101,10 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
+      // Store the auth method before clearing state
+      const authMethod = state.authMethod;
+      
+      // Clear state
       state.user = null;
       state.token = null;
       state.refreshToken = null;
@@ -115,8 +119,11 @@ const authSlice = createSlice({
       localStorage.removeItem('auth_method');
       
       // For Replit auth, redirect to the logout endpoint
-      if (state.authMethod === 'replit') {
-        window.location.href = '/api/logout';
+      if (authMethod === 'replit') {
+        // Use setTimeout to ensure state updates before redirect
+        setTimeout(() => {
+          window.location.href = '/api/logout';
+        }, 100);
       }
     },
     setCredentials: (state, action: PayloadAction<{ 

@@ -17,19 +17,25 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  // Initialize with a default theme
+  const [theme, setTheme] = useState<Theme>('light');
+  
+  // Initialize theme once the component is mounted
+  useEffect(() => {
+    // Safe check for browser environment
+    if (typeof window === 'undefined') return;
+    
     // Check for saved theme preference or respect OS preference
     const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'dark') return 'dark';
-    if (storedTheme === 'light') return 'light';
-    
-    // If no stored preference, check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
+    if (storedTheme === 'dark') {
+      setTheme('dark');
+    } else if (storedTheme === 'light') {
+      setTheme('light');
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      // If no stored preference, check system preference
+      setTheme('dark');
     }
-    
-    return 'light';
-  });
+  }, []);
   
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
@@ -37,6 +43,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   
   // Apply theme class to document
   useEffect(() => {
+    // Safe check for browser environment
+    if (typeof window === 'undefined') return;
+    
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -49,6 +58,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   
   // Listen for system preference changes
   useEffect(() => {
+    // Safe check for browser environment
+    if (typeof window === 'undefined') return;
+    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = (e: MediaQueryListEvent) => {

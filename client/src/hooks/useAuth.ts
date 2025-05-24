@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { 
   selectAuthUser, 
@@ -6,8 +6,10 @@ import {
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,
-  fetchReplitUser
+  fetchReplitUser,
+  logout
 } from '@/features/auth/authSlice';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Enhanced auth hook that supports both traditional and Replit authentication methods
@@ -20,6 +22,7 @@ export function useAuth() {
   const isLoading = useAppSelector(selectAuthLoading);
   const error = useAppSelector(selectAuthError);
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
 
   // Check for Replit authentication if no user is authenticated in Redux store
   useEffect(() => {
@@ -30,11 +33,31 @@ export function useAuth() {
     }
   }, [isAuthenticated, isLoading, error, dispatch]);
 
+  // Logout handler with callback for better performance
+  const handleLogout = useCallback(() => {
+    try {
+      dispatch(logout());
+      toast({
+        title: "Logged out successfully",
+        description: "You have been securely logged out of your account",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "There was an issue logging you out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [dispatch, toast]);
+
   return {
     user,
     isAuthenticated,
     isLoading,
     error,
-    authStatus
+    authStatus,
+    logout: handleLogout
   };
 }
