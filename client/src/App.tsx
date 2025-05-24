@@ -7,6 +7,8 @@ import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
 import { UserRole } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -171,21 +173,49 @@ function ProtectedRoute({
 }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   // If still loading, show loading indicator
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, show login prompt
   if (!isAuthenticated) {
-    // Redirect to Replit login
-    window.location.href = '/api/login';
-    return null;
+    return (
+      <div className="max-w-md mx-auto mt-12 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Login Required</h2>
+        <p className="mb-6 text-gray-600 dark:text-gray-300">
+          You need to be logged in to access this page. Please log in to continue.
+        </p>
+        <Button asChild className="w-full">
+          <a href="/api/login">Log in with Replit</a>
+        </Button>
+      </div>
+    );
   }
 
-  // If roles are specified, check if user has required role (TO BE IMPLEMENTED)
-  // This needs more implementation once user roles are stored properly
+  // If roles are specified, check if user has required role
+  // Safety checks to avoid errors with undefined user or roles
+  if (roles && roles.length > 0 && user) {
+    // For Replit auth, we might not have a role field explicitly set
+    // So assume regular user role as a fallback
+    const userRole = (user as any).role || UserRole.USER;
+    
+    if (!roles.includes(userRole)) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive"
+      });
+      navigate("/");
+      return null;
+    }
+  }
 
   return <>{children}</>;
 }
