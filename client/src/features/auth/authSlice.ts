@@ -45,17 +45,19 @@ const saveAuthToStorage = (
   expiresAt: string,
   user: UserProfile
 ) => {
-  localStorage.set('auth', {
+  // Use the standard localStorage API
+  window.localStorage.setItem('auth', JSON.stringify({
     token,
     refreshToken,
     expiresAt,
     user,
-  });
+  }));
 };
 
 // Helper function to clear auth data from localStorage
 const clearAuthFromStorage = () => {
-  localStorage.remove('auth');
+  // Use the standard localStorage API
+  window.localStorage.removeItem('auth');
 };
 
 // Async thunk for login
