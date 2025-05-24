@@ -378,11 +378,8 @@ export const regenerateShareableLink = (wishlistId: string) => (dispatch: any, g
   return null;
 };
 
-// Set active wishlist
-export const setActiveWishlist = (wishlistId: string) => ({
-  type: 'wishlist/setActiveWishlist',
-  payload: wishlistId
-});
+// Additional action for setting active wishlist outside of reducer
+// This is removed because it's already defined in the slice actions above
 
 // Selectors
 export const selectWishlists = (state: RootState) => state.wishlist.wishlists;
