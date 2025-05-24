@@ -13,8 +13,201 @@ import {
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { formatCurrency } from '@/lib/utils';
 
-// Import the expanded mock product data with more diverse and realistic products
-import MOCK_PRODUCTS from './data/mockProducts';
+// Use a basic set of products that will always display
+const MOCK_PRODUCTS = [
+  {
+    id: "1",
+    name: "Premium Wireless Headphones",
+    description: "High-quality wireless headphones with noise cancellation",
+    price: 299.99,
+    image: "https://source.unsplash.com/random/400x300?headphones",
+    rating: 4.8,
+    category: "Electronics",
+    brand: "Sony",
+    inStock: true,
+    discount: 10,
+    tags: ["wireless", "audio", "premium"],
+    reviews: 245,
+    priceRange: "200-500",
+    colors: ["black", "silver", "blue"]
+  },
+  {
+    id: "2",
+    name: "Men's Casual Shirt",
+    description: "Comfortable cotton shirt for everyday wear",
+    price: 49.99,
+    image: "https://source.unsplash.com/random/400x300?shirt",
+    rating: 4.2,
+    category: "Clothing",
+    brand: "Nike",
+    inStock: true,
+    discount: 0,
+    tags: ["casual", "men", "cotton"],
+    reviews: 120,
+    priceRange: "25-50",
+    colors: ["blue", "white", "black"]
+  },
+  {
+    id: "3",
+    name: "Smart 4K TV",
+    description: "55-inch 4K Smart TV with HDR and built-in streaming apps",
+    price: 699.99,
+    image: "https://source.unsplash.com/random/400x300?tv",
+    rating: 4.6,
+    category: "Electronics",
+    brand: "Samsung",
+    inStock: true,
+    discount: 15,
+    tags: ["4k", "smart", "tv"],
+    reviews: 189,
+    priceRange: "500-1000",
+    colors: ["black"]
+  },
+  {
+    id: "4",
+    name: "Premium Coffee Maker",
+    description: "Automatic coffee maker with timer and multiple brew settings",
+    price: 129.99,
+    image: "https://source.unsplash.com/random/400x300?coffee-maker",
+    rating: 4.3,
+    category: "Home & Kitchen",
+    brand: "KitchenAid",
+    inStock: true,
+    discount: 0,
+    tags: ["kitchen", "appliance", "coffee"],
+    reviews: 156,
+    priceRange: "100-200",
+    colors: ["silver", "black", "red"]
+  },
+  {
+    id: "5",
+    name: "Running Shoes",
+    description: "Lightweight and comfortable running shoes for all terrains",
+    price: 89.99,
+    image: "https://source.unsplash.com/random/400x300?running-shoes",
+    rating: 4.5,
+    category: "Sports & Outdoors",
+    brand: "Adidas",
+    inStock: true,
+    discount: 5,
+    tags: ["running", "shoes", "sports"],
+    reviews: 210,
+    priceRange: "50-100",
+    colors: ["black", "blue", "red", "green"]
+  },
+  {
+    id: "6",
+    name: "Smartphone",
+    description: "Latest model smartphone with high-resolution camera and long battery life",
+    price: 899.99,
+    image: "https://source.unsplash.com/random/400x300?smartphone",
+    rating: 4.7,
+    category: "Electronics",
+    brand: "Apple",
+    inStock: true,
+    discount: 0,
+    tags: ["mobile", "smartphone", "high-tech"],
+    reviews: 320,
+    priceRange: "500-1000",
+    colors: ["black", "white", "gold"]
+  },
+  {
+    id: "7",
+    name: "Desk Lamp",
+    description: "Adjustable LED desk lamp with multiple brightness levels",
+    price: 39.99,
+    image: "https://source.unsplash.com/random/400x300?lamp",
+    rating: 4.1,
+    category: "Home & Kitchen",
+    brand: "Philips",
+    inStock: true,
+    discount: 0,
+    tags: ["lighting", "desk", "home"],
+    reviews: 87,
+    priceRange: "25-50",
+    colors: ["white", "black", "silver"]
+  },
+  {
+    id: "8",
+    name: "Bluetooth Speaker",
+    description: "Portable Bluetooth speaker with waterproof design and long battery life",
+    price: 79.99,
+    image: "https://source.unsplash.com/random/400x300?speaker",
+    rating: 4.4,
+    category: "Electronics",
+    brand: "Bose",
+    inStock: true,
+    discount: 10,
+    tags: ["audio", "bluetooth", "portable"],
+    reviews: 175,
+    priceRange: "50-100",
+    colors: ["black", "blue", "red"]
+  },
+  {
+    id: "9",
+    name: "Digital Camera",
+    description: "High-resolution digital camera with 4K video recording capability",
+    price: 599.99,
+    image: "https://source.unsplash.com/random/400x300?camera",
+    rating: 4.6,
+    category: "Electronics",
+    brand: "Canon",
+    inStock: true,
+    discount: 5,
+    tags: ["camera", "photography", "4k"],
+    reviews: 124,
+    priceRange: "500-1000",
+    colors: ["black"]
+  },
+  {
+    id: "10",
+    name: "Yoga Mat",
+    description: "Non-slip yoga mat with carrying strap",
+    price: 29.99,
+    image: "https://source.unsplash.com/random/400x300?yoga-mat",
+    rating: 4.3,
+    category: "Sports & Outdoors",
+    brand: "Under Armour",
+    inStock: true,
+    discount: 0,
+    tags: ["yoga", "fitness", "exercise"],
+    reviews: 98,
+    priceRange: "0-50",
+    colors: ["purple", "blue", "black", "pink"]
+  },
+  {
+    id: "11",
+    name: "Stainless Steel Water Bottle",
+    description: "Insulated water bottle that keeps beverages hot or cold for hours",
+    price: 24.99,
+    image: "https://source.unsplash.com/random/400x300?water-bottle",
+    rating: 4.5,
+    category: "Sports & Outdoors",
+    brand: "CamelBak",
+    inStock: true,
+    discount: 0,
+    tags: ["hydration", "bottle", "insulated"],
+    reviews: 112,
+    priceRange: "0-50",
+    colors: ["silver", "black", "blue", "red"]
+  },
+  {
+    id: "12",
+    name: "Wireless Mouse",
+    description: "Ergonomic wireless mouse with long battery life",
+    price: 49.99,
+    image: "https://source.unsplash.com/random/400x300?computer-mouse",
+    rating: 4.2,
+    category: "Electronics",
+    brand: "Logitech",
+    inStock: true,
+    discount: 0,
+    tags: ["computer", "wireless", "peripheral"],
+    reviews: 156,
+    priceRange: "25-50",
+    colors: ["black", "gray"]
+  }
+];
 
 interface MockProductsComponentProps {
   title?: string;
@@ -52,16 +245,26 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
   
   // Filter and sort products based on criteria
   useEffect(() => {
-    setHasReachedEnd(false);
-    let result = [...MOCK_PRODUCTS];
+    console.log('Effect running with:', { searchQuery, filters });
     
-    // Apply search query filter with relaxed matching for better results
-    if (searchQuery && searchQuery.trim() !== '') {
+    setHasReachedEnd(false);
+    
+    // Create a copy of all products
+    let result = [...MOCK_PRODUCTS];
+    console.log('Total products initially:', result.length);
+    
+    // Debug: Log a sample product
+    if (result.length > 0) {
+      console.log('Sample product:', result[0]);
+    }
+    
+    // Always show all products if no filters applied and no search query
+    if (!searchQuery || searchQuery.trim() === '') {
+      // Only apply other filters
+    } else {
+      // Apply search query filter with relaxed matching for better results
       const query = searchQuery.toLowerCase().trim();
-      
-      // Log what we're searching for to help debug
       console.log('Searching for:', query);
-      console.log('Total products before search:', result.length);
       
       result = result.filter(product => {
         const nameMatch = product.name.toLowerCase().includes(query);
@@ -70,10 +273,9 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
         const brandMatch = product.brand.toLowerCase().includes(query);
         const tagMatch = product.tags.some(tag => tag.toLowerCase().includes(query));
         
-        return nameMatch || descMatch || categoryMatch || brandMatch || tagMatch;
+        const isMatch = nameMatch || descMatch || categoryMatch || brandMatch || tagMatch;
+        return isMatch;
       });
-      
-      console.log('Products found after search:', result.length);
     }
     
     // Apply category filter

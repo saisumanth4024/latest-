@@ -128,6 +128,7 @@ const ProductsPage: React.FC = () => {
   
   // Handle search query change
   const handleSearchChange = (query: string) => {
+    console.log('Setting search query to:', query);
     setSearchQuery(query);
   };
   
