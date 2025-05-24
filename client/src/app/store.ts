@@ -6,6 +6,10 @@ import wishlistReducer from '@/features/wishlist/wishlistSlice';
 import checkoutReducer from '@/features/checkout/checkoutSlice';
 import ordersReducer from '@/features/orders/ordersSlice';
 import { ordersApi } from '@/features/orders/ordersApi';
+import dashboardReducer from '@/features/dashboard/dashboardSlice';
+import { dashboardApi } from '@/features/dashboard/dashboardApi';
+import notificationsReducer from '@/features/notifications/notificationsSlice';
+import { notificationsApi } from '@/features/notifications/notificationsApi';
 
 export const store = configureStore({
   reducer: {
@@ -14,8 +18,12 @@ export const store = configureStore({
     wishlist: wishlistReducer,
     checkout: checkoutReducer,
     orders: ordersReducer,
+    dashboard: dashboardReducer,
+    notifications: notificationsReducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
+    [dashboardApi.reducerPath]: dashboardApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -28,7 +36,12 @@ export const store = configureStore({
           'checkout/placeOrder/fulfilled',
           'checkout/requestOTP/fulfilled',
           'orders/submitReturnRequest/fulfilled',
-          'orders/submitCancellationRequest/fulfilled'
+          'orders/submitCancellationRequest/fulfilled',
+          'notifications/fetchNotifications/fulfilled',
+          'notifications/markAsRead/fulfilled',
+          'notifications/markAllAsRead/fulfilled',
+          'notifications/addLocalNotification',
+          'dashboard/updateDashboardLayout/fulfilled'
         ],
         // Ignore these field paths in all actions
         ignoredActionPaths: [
@@ -48,7 +61,9 @@ export const store = configureStore({
           'payload.actualDelivery',
           'payload.invoiceDate',
           'payload.dueDate',
-          'payload.paidDate'
+          'payload.paidDate',
+          'payload.readAt',
+          'payload.notifications'
         ],
         // Ignore these paths in the state
         ignoredPaths: [
@@ -76,10 +91,19 @@ export const store = configureStore({
           'orders.returnRequests.entities.*.refundProcessedAt',
           'orders.cancellationRequests.entities.*.requestedAt',
           'orders.cancellationRequests.entities.*.processedAt',
-          'orders.cancellationRequests.entities.*.refundProcessedAt'
+          'orders.cancellationRequests.entities.*.refundProcessedAt',
+          'notifications.items.*.createdAt',
+          'notifications.items.*.readAt',
+          'notifications.items.*.expiresAt',
+          'dashboard.layout.widgets.*.settings'
         ],
       },
-    }).concat(productsApi.middleware, ordersApi.middleware),
+    }).concat(
+      productsApi.middleware, 
+      ordersApi.middleware, 
+      dashboardApi.middleware, 
+      notificationsApi.middleware
+    ),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
