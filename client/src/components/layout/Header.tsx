@@ -4,6 +4,7 @@ import { selectUser } from '@/features/auth/authSlice';
 import NotificationMenu from '@/components/ui/NotificationMenu';
 import UserMenu from '@/components/ui/UserMenu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import GlobalSearch from '@/features/search/components/GlobalSearch';
 import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
 
@@ -55,40 +56,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       
       <div className="flex items-center space-x-4">
         {/* Global Search */}
-        <div className="relative hidden sm:block">
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
-            aria-label="Search"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
-          </button>
-          
-          {searchOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setSearchOpen(false)}></div>
-              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-md shadow-lg overflow-hidden z-20 border border-slate-200 dark:border-slate-700">
-                <div className="p-2">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="w-full p-2 pl-8 pr-4 rounded-md bg-slate-100 dark:bg-slate-700 border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-0 text-sm"
-                      placeholder="Search..."
-                      autoFocus
-                    />
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-2 top-3 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="border-t border-slate-200 dark:border-slate-700 py-2 px-2 text-xs text-slate-500 dark:text-slate-400">
-                  Press <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">ESC</kbd> to close
-                </div>
-              </div>
-            </>
-          )}
+        <div className="relative hidden sm:block w-72">
+          <GlobalSearch />
         </div>
         
         <NotificationMenu />

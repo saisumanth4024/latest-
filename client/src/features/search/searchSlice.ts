@@ -286,8 +286,28 @@ const searchSlice = createSlice({
         inStock: action.payload || undefined
       };
     },
+    toggleInStockOnly: (state) => {
+      state.inStockOnly = !state.inStockOnly;
+      state.filters = {
+        ...state.filters,
+        inStock: state.inStockOnly || undefined
+      };
+    },
     setOnSaleOnly: (state, action: PayloadAction<boolean>) => {
       state.onSaleOnly = action.payload;
+      state.filters = {
+        ...state.filters,
+        // Just use the filter for the backend API, but don't specify a field that doesn't exist
+        ...(action.payload && { onSale: true })
+      };
+    },
+    toggleOnSaleOnly: (state) => {
+      state.onSaleOnly = !state.onSaleOnly;
+      state.filters = {
+        ...state.filters,
+        // Just use the filter for the backend API, but don't specify a field that doesn't exist
+        ...(state.onSaleOnly && { onSale: true })
+      };
     },
     setSortBy: (state, action: PayloadAction<'relevance' | 'price' | 'newest' | 'popularity'>) => {
       state.sortBy = action.payload;
@@ -396,7 +416,9 @@ export const {
   setPriceRange,
   setSelectedTags,
   setInStockOnly,
+  toggleInStockOnly,
   setOnSaleOnly,
+  toggleOnSaleOnly,
   setSortBy,
   setSortOrder,
   resetFilters

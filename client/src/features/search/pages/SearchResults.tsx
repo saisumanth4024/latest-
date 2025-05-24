@@ -127,14 +127,18 @@ export default function SearchResults() {
     queryKey: ['/api/products/search', query, selectedCategory, selectedBrands, priceRange, selectedTags, inStockOnly, onSaleOnly, sortBy, sortOrder],
     queryFn: async () => {
       const filters: ProductFilters = {
-        categoryId: selectedCategory || undefined,
+        category: selectedCategory || undefined,
         brandIds: selectedBrands.length > 0 ? selectedBrands : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
         tags: selectedTags.length > 0 ? selectedTags : undefined,
         inStock: inStockOnly || undefined,
-        onSale: onSaleOnly || undefined,
-        sortBy: sortBy || undefined,
+        // Handle the sort mapping to match what the API expects
+        sortBy: sortBy === 'relevance' 
+          ? undefined 
+          : sortBy === 'popularity' 
+            ? 'rating' 
+            : sortBy as 'price' | 'newest' | 'name',
         sortOrder: sortOrder || undefined,
       };
       
@@ -267,7 +271,9 @@ export default function SearchResults() {
   };
   
   const handlePriceChange = (value: number[]) => {
-    dispatch(setPriceRange(value));
+    if (value.length === 2) {
+      dispatch(setPriceRange([value[0], value[1]]));
+    }
   };
   
   const handleInStockToggle = () => {
