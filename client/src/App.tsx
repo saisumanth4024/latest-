@@ -1,15 +1,38 @@
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/Dashboard";
-import Landing from "@/pages/Landing";
-import LoginPage from "@/pages/LoginPage";
 import Layout from "@/components/layout/Layout";
-import ProfilePageLegacy from "@/pages/ProfilePage";
-import ProfilePage from "@/features/profile/ProfilePage";
 import { UserRole } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import ErrorBoundary, { withErrorBoundary } from "@/components/ErrorBoundary";
+import OfflineIndicator from "@/components/OfflineIndicator";
+import { Loader2 } from "lucide-react";
+
+// Global loading component for lazy-loaded routes
+const GlobalLoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+  </div>
+);
+
+// Lazy-loaded components for better code splitting and performance
+const Landing = lazy(() => import("@/pages/Landing"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
+const ProfilePageLegacy = lazy(() => import("@/pages/ProfilePage"));
+const ProductsPage = lazy(() => import("@/features/products/components/ProductsPage"));
+const ProductDetailPage = lazy(() => import("@/features/products/components/ProductDetailPage"));
+const CartPage = lazy(() => import("@/features/cart/components/CartPage"));
+const WishlistPage = lazy(() => import("@/features/wishlist/components/WishlistPage"));
+const Checkout = lazy(() => import("@/features/checkout/components/Checkout"));
+const OrdersPage = lazy(() => import('@/features/orders/components/OrdersPage'));
+const SearchResults = lazy(() => import('@/features/search/pages/SearchResults'));
+const DashboardPage = lazy(() => import('@/features/dashboard').then(m => ({ default: m.DashboardPage })));
+const ReviewsPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ReviewsPage })));
+const ModerationPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ModerationPage })));
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -19,28 +42,11 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Import the product pages components
-import { ProductsPage as ProductsPageImpl, ProductDetailPage } from "@/features/products";
-
-// Import cart and wishlist pages
-import CartPage from "@/features/cart/components/CartPage";
-import WishlistPage from "@/features/wishlist/components/WishlistPage";
-
-// Import checkout page
-import Checkout from "@/features/checkout/components/Checkout";
-
-// Import reviews pages
-import { ReviewsPage, ModerationPage } from "@/features/reviews/pages";
-
-// Create components for each route
-const ProductsPlaceholder = () => <PlaceholderPage title="Products" />;
-import OrdersPage from '@/features/orders/components/OrdersPage';
-import SearchResults from '@/features/search/pages/SearchResults';
-import { DashboardPage } from '@/features/dashboard';
-const AnalyticsPage = () => <DashboardPage />;
-const SettingsPage = () => <PlaceholderPage title="Settings" />;
-const AdminDashboardPage = () => <PlaceholderPage title="Admin Dashboard" />;
-const SellerDashboardPage = () => <PlaceholderPage title="Seller Dashboard" />;
+// Wrap placeholder pages in error boundaries
+const AnalyticsPage = withErrorBoundary(() => <DashboardPage />, { boundary: "AnalyticsPage" });
+const SettingsPage = withErrorBoundary(() => <PlaceholderPage title="Settings" />, { boundary: "SettingsPage" });
+const AdminDashboardPage = withErrorBoundary(() => <PlaceholderPage title="Admin Dashboard" />, { boundary: "AdminDashboardPage" });
+const SellerDashboardPage = withErrorBoundary(() => <PlaceholderPage title="Seller Dashboard" />, { boundary: "SellerDashboardPage" });
 
 // Create a central routes configuration with auth requirements
 export const routes = [
@@ -62,7 +68,7 @@ export const routes = [
   },
   { 
     path: "/products", 
-    component: ProductsPageImpl, 
+    component: ProductsPage, 
     requireAuth: false,
     title: "Products",
     roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
@@ -175,7 +181,6 @@ export const routes = [
     roles: ['seller', 'admin'] as UserRole[],
     title: "Seller Dashboard",
   },
-  // Login and signup routes are implemented with standard forms
   { 
     path: "*", 
     component: NotFound,
@@ -201,7 +206,7 @@ function ProtectedRoute({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full"></div>
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -251,30 +256,62 @@ function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
   const noLayoutPaths: string[] = ['/'];
   const shouldShowLayout = !noLayoutPaths.includes(location) || isAuthenticated;
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // If we're still loading auth status, show a loading indicator
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full"></div>
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
   
   // Show landing page for non-authenticated users at root path
   if (!isAuthenticated && location === '/') {
-    return <Landing />;
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<GlobalLoadingFallback />}>
+          <Landing />
+          <OfflineIndicator />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
   
   // Generate routes with the appropriate protection
   const routeElements = routes.map((route, index) => {
+    // Wrap component in Suspense and ErrorBoundary
+    const Component = route.component;
+    const WrappedComponent = () => (
+      <ErrorBoundary boundary={route.title}>
+        <Suspense fallback={<GlobalLoadingFallback />}>
+          <Component />
+        </Suspense>
+      </ErrorBoundary>
+    );
+
     // Non-auth routes or special paths
     if (!route.requireAuth || route.path === "*" || noLayoutPaths.includes(route.path)) {
       return (
         <Route 
           key={index} 
           path={route.path === "*" ? undefined : route.path} 
-          component={route.component} 
+          component={WrappedComponent} 
         />
       );
     }
@@ -283,13 +320,18 @@ function AppRouter() {
     return (
       <Route key={index} path={route.path}>
         <ProtectedRoute roles={route.roles}>
-          {route.component && <route.component />}
+          <WrappedComponent />
         </ProtectedRoute>
       </Route>
     );
   });
   
-  const content = <Switch>{routeElements}</Switch>;
+  const content = (
+    <ErrorBoundary>
+      <Switch>{routeElements}</Switch>
+      <OfflineIndicator />
+    </ErrorBoundary>
+  );
   
   // Wrap with layout for most pages, except landing page for non-authenticated users
   return shouldShowLayout ? <Layout>{content}</Layout> : content;
