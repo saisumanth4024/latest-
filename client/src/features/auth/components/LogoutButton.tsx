@@ -25,27 +25,24 @@ export default function LogoutButton({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // This will handle the logout through the Redux action
-      // For Replit auth, it will redirect to the correct API endpoint
-      dispatch(logout());
+      // Show success toast
+      toast({
+        title: "Logging out...",
+        description: "You are being logged out of your account.",
+      });
       
-      // Only show toast and redirect if using traditional auth
-      // For Replit auth, the redirect happens in the authSlice
-      if (localStorage.getItem('auth_method') !== 'replit') {
-        toast({
-          title: "Logged out successfully",
-          description: "You have been logged out of your account.",
-        });
-        // Redirect to login page
-        setLocation('/login');
-      }
+      // Direct browser navigation to the logout endpoint
+      // This will handle the server-side session clearing and redirection
+      window.location.href = '/api/auth/logout';
+      
+      // Also clear Redux state (this will likely not complete before redirect)
+      dispatch(logout());
     } catch (error) {
       toast({
         title: "Logout failed",
         description: "There was a problem logging you out. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoggingOut(false);
     }
   };
