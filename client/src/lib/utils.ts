@@ -24,6 +24,13 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * Format time to human-readable string
+ */
+export function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString();
+}
+
+/**
  * Formats a date string
  */
 export function formatDate(dateString: string, options: Intl.DateTimeFormatOptions = {}): string {

@@ -1,139 +1,91 @@
-# Local Setup Guide for Enterprise App
+# Local Setup Guide
 
-This guide will help you set up and run the Enterprise App on your local machine without any dependency on Replit.
+This guide will help you set up and run the Enterprise App locally without any external dependencies.
 
 ## Prerequisites
 
-1. Node.js (v18.x or later)
-2. PostgreSQL (v14.x or later)
-3. Git
+- Node.js (v16 or higher)
+- npm (v7 or higher)
 
-## Setup Instructions
+## Setup Steps
 
-### 1. Database Setup
-
-First, set up a PostgreSQL database:
-
-```bash
-# Create a new database
-createdb enterprise_app
-
-# Or using psql
-psql -U postgres
-CREATE DATABASE enterprise_app;
-\q
-```
-
-### 2. Environment Configuration
-
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
+1. Clone the repository to your local machine:
+   ```
+   git clone [repository-url]
+   cd enterprise-app
    ```
 
-2. Update the `.env` file with your PostgreSQL credentials:
+2. Install dependencies:
    ```
-   DATABASE_URL="postgresql://yourusername:yourpassword@localhost:5432/enterprise_app"
-   SESSION_SECRET="your-strong-random-secret-key"
+   npm install
    ```
 
-### 3. Installation
-
-Install all required dependencies:
-
-```bash
-npm install
-```
-
-### 4. Database Migration
-
-Initialize the database schema:
-
-```bash
-npm run db:push
-```
-
-### 5. Starting the Application
-
-Run the development server:
-
-```bash
-npm run dev
-```
-
-The application should now be running at `http://localhost:5000`.
-
-## Application Structure
-
-- `client/` - React frontend application
-- `server/` - Express API backend
-- `shared/` - Shared code and types between frontend and backend
-- `server/routes/` - API route handlers including mock data endpoints
-
-## Using Without a Database
-
-If you want to run the application without setting up PostgreSQL:
-
-1. Open `server/db.ts` and comment out the database connection logic
-2. Modify `server/storage.ts` to use `MemStorage` instead of `DatabaseStorage`
-
-Example modification for `server/db.ts`:
-
-```typescript
-// Comment out or replace with mock implementation
-export const pool = {
-  connect: () => console.log('Using mock database'),
-};
-export const db = {
-  // Mock implementation
-};
-```
-
-## Running Tests
-
-```bash
-npm test
-```
-
-## Common Issues and Solutions
-
-### Database Connection Issues
-
-If you see errors connecting to the database:
-
-1. Verify your PostgreSQL service is running
-2. Check your credentials in the `.env` file
-3. Ensure the database exists and is accessible
-
-### Port Conflicts
-
-If port 5000 is already in use:
-
-1. Change the PORT in the `.env` file:
+3. Create a `.env` file in the root directory with the following content:
    ```
+   # Base configuration
+   NODE_ENV=development
    PORT=3000
+   
+   # Disable external dependencies
+   USE_MOCK_DATA=true
+   OFFLINE_MODE=true
    ```
 
-### Authentication Issues
+4. Start the development server:
+   ```
+   npm run dev
+   ```
 
-The app uses a demo authentication system. If you encounter authentication issues:
+5. The application should now be running at http://localhost:3000
 
-1. Check session configuration in `server/auth.ts`
-2. Ensure the SESSION_SECRET is properly set in `.env`
+## Running in Offline Mode
 
-## Running in Production
+The application has been configured to work completely offline with mock data. Key features available offline:
 
-For production builds:
+- Product browsing and search
+- User authentication (with mock credentials)
+- Orders and order history
+- Admin dashboard with mock metrics
 
-```bash
-npm run build
-npm start
-```
+## Mock Credentials
 
-This will create optimized builds and serve them with better performance.
+Use these credentials to log in to the application:
 
-## Additional Resources
+- **Admin User**:
+  - Email: admin@example.com
+  - Password: admin123
 
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [React Documentation](https://react.dev/)
+- **Regular User**:
+  - Email: user@example.com
+  - Password: user123
+
+## Project Structure
+
+- `/client` - Frontend React application
+- `/server` - Express backend server
+- `/shared` - Shared types and utilities
+
+## Customizing Mock Data
+
+You can modify the mock data in these files:
+- `client/src/features/products/components/SimpleProductGrid.tsx` - Product data
+- `client/src/features/auth/data/mockUsers.ts` - User data
+- `client/src/features/orders/data/mockOrders.ts` - Order data
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Module not found errors**
+   - Make sure all dependencies are installed: `npm install`
+   - Try cleaning the cache: `npm cache clean --force`
+
+2. **Rendering issues**
+   - The application uses mock data in offline mode, which might differ from the expected API responses
+   - Check the console for any specific errors
+
+3. **Authentication problems**
+   - In offline mode, only the mock credentials listed above will work
+   - Session data is stored in localStorage and will persist between browser sessions
+
+If you encounter any other issues, please check the error console in your browser's developer tools for more specific information.
