@@ -1,0 +1,54 @@
+My Sign In, Sign Up, and Logout flows are broken.  
+Debug and repair the following files with precision. DO NOT touch unrelated features.
+
+1. **src/features/auth/authSlice.ts**
+   - On login success: set `isAuthenticated: true`, save user/role/token, and persist to localStorage.
+   - On signup: DO NOT auto-login; after success, redirect to login and show a success toast.
+   - On logout: clear user, token, isAuthenticated in state and all relevant storage.
+   - On any error: set error field in state for UI to read. Clear error on successful login/signup.
+   - Make sure all async thunks/mutations handle `loading`, `success`, `error` correctly.
+
+2. **src/features/auth/components/LoginForm.tsx**
+   - Use React Hook Form or fully controlled state, strict TS types.
+   - On submit: dispatch login (RTK Query mutation or thunk).
+   - On success: redirect to dashboard/protected page and show a toast.
+   - On error: show clear error message; do not clear user-entered values.
+   - Always show field validation errors (required, email format, min password length).
+
+3. **src/features/auth/components/SignupForm.tsx**
+   - Same standards as LoginForm.
+   - On submit: dispatch signup mutation.
+   - On success: show "Registration successful" toast and redirect to login page.
+   - Do NOT auto-login.
+   - On error: show server error.
+
+4. **src/features/auth/api.ts**
+   - Ensure login, signup, and logout endpoints return errors in a way the UI can display (not just status 500).
+   - On login success, return JWT and user/role; on signup, just success or error.
+   - Parse and store tokens/roles only after successful login.
+
+5. **src/features/auth/utils.ts**
+   - Implement reliable set, get, and clear methods for user/token in storage.
+   - On logout, clear ALL relevant keys.
+
+6. **src/layout/Header.tsx** (or `src/components/Header.tsx`)
+   - Logout button: dispatch logout action, clear all local/session storage, redirect to login, show "Logged out" toast.
+   - After logout, header/nav should show login/signup (not user menu).
+
+7. **src/app/ProtectedRoute.tsx**
+   - Must read `isAuthenticated` from Redux.
+   - If NOT authenticated, redirect to `/login` using navigate.
+   - Only authenticated users access protected routes.
+
+**Testing:**
+- User can sign up, see toast, be redirected to login (not auto-logged in).
+- User can login, see welcome toast, reach dashboard.
+- User can logout, be redirected to login, see "logged out" toast.
+- Protected pages block if not logged in.
+- All storage/state are cleared after logout.
+- Errors and validation are always visible.
+- All other app features remain unaffected.
+
+**Documentation:**
+- Update README in `src/features/auth/` to explain the correct flow, how to debug, and extend.
+

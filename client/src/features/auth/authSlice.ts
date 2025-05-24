@@ -341,14 +341,21 @@ export const signup = createAsyncThunk(
   async (userData: { username: string; email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await apiRequest('POST', '/api/auth/signup', userData);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return rejectWithValue(errorData.message || 'Signup failed');
+      }
+      
       const data = await response.json();
       
-      // Store auth data in localStorage on successful signup
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_refresh_token', data.refreshToken);
-      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      // Do NOT store auth data in localStorage on signup
+      // User should be redirected to login page instead
       
-      return data;
+      return {
+        success: true,
+        message: 'Account created successfully'
+      };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Signup failed');
     }

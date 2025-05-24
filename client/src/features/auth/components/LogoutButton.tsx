@@ -31,11 +31,26 @@ export default function LogoutButton({
         description: "You are being logged out of your account.",
       });
       
-      // First make a fetch request to the server logout endpoint to clear session
+      // First check if we're using Replit auth or traditional auth
+      if (authStatus.authMethod === 'replit') {
+        // Use Replit's logout endpoint for Replit authentication
+        window.location.href = '/api/logout';
+        return; // Let the redirect handle everything
+      }
+      
+      // For traditional auth, make a fetch request to the server logout endpoint to clear session
       const response = await fetch('/api/auth/logout');
       
       // Then dispatch Redux action to clear client state
       dispatch(logout());
+      
+      // Ensure all localStorage items are cleared directly as well
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_refresh_token');
+      localStorage.removeItem('auth_expires_at');
+      localStorage.removeItem('auth_method');
+      localStorage.removeItem('demoUserRole');
+      sessionStorage.clear(); // Clear any session storage items as well
       
       // Check if the server request was successful
       if (response.ok) {
@@ -46,8 +61,10 @@ export default function LogoutButton({
           variant: "success"
         });
         
-        // Redirect to login page with wouter
-        setLocation('/login');
+        // Force a page refresh to reset all app state
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 300);
       } else {
         throw new Error("Server logout request failed");
       }
@@ -55,14 +72,24 @@ export default function LogoutButton({
       // Even if server request fails, still clear local state
       dispatch(logout());
       
+      // Clear all storage again to be safe
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_refresh_token');
+      localStorage.removeItem('auth_expires_at');
+      localStorage.removeItem('auth_method');
+      localStorage.removeItem('demoUserRole');
+      sessionStorage.clear();
+      
       toast({
         title: "Logout warning",
         description: "There was an issue with the server logout. Your local session has been cleared.",
         variant: "warning"
       });
       
-      // Still redirect to login
-      setLocation('/login');
+      // Force a page refresh to reset all app state
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 300);
     } finally {
       setIsLoggingOut(false);
     }
