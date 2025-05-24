@@ -6,7 +6,7 @@ import LoginPage from "@/pages/LoginPage";
 import Layout from "@/components/layout/Layout";
 import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
-import { UserRole } from "@/types";
+import { UserRole } from "@/features/auth/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";

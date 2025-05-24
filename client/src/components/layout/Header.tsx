@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useAppSelector } from '@/app/hooks';
-import { selectAuthUser, selectIsAuthenticated } from '@/features/auth/authSlice';
+import { useAuth } from '@/hooks/useAuth';
 import LogoutButton from '@/features/auth/components/LogoutButton';
 import NotificationMenu from '@/components/ui/NotificationMenu';
 import UserMenu from '@/components/ui/UserMenu';
@@ -14,8 +13,7 @@ interface HeaderProps {
 }
 
 export default function Header({ toggleSidebar }: HeaderProps) {
-  const user = useAppSelector(selectAuthUser);
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const { user, isAuthenticated } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   
   return (

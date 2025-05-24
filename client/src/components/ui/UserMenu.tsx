@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAppDispatch } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
-import { UserProfile } from '@/types';
+import { User } from '@/features/auth/types';
 import { Link } from 'wouter';
 
 interface UserMenuProps {
