@@ -435,8 +435,12 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     const endIndex = startIndex + productsPerPage;
     
     // Check if there are more products to load
-    return endIndex < filteredProducts.length;
-  }, [filteredProducts.length, productsPerPage]);
+    const hasMore = endIndex < filteredProducts.length;
+    if (!hasMore) {
+      setHasReachedEnd(true);
+    }
+    return hasMore;
+  }, [filteredProducts.length, productsPerPage, setHasReachedEnd]);
   
   // Use the infinite scroll hook
   const { 
