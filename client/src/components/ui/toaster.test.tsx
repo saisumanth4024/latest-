@@ -2,10 +2,24 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Toaster } from './toaster';
 import * as hooks from '@/hooks/use-toast';
+import { ToastActionElement } from '@/hooks/use-toast';
+
+// Define the proper toast type to match what the component expects
+type ToasterToast = {
+  id: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: ToastActionElement;
+  variant?: 'default' | 'destructive' | 'success' | 'info' | 'warning';
+  open?: boolean;
+}
 
 // Mock the useToast hook
 vi.mock('@/hooks/use-toast', () => ({
   useToast: vi.fn(() => ({
+    toast: vi.fn(),
+    dismiss: vi.fn(),
+    remove: vi.fn(),
     toasts: []
   }))
 }));
@@ -22,8 +36,8 @@ describe('Toaster Component', () => {
   });
 
   it('should render toast with title and description', () => {
-    // Setup mock toasts
-    const mockToasts = [
+    // Setup mock toasts with proper types
+    const mockToasts: ToasterToast[] = [
       {
         id: '1',
         title: 'Test Toast Title',
@@ -34,6 +48,9 @@ describe('Toaster Component', () => {
 
     // Mock the hook to return toasts
     vi.mocked(hooks.useToast).mockImplementation(() => ({
+      toast: vi.fn(),
+      dismiss: vi.fn(),
+      remove: vi.fn(),
       toasts: mockToasts
     }));
 
@@ -46,7 +63,7 @@ describe('Toaster Component', () => {
 
   it('should render multiple toasts', () => {
     // Setup mock multiple toasts
-    const mockToasts = [
+    const mockToasts: ToasterToast[] = [
       {
         id: '1',
         title: 'First Toast',
@@ -63,6 +80,9 @@ describe('Toaster Component', () => {
 
     // Mock the hook to return multiple toasts
     vi.mocked(hooks.useToast).mockImplementation(() => ({
+      toast: vi.fn(),
+      dismiss: vi.fn(),
+      remove: vi.fn(),
       toasts: mockToasts
     }));
 
@@ -77,7 +97,7 @@ describe('Toaster Component', () => {
 
   it('should render toast with custom variant', () => {
     // Setup mock toast with different variant
-    const mockToasts = [
+    const mockToasts: ToasterToast[] = [
       {
         id: '1',
         title: 'Warning Toast',
@@ -88,6 +108,9 @@ describe('Toaster Component', () => {
 
     // Mock the hook to return toast with variant
     vi.mocked(hooks.useToast).mockImplementation(() => ({
+      toast: vi.fn(),
+      dismiss: vi.fn(),
+      remove: vi.fn(),
       toasts: mockToasts
     }));
 
@@ -100,7 +123,7 @@ describe('Toaster Component', () => {
 
   it('should render toast without description', () => {
     // Setup mock toast without description
-    const mockToasts = [
+    const mockToasts: ToasterToast[] = [
       {
         id: '1',
         title: 'Title Only Toast',
@@ -110,6 +133,9 @@ describe('Toaster Component', () => {
 
     // Mock the hook to return toast without description
     vi.mocked(hooks.useToast).mockImplementation(() => ({
+      toast: vi.fn(),
+      dismiss: vi.fn(),
+      remove: vi.fn(),
       toasts: mockToasts
     }));
 
@@ -124,7 +150,7 @@ describe('Toaster Component', () => {
     const ActionComponent = () => <button>Action Button</button>;
     
     // Setup mock toast with action
-    const mockToasts = [
+    const mockToasts: ToasterToast[] = [
       {
         id: '1',
         title: 'Action Toast',
@@ -136,6 +162,9 @@ describe('Toaster Component', () => {
 
     // Mock the hook to return toast with action
     vi.mocked(hooks.useToast).mockImplementation(() => ({
+      toast: vi.fn(),
+      dismiss: vi.fn(),
+      remove: vi.fn(),
       toasts: mockToasts
     }));
 

@@ -11,9 +11,19 @@ import {
   ToastViewport
 } from './toast';
 
+// Helper function to wrap components in a ToastProvider
+const renderWithToastProvider = (ui: React.ReactNode) => {
+  return render(
+    <ToastProvider>
+      {ui}
+      <ToastViewport />
+    </ToastProvider>
+  );
+};
+
 describe('Toast Components', () => {
   it('should render Toast with default variant', () => {
-    render(
+    renderWithToastProvider(
       <Toast>
         <div>Toast Content</div>
       </Toast>
@@ -25,7 +35,7 @@ describe('Toast Components', () => {
   });
 
   it('should render Toast with destructive variant', () => {
-    render(
+    renderWithToastProvider(
       <Toast variant="destructive">
         <div>Destructive Toast</div>
       </Toast>
@@ -37,7 +47,7 @@ describe('Toast Components', () => {
   });
 
   it('should render Toast with custom className', () => {
-    render(
+    renderWithToastProvider(
       <Toast className="custom-class">
         <div>Custom Toast</div>
       </Toast>
@@ -49,7 +59,7 @@ describe('Toast Components', () => {
   });
 
   it('should render ToastTitle correctly', () => {
-    render(
+    renderWithToastProvider(
       <Toast>
         <ToastTitle>Toast Title</ToastTitle>
       </Toast>
@@ -60,7 +70,7 @@ describe('Toast Components', () => {
   });
 
   it('should render ToastDescription correctly', () => {
-    render(
+    renderWithToastProvider(
       <Toast>
         <ToastDescription>Toast Description</ToastDescription>
       </Toast>
@@ -74,7 +84,7 @@ describe('Toast Components', () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     
-    render(
+    renderWithToastProvider(
       <Toast>
         <div>Close Test</div>
         <ToastClose onClick={onClose} />
@@ -92,7 +102,7 @@ describe('Toast Components', () => {
     const onAction = vi.fn();
     const user = userEvent.setup();
     
-    render(
+    renderWithToastProvider(
       <Toast>
         <div>Action Test</div>
         <ToastAction altText="Test Action" onClick={onAction}>
@@ -121,20 +131,17 @@ describe('Toast Components', () => {
   });
 
   it('should render a complete toast with all components', () => {
-    render(
-      <ToastProvider>
-        <Toast>
-          <div className="grid gap-1">
-            <ToastTitle>Complete Toast</ToastTitle>
-            <ToastDescription>This is a full toast example</ToastDescription>
-          </div>
-          <ToastAction altText="Try again" asChild>
-            <button className="action-button">Try again</button>
-          </ToastAction>
-          <ToastClose />
-        </Toast>
-        <ToastViewport />
-      </ToastProvider>
+    renderWithToastProvider(
+      <Toast>
+        <div className="grid gap-1">
+          <ToastTitle>Complete Toast</ToastTitle>
+          <ToastDescription>This is a full toast example</ToastDescription>
+        </div>
+        <ToastAction altText="Try again" asChild>
+          <button className="action-button">Try again</button>
+        </ToastAction>
+        <ToastClose />
+      </Toast>
     );
     
     expect(screen.getByText('Complete Toast')).toBeInTheDocument();

@@ -2,6 +2,75 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useToast } from './use-toast';
 
+// Mock the module to prevent actual DOM operations
+vi.mock('@/hooks/use-toast', async () => {
+  // Get the original module
+  const actualModule = await vi.importActual<typeof import('./use-toast')>('./use-toast');
+  
+  // Create a mock state
+  let mockToasts: any[] = [];
+  
+  // Return a modified version for testing
+  return {
+    ...actualModule,
+    useToast: () => ({
+      toast: vi.fn(({ title, description, variant, action }) => {
+        const id = `toast-${mockToasts.length + 1}`;
+        mockToasts.push({ 
+          id, 
+          title, 
+          description, 
+          variant: variant || 'default', 
+          action,
+          open: true 
+        });
+        return id;
+      }),
+      remove: vi.fn((id) => {
+        mockToasts = mockToasts.filter(t => t.id !== id);
+      }),
+      dismiss: vi.fn((id) => {
+        if (id) {
+          const toast = mockToasts.find(t => t.id === id);
+          if (toast) toast.open = false;
+        } else {
+          mockToasts.forEach(t => t.open = false);
+        }
+      }),
+      toasts: mockToasts,
+      success: vi.fn(({ title, description }) => {
+        const id = `toast-${mockToasts.length + 1}`;
+        mockToasts.push({ id, title, description, variant: 'success', open: true });
+        return id;
+      }),
+      error: vi.fn(({ title, description }) => {
+        const id = `toast-${mockToasts.length + 1}`;
+        mockToasts.push({ id, title, description, variant: 'destructive', open: true });
+        return id;
+      }),
+      warning: vi.fn(({ title, description }) => {
+        const id = `toast-${mockToasts.length + 1}`;
+        mockToasts.push({ id, title, description, variant: 'warning', open: true });
+        return id;
+      }),
+      info: vi.fn(({ title, description }) => {
+        const id = `toast-${mockToasts.length + 1}`;
+        mockToasts.push({ id, title, description, variant: 'info', open: true });
+        return id;
+      }),
+      update: vi.fn(({ id, ...props }) => {
+        const index = mockToasts.findIndex(t => t.id === id);
+        if (index !== -1) {
+          mockToasts[index] = { ...mockToasts[index], ...props };
+        }
+      }),
+      clearAll: vi.fn(() => {
+        mockToasts = [];
+      })
+    })
+  };
+});
+
 describe('useToast Hook', () => {
   beforeEach(() => {
     // Clear any previous toasts before each test

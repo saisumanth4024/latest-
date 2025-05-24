@@ -3,75 +3,97 @@ import NavigationToast from './NavigationToast';
 import { renderWithProviders } from '@/test/test-utils';
 import { navigateTo } from './navigationSlice';
 import * as hooks from '@/hooks/use-toast';
+import { act } from '@testing-library/react';
+
+// Mock the useLocation hook from wouter
+vi.mock('wouter', async () => {
+  const actual = await vi.importActual('wouter');
+  return {
+    ...actual,
+    useLocation: vi.fn(() => ['/', vi.fn()])
+  };
+});
+
+// Mock the routes from App.tsx
+vi.mock('@/App', () => ({
+  routes: [
+    { path: '/', title: 'Dashboard' },
+    { path: '/products', title: 'Products' },
+    { path: '/products/:productId', title: 'Product Details' },
+    { path: '/cart', title: 'Cart' },
+  ]
+}));
 
 // Mock the useToast hook
 vi.mock('@/hooks/use-toast', () => ({
   useToast: vi.fn(() => ({
-    toast: vi.fn(),
+    toast: vi.fn(() => 'mocked-toast-id'),
+    dismiss: vi.fn(),
+    remove: vi.fn(),
+    toasts: []
   }))
 }));
 
 describe('NavigationToast Component', () => {
-  const mockToast = vi.fn();
+  const mockToast = vi.fn(() => 'mocked-toast-id');
+  const useLocationMock = vi.fn(() => ['/', vi.fn()]);
   
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Setup default location mock
+    vi.spyOn(require('wouter'), 'useLocation').mockImplementation(useLocationMock);
+    
     // Setup toast mock for each test
     vi.mocked(hooks.useToast).mockImplementation(() => ({
-      toast: mockToast
+      toast: mockToast,
+      dismiss: vi.fn(),
+      remove: vi.fn(),
+      toasts: []
     }));
   });
 
-  it('should not show toast notification on initial render', () => {
-    // Render with initial route
+  it('should not show toast notification on initial render when currentPath matches location', () => {
+    // Mock location to be at root
+    useLocationMock.mockReturnValue(['/', vi.fn()]);
+    
+    // Render with initial route matching the currentPath
     renderWithProviders(<NavigationToast />, { 
       route: '/',
       preloadedState: {
         navigation: {
           previousPath: null,
-          currentPath: null, // Important! currentPath is null initially
-          navigationHistory: [],
-          lastTransitionTime: null,
-        }
-      }
-    });
-    
-    // No toast should be shown on initial render
-    expect(mockToast).not.toHaveBeenCalled();
-  });
-
-  it('should show toast notification when navigating to a new route', () => {
-    // First, set up the initial state with currentPath already set to '/'
-    const { store } = renderWithProviders(<NavigationToast />, {
-      route: '/',
-      preloadedState: {
-        navigation: {
-          previousPath: null,
-          currentPath: '/', // Initial path is set
+          currentPath: '/', // currentPath already set to match route
           navigationHistory: ['/'],
           lastTransitionTime: Date.now(),
         }
       }
     });
     
-    // No toast on initial render since currentPath === location
+    // No toast should be shown when paths match
     expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it('should show toast notification when current path differs from location', () => {
+    // Setup with location different from currentPath
+    useLocationMock.mockReturnValue(['/products', vi.fn()]);
     
-    // Now simulate navigation by:
-    // 1. Changing the route
-    // 2. Re-rendering component
-    store.dispatch(navigateTo('/products'));
-    
-    // Re-render with new route
+    // When the component renders with a mismatch between location and currentPath,
+    // it should show a toast notification
     renderWithProviders(<NavigationToast />, {
       route: '/products',
-      store
+      preloadedState: {
+        navigation: {
+          previousPath: '/',
+          currentPath: '/', // Important: this is different from the location (/products)
+          navigationHistory: ['/', '/products'],
+          lastTransitionTime: Date.now(),
+        }
+      }
     });
     
-    // Toast should have been called once
+    // Toast should be called with products page info
     expect(mockToast).toHaveBeenCalledTimes(1);
-    
-    // Toast should include the new route name
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({
         title: expect.stringContaining('Products'),
@@ -83,29 +105,20 @@ describe('NavigationToast Component', () => {
   });
 
   it('should identify route names from dynamic routes', () => {
-    // Setup initial state with currentPath
-    const { store } = renderWithProviders(<NavigationToast />, {
-      route: '/products',
+    // Setup location as a dynamic route
+    useLocationMock.mockReturnValue(['/products/123', vi.fn()]);
+    
+    // Render with current path not matching location
+    renderWithProviders(<NavigationToast />, {
+      route: '/products/123',
       preloadedState: {
         navigation: {
-          previousPath: '/',
-          currentPath: '/products',
+          previousPath: '/products',
+          currentPath: '/products', // Different from location
           navigationHistory: ['/products', '/'],
           lastTransitionTime: Date.now(),
         }
       }
-    });
-    
-    // Reset mock to ensure clean test
-    mockToast.mockReset();
-    
-    // Navigate to a dynamic route
-    store.dispatch(navigateTo('/products/123'));
-    
-    // Re-render with new dynamic route
-    renderWithProviders(<NavigationToast />, {
-      route: '/products/123',
-      store
     });
     
     // Toast should be called with correct product details title
@@ -119,29 +132,20 @@ describe('NavigationToast Component', () => {
   });
 
   it('should handle unknown routes gracefully', () => {
-    // Setup initial state with currentPath
-    const { store } = renderWithProviders(<NavigationToast />, {
-      route: '/known-route',
+    // Setup location as an unknown route
+    useLocationMock.mockReturnValue(['/some-unknown-route', vi.fn()]);
+    
+    // Render with current path not matching location
+    renderWithProviders(<NavigationToast />, {
+      route: '/some-unknown-route',
       preloadedState: {
         navigation: {
-          previousPath: '/',
-          currentPath: '/known-route',
+          previousPath: '/known-route',
+          currentPath: '/known-route', // Different from location
           navigationHistory: ['/known-route', '/'],
           lastTransitionTime: Date.now(),
         }
       }
-    });
-    
-    // Reset mock to ensure clean test
-    mockToast.mockReset();
-    
-    // Navigate to an unknown route
-    store.dispatch(navigateTo('/some-unknown-route'));
-    
-    // Re-render with unknown route
-    renderWithProviders(<NavigationToast />, {
-      route: '/some-unknown-route',
-      store
     });
     
     // Toast should be called with a default "Unknown Page" name
@@ -152,5 +156,26 @@ describe('NavigationToast Component', () => {
         description: expect.stringContaining('Unknown Page'),
       })
     );
+  });
+
+  it('should not show toast when navigating to the same route', () => {
+    // Mock location to be at products
+    useLocationMock.mockReturnValue(['/products', vi.fn()]);
+    
+    // Render with currentPath matching location
+    renderWithProviders(<NavigationToast />, { 
+      route: '/products',
+      preloadedState: {
+        navigation: {
+          previousPath: '/',
+          currentPath: '/products', // Already at products page
+          navigationHistory: ['/products', '/'],
+          lastTransitionTime: Date.now(),
+        }
+      }
+    });
+    
+    // No toast should be shown when on the same page
+    expect(mockToast).not.toHaveBeenCalled();
   });
 });
