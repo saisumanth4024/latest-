@@ -177,7 +177,7 @@ const ProductsPage: React.FC = () => {
                 {ratings.find(r => r.id === filters.rating)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ rating: null }))}
+                  onClick={() => dispatch(setFilter({ key: 'rating', value: null }))}
                 >
                   ×
                 </button>
