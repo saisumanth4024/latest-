@@ -119,13 +119,11 @@ const authSlice = createSlice({
       localStorage.removeItem('auth_method');
       localStorage.removeItem('demoUserRole');
       
-      // For Replit auth, redirect to the logout endpoint
-      if (authMethod === 'replit') {
-        // Use setTimeout to ensure state updates before redirect
-        setTimeout(() => {
-          window.location.href = '/api/auth/logout';
-        }, 100);
-      }
+      // For any auth method, perform a hard redirect to the logout endpoint
+      // This ensures the session is properly cleared on the server
+      setTimeout(() => {
+        window.location.href = '/api/auth/logout';
+      }, 100);
     },
     setCredentials: (state, action: PayloadAction<{ 
       user: User; 
