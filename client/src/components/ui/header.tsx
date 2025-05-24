@@ -385,7 +385,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
                   </Link>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/api/auth/logout'}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

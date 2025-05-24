@@ -15,10 +15,10 @@ export default function Landing() {
 
         <div className="flex justify-center mb-16">
           <a 
-            href="/api/login" 
+            href="/login" 
             className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            Log in with Replit
+            Log in
           </a>
         </div>
 
