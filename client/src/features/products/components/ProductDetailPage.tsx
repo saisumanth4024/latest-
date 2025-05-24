@@ -68,16 +68,24 @@ const ProductDetailPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product Images */}
         <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
-          <div className="h-[400px] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-            <span className="text-gray-400">Product Image Placeholder</span>
+          <div className="h-[400px] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+            <img 
+              src={`https://source.unsplash.com/random/600x600/?${product.category.toLowerCase()},${product.name.toLowerCase().replace(' ', '-')}`} 
+              alt={product.name}
+              className="object-cover w-full h-full"
+            />
           </div>
           <div className="flex mt-4 gap-2">
             {[1, 2, 3].map((_, index) => (
               <div 
                 key={index} 
-                className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center cursor-pointer"
+                className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center cursor-pointer overflow-hidden"
               >
-                <span className="text-gray-400 text-xs">Image {index + 1}</span>
+                <img 
+                  src={`https://source.unsplash.com/random/200x200/?${product.category.toLowerCase()},${product.subcategory.toLowerCase()}`} 
+                  alt={`${product.name} - view ${index + 1}`}
+                  className="object-cover w-full h-full"
+                />
               </div>
             ))}
           </div>

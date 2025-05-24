@@ -122,14 +122,31 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialQuery = '' }) =>
     }
   };
   
-  // Generate trending searches (usually from backend)
-  const trendingSearches = [
-    'wireless headphones',
-    'smart tv deals',
-    'gaming accessories',
-    'home office furniture',
-    'fitness trackers'
-  ];
+  // Get trending searches from API or from Redux store
+  const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
+  
+  // Fetch trending searches
+  useEffect(() => {
+    // This would normally be an API call to get real trending data
+    // For now, we'll simulate a fetch with more relevant product categories
+    const fetchTrendingSearches = async () => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Dynamic trending searches based on current popular categories
+      setTrendingSearches([
+        'premium headphones',
+        'smartphone accessories',
+        'ergonomic keyboards',
+        'bluetooth speakers',
+        'gaming laptops',
+        'smart home devices',
+        'fitness wearables'
+      ]);
+    };
+    
+    fetchTrendingSearches();
+  }, []);
   
   return (
     <div className="relative w-full">
