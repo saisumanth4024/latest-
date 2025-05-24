@@ -372,7 +372,8 @@ export const selectToken = (state: RootState) => state.auth.token;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
-export const selectAuthToken = (state: RootState) => state.auth.token;
+export const selectFormError = (state: RootState) => state.auth.error;
+
 export const selectUserRole = (state: RootState) => state.auth.user?.role || ('guest' as UserRole);
 export const selectAuthStatus = (state: RootState) => ({
   isAuthenticated: state.auth.isAuthenticated,
