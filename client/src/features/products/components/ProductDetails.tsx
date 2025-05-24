@@ -38,6 +38,9 @@ const ProductDetails: React.FC = () => {
   // Fetch product details
   const { data: product, isLoading, error } = useGetProductByIdQuery(productId);
   
+  // Type assertion for enhanced product data with expanded attributes
+  const enhancedProduct = product as any;
+  
   // Fetch recommendations (products in same category)
   const { data: relatedProductsData } = useGetProductsQuery({
     category: product?.category,
@@ -55,8 +58,8 @@ const ProductDetails: React.FC = () => {
     }).format(price);
   };
   
-  // Get available colors
-  const colors = product?.colors || [];
+  // Get available colors from enhanced product data
+  const colors = enhancedProduct?.colors || [];
   // Example sizes if not provided by the product data
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
   
@@ -173,9 +176,9 @@ const ProductDetails: React.FC = () => {
         {/* Product image gallery */}
         <div>
           <ProductImageGallery 
-            mainImage={product.image} 
-            images={product.images || [product.image]} 
-            productName={product.name}
+            mainImage={enhancedProduct.image} 
+            images={enhancedProduct.images || [enhancedProduct.image]} 
+            productName={enhancedProduct.name}
           />
         </div>
         
@@ -183,27 +186,27 @@ const ProductDetails: React.FC = () => {
         <div className="space-y-6">
           <div>
             {/* Brand */}
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{product.brand}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{enhancedProduct.brand}</div>
             
             {/* Product name */}
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{enhancedProduct.name}</h1>
             
             {/* Rating */}
             <div className="flex items-center mb-1">
               <div className="flex items-center mr-2">
-                {renderRatingStars(product.rating)}
+                {renderRatingStars(enhancedProduct.rating)}
               </div>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+                {enhancedProduct.rating.toFixed(1)} ({enhancedProduct.reviews || enhancedProduct.reviewCount || 0} reviews)
               </span>
             </div>
             
             {/* Status badges */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {product.isNew && <Badge variant="default">New Arrival</Badge>}
-              {product.isFeatured && <Badge variant="secondary">Featured</Badge>}
-              <Badge variant={product.inStock ? "outline" : "destructive"}>
-                {product.inStock ? 'In Stock' : 'Out of Stock'}
+              {enhancedProduct.isNew && <Badge variant="default">New Arrival</Badge>}
+              {enhancedProduct.isFeatured && <Badge variant="secondary">Featured</Badge>}
+              <Badge variant={enhancedProduct.inStock ? "outline" : "destructive"}>
+                {enhancedProduct.inStock ? 'In Stock' : 'Out of Stock'}
               </Badge>
             </div>
           </div>
@@ -426,7 +429,7 @@ const ProductDetails: React.FC = () => {
                     <td className="py-2 font-medium">Available Colors</td>
                     <td className="py-2">
                       <div className="flex flex-wrap gap-2">
-                        {product.colors.map((color, idx) => (
+                        {product.colors.map((color: string, idx: number) => (
                           <div 
                             key={idx} 
                             className="flex items-center"

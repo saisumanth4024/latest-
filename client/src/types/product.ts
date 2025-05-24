@@ -135,10 +135,6 @@ export interface Product {
   category?: string;
   /** Detailed product specifications */
   specs?: Record<string, string | number>;
-  /** Product creation date (string format for API response) */
-  createdAt?: string | Date;
-  /** Product update date (string format for API response) */
-  updatedAt?: string | Date;
   /** Product variants */
   variants: ProductVariant[];
   /** SEO metadata */
@@ -164,10 +160,10 @@ export interface Product {
   isTaxExempt: boolean;
   /** Product attributes (color, size, material, etc.) */
   attributes?: Record<string, string | string[]>;
-  /** Creation timestamp */
-  createdAt: string | Date;
-  /** Last update timestamp */
-  updatedAt: string | Date;
+  /** Creation timestamp - can be string from API or Date object */
+  createdAt?: string | Date;
+  /** Last update timestamp - can be string from API or Date object */
+  updatedAt?: string | Date;
   /** Product seller/vendor */
   seller?: {
     id: string | number;
