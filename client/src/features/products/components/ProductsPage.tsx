@@ -19,7 +19,7 @@ const productNames = [
   "Smart Watch Pro",
   "Designer Sunglasses",
   "Wireless Earbuds",
-  "Ultrabook Laptop 15"",
+  "Ultrabook Laptop 15\"",
   "Mechanical Keyboard",
   "Noise-Cancelling Headset",
   "Performance Athletic Shoes",

@@ -1,475 +1,269 @@
-# Enterprise React Application - Technical Documentation
+# Enterprise React Application
 
-## 1. Project Overview
+A production-ready enterprise-grade React application built with TypeScript, Redux Toolkit, RTK Query, and Tailwind CSS. This application follows strict architectural principles and implements advanced React patterns for optimal performance and maintainability.
 
-### Introduction
-This application is a comprehensive enterprise-grade e-commerce platform that integrates content management and administrative capabilities. It follows industry-standard architecture patterns inspired by large-scale applications developed at leading technology companies.
+## Project Overview
 
 ### Tech Stack
-- **Frontend Framework**: React with TypeScript for type safety
-- **State Management**: Redux Toolkit with RTK Query for efficient API data fetching
-- **UI & Styling**: Tailwind CSS with shadcn/UI components
-- **Authentication**: Replit OpenID Connect with custom role-based access control
-- **Routing**: wouter for lightweight, hooks-based routing
-- **Form Management**: React Hook Form with Zod validation
-- **Database**: PostgreSQL with Drizzle ORM
+- **Frontend**: React 18 with TypeScript
+- **State Management**: Redux Toolkit with RTK Query
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Routing**: wouter (lightweight router)
+- **Form Handling**: react-hook-form with zod validation
+- **API Integration**: RTK Query with optimistic updates
+- **Authentication**: Custom auth with JWT and refresh tokens
 
-### Architectural Philosophy
-The application is built on a monolithic frontend architecture where all features plug into:
-- One global Redux store
-- One global router
-- One UI/layout provider stack
-- One global app shell
+### Integration Philosophy
+- **Single Source of Truth**: One Redux store for all global state
+- **Global UI Management**: UI state (modals, toasts) managed through Redux
+- **Barrel Exports**: Organized exports through index.ts files for clean imports
+- **Absolute Imports**: Configured path aliases for cleaner imports
+- **Type Safety**: Comprehensive TypeScript typing throughout the codebase
 
-This approach ensures a consistent user experience, simplified state management, and better maintainability across the codebase. Every feature is designed to be a self-contained module that integrates with the core application architecture through standardized patterns.
-
-## 2. Folder Structure
-
-### Top-Level Organization
+## Global Folder Structure
 
 ```
-├── client/                  # Frontend application code
-│   ├── src/                 # Source code
-│   │   ├── app/             # Core app configuration (store, hooks)
-│   │   ├── components/      # Shared UI components
-│   │   ├── features/        # Feature-specific modules
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utility libraries
-│   │   ├── pages/           # Top-level page components
-│   │   ├── providers/       # Context providers
-│   │   ├── types/           # TypeScript type definitions
-│   │   ├── utils/           # Utility functions
-│   │   ├── App.tsx          # Main application component
-│   │   ├── index.css        # Global styles
-│   │   └── main.tsx         # Application entry point
-├── server/                  # Backend server code
-│   ├── db.ts                # Database connection
-│   ├── index.ts             # Server entry point
-│   ├── routes.ts            # API route definitions
-│   ├── storage.ts           # Data storage interface
-│   └── vite.ts              # Vite server integration
-├── shared/                  # Shared code between frontend and backend
-│   └── schema.ts            # Database schema definitions
+client/
+├── src/
+│   ├── app/                    # Redux store setup, hooks
+│   ├── components/             # Shared UI components
+│   │   ├── ui/                 # Primitive UI components (shadcn)
+│   │   └── layout/             # Layout components
+│   ├── config/                 # Application configuration
+│   ├── features/               # Feature modules (products, auth, cart, etc.)
+│   │   ├── [feature]/
+│   │   │   ├── components/     # Feature-specific components
+│   │   │   ├── hooks/          # Feature-specific hooks
+│   │   │   ├── [feature]Slice.ts # Redux Toolkit slice
+│   │   │   └── [feature]Api.ts # RTK Query API definitions
+│   ├── hooks/                  # Shared custom hooks
+│   ├── lib/                    # Utility libraries
+│   ├── pages/                  # Page components
+│   ├── providers/              # Context providers
+│   ├── types/                  # Global type definitions
+│   ├── utils/                  # Utility functions
+│   ├── App.tsx                 # Main application component
+│   └── main.tsx                # Application entry point
+├── public/                     # Static assets
+└── package.json                # Dependencies and scripts
 ```
 
-### Feature Module Organization
+## How to Run the Project
 
-Each feature in the `features/` directory follows a consistent structure:
+### Prerequisites
+- Node.js 18+ and npm/yarn
 
+### Installation
+```bash
+# Clone the repository
+git clone [repository-url]
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
-feature/
-├── components/          # Feature-specific UI components
-├── api/                 # RTK Query API definitions
-├── hooks/               # Feature-specific hooks
-├── utils/               # Feature-specific utilities
-├── types/               # Feature-specific type definitions
-├── [feature]Slice.ts    # Redux slice for state management
-└── index.ts             # Barrel export file
-```
-
-All imports use absolute paths via the `@/` prefix, facilitating easier refactoring and improved code navigation.
-
-## 3. Redux Toolkit State Management
-
-### Store Configuration
-
-The application uses a centralized Redux store configured in `app/store.ts`, combining:
-
-- Feature-specific slices (auth, products, cart, orders, etc.)
-- API middleware from RTK Query
-- Serialization and development tools
-
-### Feature Slices
-
-The application includes the following key slices:
-
-- **Auth**: User authentication state, roles, and permissions
-- **Products**: Product catalog state, filters, and search
-- **Cart**: Shopping cart items, totals, and checkout flow
-- **Orders**: Order history, tracking, and management
-- **Wishlist**: Saved items for future purchase
-- **Dashboard**: Analytics and reporting data
-- **Search**: Global search state, filters, and history
-- **UI**: Global UI state (modals, toasts, theme)
-- **Notifications**: System and user notifications
-- **Profile**: User profile and preferences
-
-### RTK Query APIs
-
-API interactions are managed through RTK Query endpoints organized by domain:
-
-- **Auth API**: User authentication and authorization
-- **Products API**: Product catalog and inventory
-- **Orders API**: Order creation and management
-- **Dashboard API**: Analytics and reporting data
-- **Metrics API**: System performance metrics
-
-### State Persistence
-
-Selected portions of the state are persisted to localStorage using standard browser APIs:
-
-```typescript
-// Example from a slice
-export const saveToLocalStorage = createAsyncThunk(
-  'feature/saveToLocalStorage',
-  async (_, { getState }) => {
-    const state = getState() as RootState;
-    window.localStorage.setItem('featureData', JSON.stringify(state.feature));
-  }
-);
-```
-
-### Role-Based Access Control
-
-The application implements role-based access control through the auth slice, which:
-
-- Tracks the current user's role
-- Provides selectors to check permissions
-- Controls access to routes and UI elements based on roles
-
-## 4. Routing & Navigation
-
-### Router Setup
-
-The application uses wouter for routing, configured in `App.tsx`:
-
-```typescript
-function AppRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  return (
-    <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/products" component={Products} />
-          {/* Additional routes */}
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-```
-
-### Protected Routes
-
-Protected routes are implemented using a custom `ProtectedRoute` component that:
-
-- Checks the user's authentication status
-- Verifies the user has the required role(s)
-- Redirects to the login page or displays an unauthorized message
-
-### Navigation Configuration
-
-Navigation items are defined in a centralized configuration:
-
-```typescript
-export interface NavItem {
-  title: string;
-  path: string;
-  icon: string;
-  roles: UserRole[];
-  children?: NavItem[];
-}
-
-export const navigation: NavSection[] = [
-  {
-    title: 'Main',
-    items: [
-      {
-        title: 'Dashboard',
-        path: '/dashboard',
-        icon: ICONS.dashboard,
-        roles: ['user', 'admin', 'seller']
-      },
-      // Additional items
-    ]
-  },
-  // Additional sections
-];
-```
-
-This configuration is filtered based on the user's role to display only relevant navigation items.
-
-## 5. UI System
-
-### Component Library
-
-The application uses a combination of custom components and shadcn/UI components, all styled with Tailwind CSS. Key UI components include:
-
-- **Layout**: Header, Sidebar, Footer
-- **Feedback**: Toast, Modal, Skeleton, ErrorBoundary
-- **Inputs**: Form, Input, Select, Checkbox, RadioGroup
-- **Display**: Card, Table, Badge, Avatar
-- **Navigation**: Tabs, Breadcrumbs, Pagination
-
-### Theme System
-
-The application supports both light and dark modes:
-
-```typescript
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Check for saved theme preference
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme as Theme;
-    
-    // Use system preference as fallback
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-  
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
-  
-  // Apply theme class to document
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // Save user preference
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-  
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-```
-
-### Global UI State
-
-UI elements like modals and toasts are managed through Redux:
-
-```typescript
-// Toast example
-export const useToast = () => {
-  const dispatch = useDispatch();
-  
-  const toast = (props: Toast) => {
-    dispatch(showToast(props));
-  };
-  
-  const success = (props: Omit<Toast, 'variant'>) => {
-    toast({ ...props, variant: 'success' });
-  };
-  
-  const error = (props: Omit<Toast, 'variant'>) => {
-    toast({ ...props, variant: 'error' });
-  };
-  
-  // Additional helper methods
-  
-  return { toast, success, error, /* ... */ };
-};
-```
-
-## 6. Features and Flows
-
-### Authentication
-
-The authentication system leverages Replit's OpenID Connect for secure user authentication:
-
-- **Login/Logout**: Uses Replit's OAuth flow
-- **User Session**: Managed through server-side sessions with PostgreSQL storage
-- **Role Management**: Custom role assignment and permission checking
-- **Protected Routes**: Content access based on authentication status and role
-
-### Products
-
-The product catalog implements:
-
-- **Search**: Global search with auto-suggestions and filters
-- **Filtering**: Category, brand, price range, tags, etc.
-- **Sorting**: Multiple sort options (price, popularity, newest)
-- **Grid/List Views**: Responsive product display options
-- **Infinite Scroll**: Load more products as the user scrolls
-
-### Cart & Wishlist
-
-The cart system supports:
-
-- **Guest/User Carts**: Shopping cart for both authenticated and anonymous users
-- **Persistence**: Cart state saved to localStorage and synchronized with server
-- **Item Management**: Add, remove, update quantities
-- **Price Calculations**: Subtotals, taxes, shipping, discounts
-- **Checkout Flow**: Multi-step checkout process
-
-The wishlist feature includes:
-
-- **Multiple Lists**: Create and manage multiple wishlists
-- **Sharing**: Generate shareable links for wishlists
-- **Item Transfer**: Move items between wishlist and cart
-
-### Orders
-
-Order management includes:
-
-- **Order History**: View past orders with filtering and sorting
-- **Order Details**: Comprehensive view of order information
-- **Order Tracking**: Real-time status updates
-- **Returns/Cancellations**: Process for handling returns and cancellations
-- **Reordering**: Quick reorder functionality for past purchases
-
-### Dashboard & Analytics
-
-The dashboard provides role-specific analytics:
-
-- **Key Metrics**: Sales, traffic, conversion rates
-- **Charts**: Visual representation of data trends
-- **Widgets**: Customizable dashboard components
-- **Time Ranges**: Filter data by different time periods
-- **Export**: Download reports in various formats
-
-### Notifications
-
-The notification system handles:
-
-- **System Notifications**: Application events and updates
-- **User Notifications**: Order status, promotions, etc.
-- **Toast Messages**: Temporary feedback messages
-- **Notification Center**: Centralized view of all notifications
-- **Preferences**: User control over notification settings
-
-## 7. Utilities & Types
-
-### Custom Hooks
-
-The application includes various custom hooks:
-
-- **useAuth**: Authentication status and user information
-- **useToast**: Display toast notifications
-- **useModal**: Show modal dialogs
-- **useDebounce**: Debounce rapidly changing values
-- **useMobileDetect**: Responsive design adaptations
-
-### Utility Functions
-
-Core utilities include:
-
-- **API**: Standardized API request handling
-- **Storage**: Type-safe localStorage/sessionStorage wrappers
-- **Date/Time**: Formatting and manipulation helpers
-- **Validation**: Form validation with Zod schemas
-- **Error Handling**: Centralized error parsing and formatting
-
-### TypeScript Types
-
-The type system is built on a foundation of shared interfaces:
-
-```typescript
-// Database schema types (shared/schema.ts)
-export type User = typeof users.$inferSelect;
-export type UpsertUser = typeof users.$inferInsert;
-
-// Feature-specific types
-export interface SearchState {
-  query: string;
-  filters: ProductFilters;
-  // Additional properties
-}
-
-export interface CartItem {
-  id: string | number;
-  productId: string | number;
-  quantity: number;
-  // Additional properties
-}
-```
-
-These types ensure consistency across the application and provide strong typing for Redux state, API responses, and UI components.
-
-## 8. Testing & Coverage
-
-### Test Setup
-
-The application is configured for testing with:
-
-- **Jest**: Test runner and assertion library
-- **Testing Library**: Component testing utilities
-- **MSW**: API mocking for integration tests
-
-### Test Organization
-
-Tests are organized alongside the code they test:
-
-```
-feature/
-├── __tests__/
-│   ├── components/
-│   │   └── Component.test.tsx
-│   ├── featureSlice.test.ts
-│   └── api.test.ts
-```
-
-### Coverage
-
-Test coverage targets key areas:
-
-- **Unit Tests**: Individual functions and components
-- **Integration Tests**: Feature workflows and API interactions
-- **Snapshot Tests**: UI component appearance
-- **Redux Tests**: State changes and reducer logic
-
-## 9. CI, DevOps, and Deployment
-
-### Development Environment
-
-To set up the development environment:
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start the development server: `npm run dev`
 
 ### Available Scripts
+- `npm run dev` - Start the development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
 
-- **dev**: Start development server
-- **build**: Build production assets
-- **start**: Run production server
-- **db:push**: Update database schema
-- **test**: Run test suite
-- **lint**: Run ESLint checks
-- **format**: Format code with Prettier
+## Features
 
-### Deployment
+### 1. Error Boundary System
 
-The application is configured for deployment on Replit:
+#### Feature Overview
+The error boundary system provides a robust error-handling mechanism that catches JavaScript errors anywhere in the component tree, logs those errors, and displays a fallback UI instead of crashing the entire application. This is critical for production applications to ensure that isolated errors don't bring down the entire user experience.
 
-1. Ensure all code is committed
-2. Click the "Deploy" button in the Replit interface
-3. The application will be built and deployed to a `*.replit.app` domain
+#### Architecture & Optimization
+- **Class Component Implementation**: Uses React's error boundary lifecycle methods which are only available in class components
+- **HOC Pattern**: Provides a higher-order component (withErrorBoundary) for easy wrapping of components
+- **Fallback UI Customization**: Supports custom fallback UIs and error components
+- **Reset Capability**: Allows users to recover from errors with a reset function
+- **Boundary Naming**: Named boundaries for easier debugging and error tracking
+- **Separation of Concerns**: Keeps error handling logic separate from component logic
 
-## 10. Roadmap/What's Next
+#### Files & Folders
+- **Main Component**: `client/src/components/ErrorBoundary.tsx` - The core error boundary component
+- **HOC Export**: `withErrorBoundary` function for wrapping components
+- **Integration**: Implemented in `App.tsx` and throughout feature components
 
-### Planned Features
+#### Usage & Debugging Tips
+- Wrap any component that might throw errors with `<ErrorBoundary>` or use the `withErrorBoundary` HOC
+- Error boundaries are particularly useful around data fetching components, form submissions, and complex UI components
+- Errors caught by error boundaries appear in the browser console and can be inspected
+- Use different boundary names for different parts of the application to identify error sources
 
-- **Payments Integration**: Stripe payment processing
-- **Advanced Analytics**: More detailed reporting and insights
-- **A/B Testing**: Feature testing framework
-- **Performance Monitoring**: Real-time application monitoring
-- **Internationalization**: Multi-language support
-- **PWA Features**: Offline support, push notifications
+### 2. Product Management
 
-### Extensibility
+#### Feature Overview
+The Product Management feature allows users to browse, search, filter, and view detailed information about products. It implements advanced UI patterns for an optimal shopping experience with efficient data loading and presentation.
 
-The application is designed for easy extension:
+#### Architecture & Optimization
+- **Redux State Management**: Uses Redux Toolkit slice for product state
+- **RTK Query Integration**: Implements efficient data fetching with caching
+- **Infinite Scrolling**: Loads products as the user scrolls for better performance
+- **Debounced Search**: Optimizes API calls during user typing with debounced inputs
+- **Memoization**: Uses React.memo, useMemo, and useCallback for performance optimization
+- **Responsive UI**: Adapts to different screen sizes with mobile-first approach
+- **Deferred Rendering**: Uses useDeferredValue for smoother UI during intensive operations
+- **Non-blocking Updates**: Implements useTransition for better user experience during state updates
+- **Virtualization**: Optimizes rendering of large product lists
+- **Filter and Sort**: Comprehensive filtering and sorting options
+- **Error Handling**: Robust error boundaries for resilient UI
 
-- **Modular Architecture**: Add new features without modifying existing code
-- **Standardized Patterns**: Consistent implementation patterns across features
-- **Comprehensive Documentation**: Clear guidance for onboarding new developers
-- **Type Safety**: Strong typing prevents integration errors
+#### Files & Folders
+- **Redux Slice**: `client/src/features/products/productsSlice.ts` - State management
+- **API Service**: `client/src/features/products/productsApi.ts` - API integration
+- **UI Components**:
+  - `client/src/features/products/components/ProductsPage.tsx` - Main products listing page
+  - `client/src/features/products/components/ProductGrid.tsx` - Grid display of products
+  - `client/src/features/products/components/ProductDetailPage.tsx` - Product details view
+  - `client/src/features/products/components/SearchBar.tsx` - Enhanced search component
+- **Custom Hooks**:
+  - `client/src/hooks/useInfiniteScroll.ts` - For infinite scrolling functionality
+  - `client/src/hooks/usePerformance.ts` - Performance optimization hooks
+- **Integration**: Registered in the Redux store, routed in App.tsx
 
----
+#### Usage & Debugging Tips
+- Navigate to `/products` to view the product listing
+- Use search bar to filter products by keyword
+- Apply filters using the sidebar
+- Inspect Redux state changes in Redux DevTools under the 'products' slice
+- Monitor API calls and caching behavior in the Network tab
+- Check React DevTools profiler for component render performance
 
-## Conclusion
+### 3. Network and Performance Optimization
 
-This enterprise-grade React application demonstrates a comprehensive approach to building scalable, maintainable web applications. By following industry best practices for architecture, state management, and code organization, it provides a solid foundation for continued development and extension.
+#### Feature Overview
+The Network and Performance optimization features enhance the application's responsiveness, loading speed, and resilience to network issues. These optimizations ensure a smooth user experience even on slower connections or when offline.
+
+#### Architecture & Optimization
+- **Code Splitting**: Uses React.lazy and Suspense for on-demand loading
+- **Lazy Loading**: Defers loading of non-critical components
+- **Online/Offline Detection**: Provides feedback and functionality during connectivity issues
+- **Connection Quality Detection**: Adjusts experience based on connection speed
+- **Performance Monitoring**: Custom hooks to detect performance issues
+- **Throttling and Debouncing**: Prevents excessive function calls
+- **Transition Management**: Enhanced version of React's useTransition for smoother UI updates
+- **Deferred Values**: Uses useDeferredValue to prevent UI blocking during intensive operations
+- **Render Warning**: Development utility to detect excessive re-renders
+
+#### Files & Folders
+- **Lazy Loading Utility**: `client/src/utils/lazyLoad.tsx` - Enhanced lazy loading with error boundaries
+- **Network Status Hooks**: `client/src/hooks/useNetworkStatus.ts` - Online/offline detection
+- **Performance Hooks**: `client/src/hooks/usePerformance.ts` - Performance optimization hooks
+- **UI Components**:
+  - `client/src/components/OfflineIndicator.tsx` - Offline status notification
+- **Integration**: Used throughout the application, especially in App.tsx and feature components
+
+#### Usage & Debugging Tips
+- Test offline functionality by disconnecting from the internet
+- Use Chrome DevTools' Network tab and set throttling to simulate slow connections
+- Look for the offline indicator when connectivity is lost
+- Monitor performance in React DevTools Profiler
+- Check render counts in development console for render warning logs
+
+### 4. Authentication System
+
+#### Feature Overview
+The Authentication system provides secure user authentication and authorization, supporting features like login, registration, session management, and role-based access control. It ensures that only authorized users can access protected resources.
+
+#### Architecture & Optimization
+- **Redux State Management**: Uses Redux Toolkit slice for auth state
+- **JWT Authentication**: Implements JWT tokens with refresh token functionality
+- **Persistent Sessions**: Maintains user sessions across browser sessions
+- **Role-Based Access Control**: Restricts access based on user roles
+- **Protected Routes**: Prevents unauthorized access to protected pages
+- **Form Validation**: Comprehensive validation with zod and react-hook-form
+- **Secure Storage**: Properly stores authentication tokens
+- **Auto-Refresh**: Automatically refreshes tokens before expiration
+- **Loading States**: Provides feedback during authentication operations
+
+#### Files & Folders
+- **Redux Slice**: `client/src/features/auth/authSlice.ts` - Authentication state
+- **API Service**: `client/src/features/auth/authApi.ts` - Authentication API integration
+- **UI Components**:
+  - `client/src/features/auth/components/LoginForm.tsx` - Login form
+  - `client/src/features/auth/components/SignupForm.tsx` - Registration form
+- **Custom Hooks**:
+  - `client/src/hooks/useAuth.ts` - Authentication status and utilities
+- **Integration**: Protected routes in App.tsx, auth state in Redux store
+
+#### Usage & Debugging Tips
+- Navigate to `/login` to access the login page
+- Use Redux DevTools to inspect the 'auth' slice
+- Check localStorage for token storage (in dev environment only)
+- Test protected routes by logging in/out
+- Monitor network requests for auth API calls
+
+### 5. UI Component System
+
+#### Feature Overview
+The UI Component System provides a comprehensive set of reusable, accessible, and customizable UI components that maintain consistent design language throughout the application. These components follow best practices for accessibility, responsiveness, and performance.
+
+#### Architecture & Optimization
+- **Composition Pattern**: Components designed for composition and flexibility
+- **Theme Customization**: Supports light/dark mode and custom theming
+- **Accessibility**: ARIA attributes and keyboard navigation
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Atomic Design**: Organized by atoms, molecules, organisms, and templates
+- **Memoization**: Performance optimized with React.memo
+- **CSS-in-JS**: Uses Tailwind CSS for styling with theme variables
+- **Variant System**: Components support multiple variants and sizes
+
+#### Files & Folders
+- **UI Primitives**: `client/src/components/ui/` - Base UI components
+- **Layout Components**: `client/src/components/layout/` - Layout structure components
+- **Theme Provider**: `client/src/providers/ThemeProvider.tsx` - Theme management
+- **Utils**: `client/src/lib/utils.ts` - UI utility functions
+- **Integration**: Used throughout the application for consistent UI
+
+#### Usage & Debugging Tips
+- Inspect component props in React DevTools
+- Use the theme toggle to test dark/light mode
+- Check responsive behavior with browser dev tools responsive mode
+- Test keyboard navigation for accessibility
+- Look at the component examples in storybook (if available)
+
+## Dev Best Practices
+
+### Code Quality
+- **TypeScript Strict Mode**: Enabled for maximum type safety
+- **ESLint & Prettier**: Configured for code quality and consistency
+- **Git Hooks**: Prevents committing code with issues
+- **Code Reviews**: Required for all changes
+
+### Performance
+- **Bundle Size Monitoring**: Tracks bundle size changes
+- **Lazy Loading**: Implements code splitting
+- **Memoization**: Uses memoization techniques for expensive operations
+- **Virtual Rendering**: For large lists and data sets
+
+### Accessibility
+- **ARIA Attributes**: Properly implemented for screen readers
+- **Keyboard Navigation**: All interactive elements are keyboard accessible
+- **Color Contrast**: Meets WCAG standards
+- **Focus Management**: Proper focus handling for modals and dialogs
+
+### Testing
+- **Unit Tests**: For isolated component and logic testing
+- **Integration Tests**: For feature interaction testing
+- **E2E Tests**: For full user flow testing
+- **Visual Regression Tests**: For UI changes
+
+## Contribution Guidelines
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+[MIT License](LICENSE)
