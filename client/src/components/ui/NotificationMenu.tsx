@@ -1,88 +1,130 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Bell, CheckCheck, Check, Trash2 } from 'lucide-react';
+import { Link } from 'wouter';
 import { formatTimeAgo } from '@/lib/utils';
+import { 
+  selectNotifications, 
+  selectUnreadCount,
+  selectNotificationsLoading,
+  fetchNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification
+} from '@/features/notifications/notificationsSlice';
+import { 
+  Notification as NotificationType,
+  NotificationType as NotificationTypeEnum, 
+  NotificationStatus
+} from '@/types/notification';
 
-interface Notification {
-  id: number;
-  title: string;
-  time: string;
-  iconType: 'info' | 'success' | 'warning' | 'error';
-}
-
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    title: 'API service update completed',
-    time: formatTimeAgo(new Date(Date.now() - 2 * 60 * 1000)), // 2 minutes ago
-    iconType: 'info',
-  },
-  {
-    id: 2,
-    title: 'Project build succeeded',
-    time: formatTimeAgo(new Date(Date.now() - 5 * 60 * 1000)), // 5 minutes ago
-    iconType: 'success',
-  },
-];
-
-const getIconByType = (type: Notification['iconType']) => {
-  switch (type) {
-    case 'info':
-      return (
-        <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-600 dark:text-primary-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-        </div>
-      );
-    case 'success':
-      return (
-        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-        </div>
-      );
-    case 'warning':
-      return (
-        <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-600 dark:text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-        </div>
-      );
-    case 'error':
-      return (
-        <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-          </svg>
-        </div>
-      );
-  }
-};
+// Import from our new components
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function NotificationMenu() {
+  const dispatch = useDispatch();
+  const notifications = useSelector(selectNotifications);
+  const unreadCount = useSelector(selectUnreadCount);
+  const isLoading = useSelector(selectNotificationsLoading);
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [activeTab, setActiveTab] = useState('all');
+  
+  // Effect to fetch notifications on component mount
+  useEffect(() => {
+    dispatch(fetchNotifications());
+  }, [dispatch]);
+  
+  // Set up polling for notifications (every 30 seconds)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      dispatch(fetchNotifications());
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, [dispatch]);
   
   const toggleMenu = () => setIsOpen(prev => !prev);
   const closeMenu = () => setIsOpen(false);
   
-  const hasUnreadNotifications = notifications.length > 0;
+  // Filter notifications based on the active tab
+  const filteredNotifications = activeTab === 'unread'
+    ? notifications.filter(n => n.status === NotificationStatus.UNREAD)
+    : notifications;
+  
+  // Handle marking a notification as read
+  const handleMarkAsRead = (id: string) => {
+    dispatch(markAsRead(id));
+  };
+  
+  // Handle marking all notifications as read
+  const handleMarkAllAsRead = () => {
+    dispatch(markAllAsRead());
+  };
+  
+  // Handle deleting a notification
+  const handleDelete = (id: string) => {
+    dispatch(deleteNotification(id));
+  };
+  
+  // Get notification icon based on type
+  const getNotificationIcon = (type: NotificationTypeEnum) => {
+    switch (type) {
+      case NotificationTypeEnum.SUCCESS:
+        return (
+          <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
+            <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+        );
+      case NotificationTypeEnum.WARNING:
+        return (
+          <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+            <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+        );
+      case NotificationTypeEnum.ERROR:
+        return (
+          <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+        );
+      case NotificationTypeEnum.INFO:
+      default:
+        return (
+          <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-600 dark:text-primary-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+        );
+    }
+  };
   
   return (
     <div className="relative">
+      {/* Notification Bell Button */}
       <button 
         onClick={toggleMenu}
         className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 relative"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zm0 16a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-        </svg>
-        {hasUnreadNotifications && (
-          <span className="absolute top-1 right-1 bg-red-500 rounded-full w-2 h-2"></span>
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center text-[10px] leading-none py-0 px-1"
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Badge>
         )}
       </button>
       
+      {/* Dropdown Menu */}
       {isOpen && (
         <>
           <div 
@@ -90,43 +132,155 @@ export default function NotificationMenu() {
             onClick={closeMenu}
           ></div>
           <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 shadow-lg rounded-md overflow-hidden z-20 border border-slate-200 dark:border-slate-700">
-            <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+            {/* Header */}
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700">
               <h3 className="text-sm font-semibold">Notifications</h3>
-            </div>
-            
-            <div className="divide-y divide-slate-200 dark:divide-slate-700 max-h-64 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                  No notifications
-                </div>
-              ) : (
-                notifications.map(notification => (
-                  <div key={notification.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <div className="flex">
-                      <div className="flex-shrink-0 mr-3">
-                        {getIconByType(notification.iconType)}
-                      </div>
-                      <div>
-                        <p className="text-sm">{notification.title}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{notification.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={handleMarkAllAsRead}
+                >
+                  <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                  Mark all as read
+                </Button>
               )}
             </div>
             
+            {/* Tabs */}
+            <Tabs defaultValue="all" onValueChange={setActiveTab}>
+              <div className="border-b border-slate-200 dark:border-slate-700">
+                <TabsList className="w-full rounded-none bg-transparent h-auto p-0">
+                  <TabsTrigger
+                    value="all"
+                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 py-2 px-4 text-sm"
+                  >
+                    All
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="unread"
+                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 py-2 px-4 text-sm"
+                  >
+                    Unread {unreadCount > 0 && `(${unreadCount})`}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              
+              {/* Notification Content */}
+              <TabsContent value="all" className="m-0 p-0">
+                {renderNotificationList()}
+              </TabsContent>
+              
+              <TabsContent value="unread" className="m-0 p-0">
+                {renderNotificationList()}
+              </TabsContent>
+            </Tabs>
+            
+            {/* Footer */}
             <div className="p-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 text-center">
-              <button 
-                onClick={closeMenu}
-                className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
-              >
-                View all notifications
-              </button>
+              <Link href="/notifications">
+                <a 
+                  className="text-primary-600 dark:text-primary-400 text-sm hover:underline"
+                  onClick={closeMenu}
+                >
+                  View all notifications
+                </a>
+              </Link>
             </div>
           </div>
         </>
       )}
     </div>
   );
+  
+  // Helper function to render notification list
+  function renderNotificationList() {
+    if (isLoading && notifications.length === 0) {
+      return (
+        <div className="p-4">
+          {[1, 2, 3].map((_, index) => (
+            <div key={index} className="flex items-start space-x-4 mb-4">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    if (filteredNotifications.length === 0) {
+      return (
+        <div className="p-6 text-center">
+          <Bell className="h-8 w-8 mx-auto mb-2 text-slate-400 dark:text-slate-500 opacity-40" />
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {activeTab === 'unread' 
+              ? "You're all caught up!" 
+              : "No notifications yet"
+            }
+          </p>
+        </div>
+      );
+    }
+    
+    return (
+      <ScrollArea className="max-h-[320px]">
+        <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          {filteredNotifications.map(notification => (
+            <div 
+              key={notification.id} 
+              className={`
+                p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50
+                ${notification.status === NotificationStatus.UNREAD ? 'bg-slate-50 dark:bg-slate-700/20' : ''}
+              `}
+            >
+              <div className="flex">
+                <div className="flex-shrink-0 mr-3">
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div className="flex-grow min-w-0">
+                  <div className="flex items-start justify-between">
+                    <p className="text-sm font-medium">{notification.title}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 ml-2 whitespace-nowrap">
+                      {formatTimeAgo(new Date(notification.createdAt))}
+                    </p>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
+                    {notification.message}
+                  </p>
+                  
+                  {/* Action buttons */}
+                  <div className="flex justify-end mt-2 space-x-1">
+                    {notification.status === NotificationStatus.UNREAD && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        title="Mark as read"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                      onClick={() => handleDelete(notification.id)}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    );
+  }
 }
