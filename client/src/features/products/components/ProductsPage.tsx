@@ -62,21 +62,24 @@ const ProductsPage: React.FC = () => {
   // Handle category filter change
   const handleCategoryChange = (categoryId: string) => {
     dispatch(setFilter({ 
-      category: filters.category === categoryId ? null : categoryId 
+      key: 'category', 
+      value: filters.category === categoryId ? null : categoryId 
     }));
   };
   
   // Handle price range filter change
   const handlePriceRangeChange = (priceRangeId: string) => {
     dispatch(setFilter({ 
-      priceRange: filters.priceRange === priceRangeId ? null : priceRangeId 
+      key: 'priceRange', 
+      value: filters.priceRange === priceRangeId ? null : priceRangeId 
     }));
   };
   
   // Handle rating filter change
   const handleRatingChange = (ratingId: string) => {
     dispatch(setFilter({ 
-      rating: filters.rating === ratingId ? null : ratingId 
+      key: 'rating', 
+      value: filters.rating === ratingId ? null : ratingId 
     }));
   };
   
@@ -88,7 +91,7 @@ const ProductsPage: React.FC = () => {
   // Handle sort change
   const handleSortChange = (value: string) => {
     setSortValue(value);
-    dispatch(setFilter({ sort: value }));
+    dispatch(setFilter({ key: 'sort', value }));
   };
   
   // Reset all filters
@@ -152,7 +155,7 @@ const ProductsPage: React.FC = () => {
                 {categories.find(c => c.id === filters.category)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ category: null }))}
+                  onClick={() => dispatch(setFilter({ key: 'category', value: null }))}
                 >
                   ×
                 </button>
@@ -163,7 +166,7 @@ const ProductsPage: React.FC = () => {
                 {priceRanges.find(p => p.id === filters.priceRange)?.name}
                 <button 
                   className="ml-2"
-                  onClick={() => dispatch(setFilter({ priceRange: null }))}
+                  onClick={() => dispatch(setFilter({ key: 'priceRange', value: null }))}
                 >
                   ×
                 </button>

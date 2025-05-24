@@ -1,5 +1,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { UploadedImage } from './components/ImageUploader';
+import { RootState } from '@/app/store';
+
+// Define filters interface
+export interface ProductFilters {
+  category: string | null;
+  priceRange: string | null;
+  rating: string | null;
+  sort: string;
+}
 
 // Define the state type
 interface ProductsState {
@@ -8,6 +17,7 @@ interface ProductsState {
     error: string | null;
     uploadedImageUrls: string[];
   };
+  filters: ProductFilters;
 }
 
 // Define the initial state
@@ -16,6 +26,12 @@ const initialState: ProductsState = {
     status: 'idle',
     error: null,
     uploadedImageUrls: [],
+  },
+  filters: {
+    category: null,
+    priceRange: null,
+    rating: null,
+    sort: 'newest'
   }
 };
 
@@ -52,6 +68,18 @@ const productsSlice = createSlice({
         error: null,
         uploadedImageUrls: []
       };
+    },
+    setFilter: (state, action: PayloadAction<{ key: keyof ProductFilters; value: string | null }>) => {
+      const { key, value } = action.payload;
+      // Ensure type safety by checking for each specific key
+      if (key === 'category' || key === 'priceRange' || key === 'rating') {
+        state.filters[key] = value;
+      } else if (key === 'sort' && typeof value === 'string') {
+        state.filters.sort = value;
+      }
+    },
+    resetFilters: (state) => {
+      state.filters = initialState.filters;
     }
   },
   extraReducers: (builder) => {
@@ -71,6 +99,9 @@ const productsSlice = createSlice({
   }
 });
 
+// Selectors
+export const selectFilters = (state: RootState) => state.products.filters;
+
 // Export actions and reducer
-export const { clearImageUploadState } = productsSlice.actions;
+export const { clearImageUploadState, setFilter, resetFilters } = productsSlice.actions;
 export default productsSlice.reducer;
