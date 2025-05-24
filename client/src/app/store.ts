@@ -20,6 +20,7 @@ import authReducer from '@/features/auth/authSlice';
 import { apiSlice } from '@/features/api/apiSlice';
 import adminReducer from '@/features/admin/adminSlice';
 import navigationReducer from '@/features/navigation/navigationSlice';
+import formsAdvancedReducer from '@/features/formsAdvanced/store/formsAdvancedSlice';
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +37,7 @@ export const store = configureStore({
     search: searchReducer,
     admin: adminReducer,
     navigation: navigationReducer,
+    formsAdvanced: formsAdvancedReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,

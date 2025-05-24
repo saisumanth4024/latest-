@@ -35,6 +35,7 @@ const SearchResults = lazy(() => import('@/features/search/pages/SearchResults')
 const DashboardPage = lazy(() => import('@/features/dashboard').then(m => ({ default: m.DashboardPage })));
 const ReviewsPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ReviewsPage })));
 const ModerationPage = lazy(() => import("@/features/reviews/pages").then(m => ({ default: m.ModerationPage })));
+const AdvancedFormPage = lazy(() => import("@/features/formsAdvanced/AdvancedFormPage"));
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -58,6 +59,13 @@ export const routes = [
     exact: true,
     requireAuth: false,
     title: "Dashboard",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
+  },
+  {
+    path: "/forms-advanced",
+    component: AdvancedFormPage,
+    requireAuth: false,
+    title: "Advanced Forms",
     roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
