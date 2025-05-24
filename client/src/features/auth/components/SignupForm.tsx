@@ -63,14 +63,20 @@ export function SignupForm() {
       const resultAction = await dispatch(signup(userData));
       
       if (signup.fulfilled.match(resultAction)) {
+        // Store email in sessionStorage to pre-fill login form
+        sessionStorage.setItem('signupEmail', userData.email);
+        
         toast({
           title: "Registration successful",
-          description: "Please sign in with your new account.",
+          description: "Your account has been created. Please sign in to continue.",
           variant: "success"
         });
         
-        // Redirect to login page instead of auto-login
-        setLocation('/login');
+        // Add a small delay to ensure toast is visible before redirecting
+        setTimeout(() => {
+          // Redirect to login page
+          setLocation('/login');
+        }, 500);
       } else if (signup.rejected.match(resultAction)) {
         toast({
           title: "Registration failed",

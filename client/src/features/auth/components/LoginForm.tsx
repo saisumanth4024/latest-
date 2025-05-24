@@ -32,15 +32,25 @@ export default function LoginForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  // Get pre-filled email from signup process if available
+  const savedEmail = sessionStorage.getItem('signupEmail') || '';
+  
   // Initialize form with default values
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      email: savedEmail,
       password: '',
       rememberMe: false,
     },
   });
+  
+  // Clear the saved email after form initialization
+  useEffect(() => {
+    if (savedEmail) {
+      sessionStorage.removeItem('signupEmail');
+    }
+  }, [savedEmail]);
 
   const onSubmit = async (data: LoginFormValues) => {
     try {

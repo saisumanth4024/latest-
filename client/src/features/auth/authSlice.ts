@@ -286,8 +286,26 @@ export const checkTokenExpiration = () => (dispatch: any, getState: () => RootSt
   const state = getState();
   const expiresAt = state.auth.expiresAt;
   
-  if (expiresAt && Date.now() > expiresAt * 1000) {
-    dispatch(logout());
+  // No expiration time means no valid token
+  if (!expiresAt) {
+    return false;
+  }
+  
+  // Convert expiresAt to milliseconds and add buffer time (5 seconds)
+  const expiryTimeMs = expiresAt * 1000;
+  const currentTimeMs = Date.now();
+  const bufferTimeMs = 5000; // 5 seconds buffer to avoid edge cases
+  
+  // If token is expired or about to expire
+  if (currentTimeMs > expiryTimeMs - bufferTimeMs) {
+    // If there's a refresh token, try to refresh instead of immediate logout
+    if (state.auth.refreshToken) {
+      // Try to dispatch refresh token action
+      dispatch(refreshToken());
+    } else {
+      // No refresh token, so just logout
+      dispatch(logout());
+    }
     return true;
   }
   return false;
@@ -345,12 +363,18 @@ export const signup = createAsyncThunk(
       
       const data = await response.json();
       
-      // Do NOT store auth data in localStorage on signup
-      // User should be redirected to login page instead
-      
+      // IMPORTANT: We intentionally DO NOT:
+      // 1. Store auth data in localStorage
+      // 2. Set isAuthenticated to true
+      // 3. Update auth state with user info or tokens
+      //
+      // This ensures the user must explicitly log in after signup
+      // and prevents the auto-login behavior
+
       return {
         success: true,
-        message: 'Account created successfully'
+        message: 'Account created successfully',
+        email: userData.email // Return email for pre-filling login form
       };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Signup failed');
