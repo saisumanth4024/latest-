@@ -67,6 +67,26 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* Only show UserMenu when user data is available */}
         {isAuthenticated && user && <UserMenu user={user} />}
         
+        {/* Explicit Logout Button */}
+        {isAuthenticated && (
+          <a 
+            href="/api/logout"
+            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium hidden md:block"
+          >
+            Logout
+          </a>
+        )}
+        
+        {/* If not authenticated, show login button */}
+        {!isAuthenticated && (
+          <a 
+            href="/api/login"
+            className="px-4 py-2 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 rounded-md text-sm font-medium"
+          >
+            Log In
+          </a>
+        )}
+        
         <ThemeToggle />
       </div>
     </header>
