@@ -1,42 +1,87 @@
+/**
+ * Utility functions for the application
+ */
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+/**
+ * Combines class names using clsx and tailwind-merge
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatNumber(num: number): string {
-  if (num >= 1_000_000) {
-    return `${(num / 1_000_000).toFixed(1)}M`;
-  } else if (num >= 1_000) {
-    return `${(num / 1_000).toFixed(1)}K`;
-  } else {
-    return num.toString();
-  }
-}
-
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  const formatter = new Intl.NumberFormat('en-US', {
+/**
+ * Formats a number as currency
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  
-  return formatter.format(amount);
+  }).format(amount);
 }
 
-export function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds}s ago`;
-  } else if (diffInSeconds < 3600) {
-    return `${Math.floor(diffInSeconds / 60)}m ago`;
-  } else if (diffInSeconds < 86400) {
-    return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  } else {
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  }
+/**
+ * Formats a date string
+ */
+export function formatDate(dateString: string, options: Intl.DateTimeFormatOptions = {}): string {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    ...options,
+  }).format(date);
+}
+
+/**
+ * Truncates text to a specified length and adds an ellipsis
+ */
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.substring(0, maxLength)}...`;
+}
+
+/**
+ * Generates a random ID
+ */
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * Debounces a function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/**
+ * Capitalizes the first letter of a string
+ */
+export function capitalizeFirstLetter(string: string): string {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
+ * Checks if an object is empty
+ */
+export function isEmptyObject(obj: Record<string, any>): boolean {
+  return Object.keys(obj).length === 0;
+}
+
+/**
+ * Removes duplicates from an array
+ */
+export function removeDuplicates<T>(array: T[]): T[] {
+  return [...new Set(array)];
 }

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import MockProductsComponent from '../MockProductsComponent';
+import SimpleProductGrid from './SimpleProductGrid';
 import FilterSidebar from './FilterSidebar';
 
 const ProductsPage: React.FC = () => {
@@ -358,24 +358,8 @@ const ProductsPage: React.FC = () => {
           
           {/* Product listing */}
           <div className="md:col-span-3">
-            <MockProductsComponent 
-              title=""
-              count={16} 
-              columns={3}
-              filters={{
-                category: filters.category,
-                priceRange: filters.priceRange,
-                rating: filters.rating,
-                sort: sortValue,
-                brand: filters.brand,
-                colors: filters.colors,
-                tags: filters.tags,
-                discount: filters.discount,
-                inStock: filters.inStock,
-                minPrice: filters.minPrice,
-                maxPrice: filters.maxPrice,
-                minRating: filters.minRating
-              }}
+            {/* Using the simpler product grid that works offline */}
+            <SimpleProductGrid 
               searchQuery={searchQuery}
             />
           </div>
