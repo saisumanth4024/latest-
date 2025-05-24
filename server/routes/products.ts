@@ -1,206 +1,23 @@
 import { Request, Response } from 'express';
+import MOCK_PRODUCTS from '../products/mockProducts';
 
-// Define product categories
-const categories = [
-  'electronics',
-  'clothing',
-  'home',
-  'beauty',
-  'books',
-  'sports',
-  'toys',
-  'automotive',
-  'health',
-  'jewelry'
-];
-
-// Define brands
-const brands = [
-  'Apple',
-  'Samsung',
-  'Sony',
-  'Nike',
-  'Adidas',
-  'LG',
-  'Dell',
-  'Logitech',
-  'Bose',
-  'Canon',
-  'Microsoft',
-  'Amazon',
-  'HP',
-  'Lenovo',
-  'Asus'
-];
-
-// Generate a random product
-const generateProduct = (id: number) => {
-  const category = categories[Math.floor(Math.random() * categories.length)];
-  const brand = brands[Math.floor(Math.random() * brands.length)];
-  const price = Math.floor(Math.random() * 1000) + 10;
-  const hasDiscount = Math.random() > 0.7;
-  const discountPrice = hasDiscount ? Math.floor(price * 0.8) : undefined;
-  const rating = (Math.random() * 4 + 1).toFixed(1);
-  const reviews = Math.floor(Math.random() * 500);
-  const inStock = Math.random() > 0.2;
-  const isNew = Math.random() > 0.8;
-  const isFeatured = Math.random() > 0.7;
-  
-  // Product names by category
-  const productNames: { [key: string]: string[] } = {
-    electronics: [
-      'Wireless Headphones',
-      'Smart Watch',
-      'Bluetooth Speaker',
-      'Wireless Earbuds',
-      'HD Webcam',
-      '4K Monitor',
-      'Gaming Keyboard',
-      'Wireless Mouse',
-      'USB-C Hub',
-      'External SSD'
-    ],
-    clothing: [
-      'Slim Fit Jeans',
-      'Cotton T-Shirt',
-      'Wool Sweater',
-      'Leather Jacket',
-      'Athletic Shorts',
-      'Running Shoes',
-      'Formal Dress Shirt',
-      'Winter Coat',
-      'Designer Sunglasses',
-      'Fashion Watch'
-    ],
-    home: [
-      'Coffee Maker',
-      'Air Purifier',
-      'Robot Vacuum',
-      'Luxury Bedding Set',
-      'Smart Thermostat',
-      'Kitchen Knife Set',
-      'Stainless Steel Cookware',
-      'Standing Desk',
-      'Memory Foam Mattress',
-      'Smart Light Bulbs'
-    ],
-    beauty: [
-      'Facial Cleanser',
-      'Anti-Aging Serum',
-      'Luxury Perfume',
-      'Hair Styling Kit',
-      'Electric Toothbrush',
-      'Makeup Palette',
-      'Moisturizing Cream',
-      'Beard Trimmer',
-      'Nail Polish Set',
-      'Hair Dryer'
-    ],
-    books: [
-      'Bestselling Novel',
-      'Business Strategy Guide',
-      'Self-Help Book',
-      'Cookbook Collection',
-      'Science Fiction Series',
-      'Biography Collection',
-      'Children\'s Picture Book',
-      'Travel Guide',
-      'Historical Fiction',
-      'Psychology Textbook'
-    ],
-    sports: [
-      'Yoga Mat',
-      'Dumbbells Set',
-      'Tennis Racket',
-      'Basketball',
-      'Golf Clubs',
-      'Fitness Tracker',
-      'Camping Tent',
-      'Hiking Backpack',
-      'Soccer Ball',
-      'Fishing Rod'
-    ],
-    toys: [
-      'Building Blocks',
-      'Remote Control Car',
-      'Educational Puzzle',
-      'Action Figure',
-      'Board Game',
-      'Stuffed Animal',
-      'Art Set',
-      'Science Kit',
-      'Drone',
-      'Video Game Console'
-    ],
-    automotive: [
-      'Car Wax',
-      'Dashboard Camera',
-      'Floor Mats',
-      'Car Cover',
-      'Bluetooth Car Adapter',
-      'Jump Starter',
-      'Tire Pressure Gauge',
-      'Car Vacuum',
-      'Phone Mount',
-      'GPS Navigator'
-    ],
-    health: [
-      'Digital Scale',
-      'Blood Pressure Monitor',
-      'Massage Gun',
-      'Vitamin Supplements',
-      'Air Purifier',
-      'Sleep Tracker',
-      'Foam Roller',
-      'Resistance Bands',
-      'Meditation Cushion',
-      'Essential Oil Diffuser'
-    ],
-    jewelry: [
-      'Diamond Earrings',
-      'Gold Necklace',
-      'Silver Bracelet',
-      'Men\'s Watch',
-      'Pearl Pendant',
-      'Engagement Ring',
-      'Wedding Band',
-      'Charm Bracelet',
-      'Birthstone Jewelry',
-      'Statement Ring'
-    ]
-  };
-  
-  // Get names for this category or use a default list
-  const namesForCategory = productNames[category] || productNames.electronics;
-  const productName = `${brand} ${namesForCategory[id % namesForCategory.length]}`;
-  
+// Enhance products with additional server-side properties
+const enhancedProducts = MOCK_PRODUCTS.map((product: any, index: number) => {
+  // Add server-side properties needed for the API
   return {
-    id,
-    name: productName,
-    description: `Experience the premium quality and performance of this ${brand} ${category} product. Designed for durability and style, this item features the latest technology and premium materials.`,
-    price,
-    discountPrice,
-    image: `https://picsum.photos/seed/product${id}/400/400`,
-    category,
-    brand,
-    rating: parseFloat(rating),
-    reviews,
-    inStock,
-    isNew,
-    isFeatured,
-    tags: [category, brand.toLowerCase(), inStock ? 'in-stock' : 'out-of-stock'],
+    ...product,
+    id: parseInt(product.id), // Convert string ID to number for server-side consistency
+    isNew: Math.random() > 0.8,
+    isFeatured: Math.random() > 0.7,
     createdAt: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString(),
-    updatedAt: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString()
+    updatedAt: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString(),
+    // Ensure discountPrice is properly set
+    discountPrice: product.discount > 0 ? product.price * (1 - product.discount / 100) : undefined
   };
-};
-
-// Generate 100 products
-const generateProducts = () => {
-  return Array(100).fill(0).map((_, idx) => generateProduct(idx + 1));
-};
+});
 
 // Cache products to avoid regenerating on every request
-const productsCache = generateProducts();
+const productsCache = enhancedProducts;
 
 // Get all products
 export const getProducts = (req: Request, res: Response) => {
@@ -312,6 +129,7 @@ export const getProductById = (req: Request, res: Response) => {
     const product = productsCache.find(p => p.id === productId);
     
     if (!product) {
+      console.log(`Product not found with ID: ${productId}. Available IDs: ${productsCache.map(p => p.id).join(', ')}`);
       return res.status(404).json({ message: 'Product not found' });
     }
     
