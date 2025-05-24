@@ -14,6 +14,7 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { formatCurrency } from '@/lib/utils';
 
 // Mock product data with realistic details
+// Extended product data with more diverse items and unique images
 const MOCK_PRODUCTS = [
   {
     id: "1",
@@ -125,7 +126,7 @@ const MOCK_PRODUCTS = [
     name: "Noise-Cancelling Headset",
     description: "Professional-grade headset with crystal clear microphone.",
     price: 249.99,
-    image: "https://i.imgur.com/jNNT4LE.jpg",
+    image: "https://images.unsplash.com/photo-1563473213013-de2a0133c100?w=500&auto=format",
     rating: 4.7,
     category: "electronics",
     brand: "ClearSound",
@@ -140,7 +141,7 @@ const MOCK_PRODUCTS = [
     name: "Performance Athletic Shoes",
     description: "High-performance athletic shoes with responsive cushioning.",
     price: 179.95,
-    image: "https://i.imgur.com/3oXaiBI.jpg",
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format",
     rating: 4.6,
     category: "clothing",
     brand: "AthleticEdge",
