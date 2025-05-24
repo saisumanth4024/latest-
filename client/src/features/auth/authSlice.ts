@@ -119,12 +119,85 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(githubLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(githubLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.isAuthenticated = true;
+      })
+      .addCase(githubLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(googleLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.isAuthenticated = true;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(refreshToken.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.isAuthenticated = true;
+      })
+      .addCase(refreshToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.expiresAt = null;
       });
   },
 });
 
 // Actions
 export const { logout, setCredentials } = authSlice.actions;
+export const setAuthState = (role: UserRole) => (dispatch: any) => {
+  const mockUser = {
+    id: '1',
+    username: 'demouser',
+    email: 'demo@example.com',
+    role: role,
+    status: 'active' as const,
+    profileImageUrl: 'https://i.pravatar.cc/150?img=3',
+    firstName: 'Demo',
+    lastName: 'User',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  dispatch(setCredentials({
+    user: mockUser,
+    token: 'mock-token',
+    refreshToken: 'mock-refresh-token',
+    expiresAt: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+  }));
+};
 
 // Token expiration check function
 export const checkTokenExpiration = () => (dispatch: any, getState: () => RootState) => {
@@ -138,8 +211,74 @@ export const checkTokenExpiration = () => (dispatch: any, getState: () => RootSt
   return false;
 };
 
+// Social login functions
+export const githubLogin = createAsyncThunk(
+  'auth/githubLogin',
+  async (code: string, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest('POST', '/api/auth/github', { code });
+      const data = await response.json();
+      
+      // Store auth data in localStorage
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_refresh_token', data.refreshToken);
+      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'GitHub login failed');
+    }
+  }
+);
+
+export const googleLogin = createAsyncThunk(
+  'auth/googleLogin',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest('POST', '/api/auth/google', { token });
+      const data = await response.json();
+      
+      // Store auth data in localStorage
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_refresh_token', data.refreshToken);
+      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Google login failed');
+    }
+  }
+);
+
+export const refreshToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const refreshTokenValue = state.auth.refreshToken;
+      
+      if (!refreshTokenValue) {
+        return rejectWithValue('No refresh token available');
+      }
+      
+      const response = await apiRequest('POST', '/api/auth/refresh', { refreshToken: refreshTokenValue });
+      const data = await response.json();
+      
+      // Update stored auth data
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_refresh_token', data.refreshToken);
+      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Token refresh failed');
+    }
+  }
+);
+
 // Selectors
 export const selectAuthUser = (state: RootState) => state.auth.user;
+export const selectUser = (state: RootState) => state.auth.user;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading;
 export const selectAuthError = (state: RootState) => state.auth.error;
