@@ -225,7 +225,7 @@ export const routes = [
   }
 ];
 
-// Protected Route component using Replit authentication
+// Protected Route component using traditional authentication
 function ProtectedRoute({ 
   children, 
   roles 

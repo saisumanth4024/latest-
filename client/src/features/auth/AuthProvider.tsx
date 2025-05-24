@@ -3,8 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { 
   selectAuthError, 
   selectIsAuthenticated,
-  setCredentials,
-  fetchReplitUser
+  setCredentials
 } from './authSlice';
 import { useToast } from '@/hooks/use-toast';
 import { useModal } from '@/hooks/useModal';
@@ -23,12 +22,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { toast } = useToast();
   const modal = useModal();
   
-  // Check for Replit authentication on initial load
-  useEffect(() => {
-    if (!isAuthenticated) {
-      dispatch(fetchReplitUser());
-    }
-  }, [dispatch]);
+  // No automatic authentication check on load - traditional auth only
   
   // Handle authentication errors
   useEffect(() => {
