@@ -31,12 +31,25 @@ export default function LogoutButton({
         description: "You are being logged out of your account.",
       });
       
-      // Direct browser navigation to the logout endpoint
-      // This will handle the server-side session clearing and redirection
-      window.location.href = '/api/auth/logout';
-      
-      // Also clear Redux state (this will likely not complete before redirect)
+      // First clear Redux state
       dispatch(logout());
+      
+      // Make a fetch request to the server logout endpoint
+      const response = await fetch('/api/auth/logout');
+      
+      // Check if the response was successful
+      if (response.ok) {
+        // Redirect to login page with wouter
+        setLocation('/login');
+        
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of your account.",
+          variant: "success"
+        });
+      } else {
+        throw new Error("Failed to logout");
+      }
     } catch (error) {
       toast({
         title: "Logout failed",
