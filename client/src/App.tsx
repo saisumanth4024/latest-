@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import Landing from "@/pages/Landing";
 import Layout from "@/components/layout/Layout";
 import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
@@ -191,10 +192,25 @@ function ProtectedRoute({
 
 // Router Component that handles auth
 function AppRouter() {
-  // Get current path to determine if we should show the layout
+  // Get current path and auth status
   const [location] = useLocation();
-  const noLayoutPaths: string[] = [];
-  const shouldShowLayout = !noLayoutPaths.includes(location);
+  const { isAuthenticated, isLoading } = useAuth();
+  const noLayoutPaths: string[] = ['/'];
+  const shouldShowLayout = !noLayoutPaths.includes(location) || isAuthenticated;
+  
+  // If we're still loading auth status, show a loading indicator
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
+  // Show landing page for non-authenticated users at root path
+  if (!isAuthenticated && location === '/') {
+    return <Landing />;
+  }
   
   // Generate routes with the appropriate protection
   const routeElements = routes.map((route, index) => {
@@ -221,7 +237,7 @@ function AppRouter() {
   
   const content = <Switch>{routeElements}</Switch>;
   
-  // Wrap with layout for most pages, except login/signup
+  // Wrap with layout for most pages, except landing page for non-authenticated users
   return shouldShowLayout ? <Layout>{content}</Layout> : content;
 }
 
