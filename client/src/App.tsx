@@ -2,12 +2,10 @@ import { Switch, Route, useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Layout from "@/components/layout/Layout";
-import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignupPage";
 import ProfilePageLegacy from "@/pages/ProfilePage";
 import ProfilePage from "@/features/profile/ProfilePage";
-import { AuthProvider, ProtectedRoute, useAuthRedirect } from "@/features/auth";
 import { UserRole } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -152,20 +150,7 @@ export const routes = [
     roles: [UserRole.SELLER, UserRole.ADMIN],
     title: "Seller Dashboard",
   },
-  { 
-    path: "/login", 
-    component: LoginPage, 
-    requireAuth: false,
-    title: "Login",
-    hideInMenu: true,
-  },
-  { 
-    path: "/signup", 
-    component: SignupPage, 
-    requireAuth: false,
-    title: "Sign Up",
-    hideInMenu: true,
-  },
+  // Login and signup routes are replaced by Replit auth
   { 
     path: "*", 
     component: NotFound,
@@ -175,14 +160,40 @@ export const routes = [
   }
 ];
 
-// Router Component that handles auth redirection
+// Protected Route component using Replit authentication
+function ProtectedRoute({ 
+  children, 
+  roles 
+}: { 
+  children: React.ReactNode; 
+  roles?: UserRole[] 
+}) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [, navigate] = useLocation();
+
+  // If still loading, show loading indicator
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    // Redirect to Replit login
+    window.location.href = '/api/login';
+    return null;
+  }
+
+  // If roles are specified, check if user has required role (TO BE IMPLEMENTED)
+  // This needs more implementation once user roles are stored properly
+
+  return <>{children}</>;
+}
+
+// Router Component that handles auth
 function AppRouter() {
-  // Listen for auth redirects
-  useAuthRedirect();
-  
   // Get current path to determine if we should show the layout
   const [location] = useLocation();
-  const noLayoutPaths = ['/login', '/signup'];
+  const noLayoutPaths: string[] = [];
   const shouldShowLayout = !noLayoutPaths.includes(location);
   
   // Generate routes with the appropriate protection
@@ -202,7 +213,7 @@ function AppRouter() {
     return (
       <Route key={index} path={route.path}>
         <ProtectedRoute roles={route.roles}>
-          <route.component />
+          {route.component && <route.component />}
         </ProtectedRoute>
       </Route>
     );
@@ -215,11 +226,7 @@ function AppRouter() {
 }
 
 function App() {
-  return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
-  );
+  return <AppRouter />;
 }
 
 export default App;
