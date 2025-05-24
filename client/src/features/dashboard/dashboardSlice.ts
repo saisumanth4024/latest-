@@ -1,406 +1,200 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { 
-  DashboardFilters, 
-  DashboardLayout, 
-  DashboardWidget, 
-  TimeRange, 
-  WidgetType 
-} from '@/types/dashboard';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
+import { apiRequest } from '@/lib/queryClient';
+
+// Define types for dashboard state
+export type TimeRangeType = 'today' | 'yesterday' | '7days' | '30days' | '90days' | 'year' | 'custom';
+
+export interface DashboardFilters {
+  timeRange: TimeRangeType;
+  startDate?: string;
+  endDate?: string;
+  category?: string;
+  productId?: string | number;
+  region?: string;
+  channel?: string;
+}
+
+export interface DashboardWidgetSettings {
+  id: string;
+  type: string;
+  title: string;
+  settings: {
+    showLegend?: boolean;
+    showDataLabels?: boolean;
+    chartType?: 'area' | 'line' | 'bar' | 'pie';
+    dataPoints?: number;
+    colorScheme?: string;
+    [key: string]: any;
+  };
+}
+
+export interface DashboardLayout {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  widgets: {
+    [widgetId: string]: {
+      id: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      settings: any;
+    };
+  };
+}
 
 interface DashboardState {
   filters: DashboardFilters;
-  layout: DashboardLayout | null;
-  isEditMode: boolean;
-  isFullscreen: boolean;
-  fullscreenWidgetId: string | null;
-  isCustomizationOpen: boolean;
-  isDateRangePickerOpen: boolean;
-  selectedWidgetForCustomization: string | null;
+  layouts: {
+    [layoutId: string]: DashboardLayout;
+  };
+  activeLayout: string;
+  isCustomizing: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
-const initialLayout: DashboardLayout = {
-  userId: 'default',
-  widgets: [
-    {
-      id: 'quick-stats',
-      type: WidgetType.QUICK_STATS,
-      title: 'Key Metrics',
-      width: 'full',
-      height: 'small',
-      position: 0,
-      roles: ['admin', 'seller'],
-      visible: true,
-    },
-    {
-      id: 'revenue-chart',
-      type: WidgetType.REVENUE_CHART,
-      title: 'Revenue & Expenses',
-      width: 'two-thirds',
-      height: 'medium',
-      position: 1,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        showLegend: true,
-        showDataLabels: false,
-        chartType: 'area',
-      },
-    },
-    {
-      id: 'orders-chart',
-      type: WidgetType.ORDERS_CHART,
-      title: 'Orders',
-      width: 'third',
-      height: 'medium',
-      position: 2,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        showLegend: true,
-        showDataLabels: true,
-        chartType: 'bar',
-      },
-    },
-    {
-      id: 'top-products',
-      type: WidgetType.TOP_PRODUCTS,
-      title: 'Top Products',
-      width: 'half',
-      height: 'medium',
-      position: 3,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        limit: 5,
-        sortBy: 'revenue',
-      },
-    },
-    {
-      id: 'traffic-sources',
-      type: WidgetType.TRAFFIC_SOURCES,
-      title: 'Traffic Sources',
-      width: 'half',
-      height: 'medium',
-      position: 4,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        chartType: 'pie',
-        showLegend: true,
-      },
-    },
-    {
-      id: 'user-growth',
-      type: WidgetType.USER_GROWTH,
-      title: 'User Growth',
-      width: 'half',
-      height: 'medium',
-      position: 5,
-      roles: ['admin'],
-      visible: true,
-      settings: {
-        showTotalUsers: true,
-        showActiveUsers: true,
-        showNewUsers: true,
-      },
-    },
-    {
-      id: 'geographic-distribution',
-      type: WidgetType.GEOGRAPHIC_DISTRIBUTION,
-      title: 'Geographic Distribution',
-      width: 'half',
-      height: 'medium',
-      position: 6,
-      roles: ['admin'],
-      visible: true,
-      settings: {
-        showMap: true,
-        showTable: true,
-        mapType: 'regions',
-      },
-    },
-    {
-      id: 'device-breakdown',
-      type: WidgetType.DEVICE_BREAKDOWN,
-      title: 'Device Usage',
-      width: 'third',
-      height: 'medium',
-      position: 7,
-      roles: ['admin'],
-      visible: true,
-      settings: {
-        chartType: 'donut',
-      },
-    },
-    {
-      id: 'search-terms',
-      type: WidgetType.TOP_SEARCH_TERMS,
-      title: 'Top Search Terms',
-      width: 'third',
-      height: 'medium',
-      position: 8,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        limit: 10,
-      },
-    },
-    {
-      id: 'recent-orders',
-      type: WidgetType.RECENT_ORDERS,
-      title: 'Recent Orders',
-      width: 'third',
-      height: 'medium',
-      position: 9,
-      roles: ['admin', 'seller'],
-      visible: true,
-      settings: {
-        limit: 5,
-      },
-    },
-  ],
-};
-
+// Define initial state
 const initialState: DashboardState = {
   filters: {
-    timeRange: TimeRange.MONTH,
+    timeRange: '30days',
   },
-  layout: initialLayout,
-  isEditMode: false,
-  isFullscreen: false,
-  fullscreenWidgetId: null,
-  isCustomizationOpen: false,
-  isDateRangePickerOpen: false,
-  selectedWidgetForCustomization: null,
+  layouts: {},
+  activeLayout: 'default',
+  isCustomizing: false,
+  isLoading: false,
+  error: null,
 };
 
+// Define async thunks
+export const fetchDashboardLayouts = createAsyncThunk(
+  'dashboard/fetchLayouts',
+  async () => {
+    const response = await apiRequest('GET', '/api/dashboard/layouts');
+    return await response.json();
+  }
+);
+
+export const updateDashboardLayout = createAsyncThunk(
+  'dashboard/updateLayout',
+  async ({ layouts, activeLayout }: { layouts: any, activeLayout: string }) => {
+    const response = await apiRequest('POST', '/api/dashboard/layouts', { layouts, activeLayout });
+    return await response.json();
+  }
+);
+
+// Create dashboard slice
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState,
   reducers: {
-    // Update time range filter
-    setTimeRange: (state, action: PayloadAction<TimeRange>) => {
+    setTimeRange: (state, action: PayloadAction<TimeRangeType>) => {
       state.filters.timeRange = action.payload;
-      if (action.payload !== TimeRange.CUSTOM) {
-        // Clear custom date range when selecting a predefined range
-        state.filters.dateRange = undefined;
+
+      // Clear custom date range if not using 'custom'
+      if (action.payload !== 'custom') {
+        state.filters.startDate = undefined;
+        state.filters.endDate = undefined;
       }
     },
-    
-    // Set custom date range
     setDateRange: (state, action: PayloadAction<{ startDate: string; endDate: string }>) => {
-      state.filters.timeRange = TimeRange.CUSTOM;
-      state.filters.dateRange = action.payload;
+      state.filters.startDate = action.payload.startDate;
+      state.filters.endDate = action.payload.endDate;
+      
+      // Set to custom when specific dates are selected
+      state.filters.timeRange = 'custom';
     },
-    
-    // Set comparison time range
-    setComparisonTimeRange: (state, action: PayloadAction<TimeRange | undefined>) => {
-      state.filters.compareWith = action.payload;
-      if (!action.payload) {
-        state.filters.compareDateRange = undefined;
-      }
+    setFilters: (state, action: PayloadAction<Partial<DashboardFilters>>) => {
+      state.filters = {
+        ...state.filters,
+        ...action.payload,
+      };
     },
-    
-    // Set comparison date range
-    setComparisonDateRange: (state, action: PayloadAction<{ startDate: string; endDate: string } | undefined>) => {
-      state.filters.compareDateRange = action.payload;
+    setActiveLayout: (state, action: PayloadAction<string>) => {
+      state.activeLayout = action.payload;
     },
-    
-    // Toggle date range picker visibility
-    toggleDateRangePicker: (state) => {
-      state.isDateRangePickerOpen = !state.isDateRangePickerOpen;
+    setIsCustomizing: (state, action: PayloadAction<boolean>) => {
+      state.isCustomizing = action.payload;
     },
-    
-    // Set dashboard layout
-    setDashboardLayout: (state, action: PayloadAction<DashboardLayout>) => {
-      state.layout = action.payload;
-    },
-    
-    // Toggle dashboard edit mode
-    toggleEditMode: (state) => {
-      state.isEditMode = !state.isEditMode;
-      // Close customization when exiting edit mode
-      if (!state.isEditMode) {
-        state.isCustomizationOpen = false;
-        state.selectedWidgetForCustomization = null;
-      }
-    },
-    
-    // Toggle widget visibility
-    toggleWidgetVisibility: (state, action: PayloadAction<string>) => {
-      if (!state.layout) return;
-      
-      const widget = state.layout.widgets.find(w => w.id === action.payload);
-      if (widget) {
-        widget.visible = !widget.visible;
-      }
-    },
-    
-    // Update widget position
-    updateWidgetPosition: (state, action: PayloadAction<{ id: string; position: number }>) => {
-      if (!state.layout) return;
-      
-      const { id, position } = action.payload;
-      const widgets = [...state.layout.widgets];
-      const widgetIndex = widgets.findIndex(w => w.id === id);
-      
-      if (widgetIndex === -1) return;
-      
-      const widget = widgets[widgetIndex];
-      widgets.splice(widgetIndex, 1);
-      widgets.splice(position, 0, widget);
-      
-      // Update all position values
-      widgets.forEach((w, idx) => {
-        w.position = idx;
-      });
-      
-      state.layout.widgets = widgets;
-    },
-    
-    // Update widget size
-    updateWidgetSize: (
-      state, 
-      action: PayloadAction<{ 
-        id: string; 
-        width?: 'full' | 'half' | 'third' | 'two-thirds'; 
-        height?: 'small' | 'medium' | 'large' 
-      }>
-    ) => {
-      if (!state.layout) return;
-      
-      const { id, width, height } = action.payload;
-      const widget = state.layout.widgets.find(w => w.id === id);
-      
-      if (widget) {
-        if (width) widget.width = width;
-        if (height) widget.height = height;
-      }
-    },
-    
-    // Update widget settings
-    updateWidgetSettings: (
-      state, 
-      action: PayloadAction<{ 
-        id: string; 
-        settings: Record<string, any> 
-      }>
-    ) => {
-      if (!state.layout) return;
-      
-      const { id, settings } = action.payload;
-      const widget = state.layout.widgets.find(w => w.id === id);
-      
-      if (widget) {
-        widget.settings = {
-          ...widget.settings,
-          ...settings
+    updateWidgetSettings: (state, action: PayloadAction<{ layoutId: string; widgetId: string; settings: any }>) => {
+      const { layoutId, widgetId, settings } = action.payload;
+      if (state.layouts[layoutId] && state.layouts[layoutId].widgets[widgetId]) {
+        state.layouts[layoutId].widgets[widgetId].settings = {
+          ...state.layouts[layoutId].widgets[widgetId].settings,
+          ...settings,
         };
       }
     },
-    
-    // Update widget title
-    updateWidgetTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
-      if (!state.layout) return;
-      
-      const { id, title } = action.payload;
-      const widget = state.layout.widgets.find(w => w.id === id);
-      
-      if (widget) {
-        widget.title = title;
+    addWidget: (state, action: PayloadAction<{ layoutId: string; widget: any }>) => {
+      const { layoutId, widget } = action.payload;
+      if (state.layouts[layoutId]) {
+        state.layouts[layoutId].widgets[widget.id] = widget;
       }
     },
-    
-    // Enter/exit fullscreen for a widget
-    toggleFullscreen: (state, action: PayloadAction<string | null>) => {
-      // If null, exit fullscreen
-      if (action.payload === null) {
-        state.isFullscreen = false;
-        state.fullscreenWidgetId = null;
-      } else {
-        // Enter fullscreen for the specified widget
-        state.isFullscreen = true;
-        state.fullscreenWidgetId = action.payload;
+    removeWidget: (state, action: PayloadAction<{ layoutId: string; widgetId: string }>) => {
+      const { layoutId, widgetId } = action.payload;
+      if (state.layouts[layoutId] && state.layouts[layoutId].widgets[widgetId]) {
+        delete state.layouts[layoutId].widgets[widgetId];
       }
     },
-    
-    // Add a new widget to the dashboard
-    addWidget: (state, action: PayloadAction<Omit<DashboardWidget, 'position'>>) => {
-      if (!state.layout) return;
-      
-      const newWidget: DashboardWidget = {
-        ...action.payload,
-        position: state.layout.widgets.length,
-      };
-      
-      state.layout.widgets.push(newWidget);
+    clearError: (state) => {
+      state.error = null;
     },
-    
-    // Remove a widget from the dashboard
-    removeWidget: (state, action: PayloadAction<string>) => {
-      if (!state.layout) return;
-      
-      const index = state.layout.widgets.findIndex(w => w.id === action.payload);
-      if (index !== -1) {
-        state.layout.widgets.splice(index, 1);
-        
-        // Update positions of remaining widgets
-        state.layout.widgets.forEach((w, idx) => {
-          w.position = idx;
-        });
-      }
-    },
-    
-    // Open customization panel for a widget
-    openWidgetCustomization: (state, action: PayloadAction<string>) => {
-      state.isCustomizationOpen = true;
-      state.selectedWidgetForCustomization = action.payload;
-    },
-    
-    // Close customization panel
-    closeWidgetCustomization: (state) => {
-      state.isCustomizationOpen = false;
-      state.selectedWidgetForCustomization = null;
-    },
-    
-    // Reset dashboard to default layout
-    resetDashboard: (state) => {
-      state.layout = initialLayout;
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchDashboardLayouts.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchDashboardLayouts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.layouts = action.payload.layouts;
+        state.activeLayout = action.payload.activeLayout;
+      })
+      .addCase(fetchDashboardLayouts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to fetch dashboard layouts';
+      })
+      .addCase(updateDashboardLayout.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateDashboardLayout.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.layouts = action.payload.layouts;
+        state.activeLayout = action.payload.activeLayout;
+      })
+      .addCase(updateDashboardLayout.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to update dashboard layout';
+      });
   },
 });
 
-// Selectors
-export const selectDashboardFilters = (state: RootState) => state.dashboard.filters;
-export const selectDashboardLayout = (state: RootState) => state.dashboard.layout;
-export const selectIsEditMode = (state: RootState) => state.dashboard.isEditMode;
-export const selectIsFullscreen = (state: RootState) => state.dashboard.isFullscreen;
-export const selectFullscreenWidgetId = (state: RootState) => state.dashboard.fullscreenWidgetId;
-export const selectIsCustomizationOpen = (state: RootState) => state.dashboard.isCustomizationOpen;
-export const selectIsDateRangePickerOpen = (state: RootState) => state.dashboard.isDateRangePickerOpen;
-export const selectSelectedWidgetForCustomization = (state: RootState) => state.dashboard.selectedWidgetForCustomization;
-
-// Actions
-export const {
-  setTimeRange,
-  setDateRange,
-  setComparisonTimeRange,
-  setComparisonDateRange,
-  toggleDateRangePicker,
-  setDashboardLayout,
-  toggleEditMode,
-  toggleWidgetVisibility,
-  updateWidgetPosition,
-  updateWidgetSize,
+// Export actions
+export const { 
+  setTimeRange, 
+  setDateRange, 
+  setFilters,
+  setActiveLayout,
+  setIsCustomizing,
   updateWidgetSettings,
-  updateWidgetTitle,
-  toggleFullscreen,
   addWidget,
   removeWidget,
-  openWidgetCustomization,
-  closeWidgetCustomization,
-  resetDashboard
+  clearError,
 } = dashboardSlice.actions;
+
+// Export selectors
+export const selectDashboardFilters = (state: RootState) => state.dashboard.filters;
+export const selectDashboardLayouts = (state: RootState) => state.dashboard.layouts;
+export const selectActiveLayout = (state: RootState) => state.dashboard.activeLayout;
+export const selectActiveLayoutData = (state: RootState) => 
+  state.dashboard.layouts[state.dashboard.activeLayout];
+export const selectIsCustomizing = (state: RootState) => state.dashboard.isCustomizing;
+export const selectDashboardLoading = (state: RootState) => state.dashboard.isLoading;
+export const selectDashboardError = (state: RootState) => state.dashboard.error;
 
 export default dashboardSlice.reducer;

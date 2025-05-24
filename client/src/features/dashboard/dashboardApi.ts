@@ -1,197 +1,166 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import {
-  DashboardStatsResponse,
-  RevenueDataResponse,
-  OrdersDataResponse,
-  UserGrowthResponse,
-  TrafficSourcesResponse,
-  DeviceDataResponse,
-  TopProductsResponse,
-  SearchTermsResponse,
-  GeographicDataResponse,
-  DashboardFilters,
-  DashboardLayout,
-  TimeRange,
-} from '@/types/dashboard';
+import { DashboardFilters, DashboardLayout } from './dashboardSlice';
 
+// Define types for API responses
+export interface DashboardLayoutResponse {
+  layouts: {
+    [key: string]: DashboardLayout;
+  };
+  activeLayout: string;
+}
+
+export interface DashboardDataResponse {
+  // Revenue data
+  revenue: {
+    total: number;
+    previousTotal?: number;
+    percentChange?: number;
+    data: Array<{
+      date: string;
+      revenue: number;
+      expenses: number;
+      profit: number;
+    }>
+  };
+  
+  // Order statistics
+  orderStats: {
+    total: number;
+    pending: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+    returned: number;
+    percentChange?: number;
+  };
+  
+  // Top products
+  topProducts: Array<{
+    id: string | number;
+    name: string;
+    category: string;
+    revenue: number;
+    units: number;
+    percentChange?: number;
+  }>;
+  
+  // Customer statistics
+  customerStats: {
+    total: number;
+    newCustomers: number;
+    returningCustomers: number;
+    percentChange?: number;
+    sources: {
+      direct: number;
+      search: number;
+      social: number;
+      referral: number;
+      email: number;
+      mobile: number;
+      desktop: number;
+    };
+  };
+  
+  // Traffic data
+  trafficData: {
+    total: number;
+    percentChange?: number;
+    sources: Array<{
+      source: string;
+      visits: number;
+      percentage: number;
+    }>;
+  };
+  
+  // Search terms
+  searchTerms: Array<{
+    term: string;
+    count: number;
+    percentChange?: number;
+  }>;
+}
+
+export interface RevenueDataResponse {
+  total: number;
+  previousTotal?: number;
+  percentChange?: number;
+  data: Array<{
+    date: string;
+    revenue: number;
+    expenses: number;
+    profit: number;
+  }>;
+}
+
+// Create the dashboard API
 export const dashboardApi = createApi({
   reducerPath: 'dashboardApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  tagTypes: ['DashboardStats', 'DashboardLayout'],
   endpoints: (builder) => ({
-    // Get dashboard stats (summary numbers)
-    getDashboardStats: builder.query<DashboardStatsResponse, void>({
-      query: () => '/dashboard/stats',
-      providesTags: ['DashboardStats'],
-      // Poll for live updates every 30 seconds
-      keepUnusedDataFor: 30,
-      async onCacheEntryAdded(
-        arg,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved }
-      ) {
-        // Create WebSocket connection for real-time updates
-        let ws: WebSocket | null = null;
-        try {
-          await cacheDataLoaded;
-
-          ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/dashboard/stats/live`);
-          
-          ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            updateCachedData(() => data);
-          };
-          
-          await cacheEntryRemoved;
-          ws?.close();
-        } catch {
-          ws?.close();
-        }
-      },
+    getDashboardLayout: builder.query<DashboardLayoutResponse, void>({
+      query: () => `/dashboard/layouts`,
     }),
-
-    // Get revenue data for charts
+    updateDashboardLayout: builder.mutation<DashboardLayoutResponse, { layouts: any, activeLayout: string }>({
+      query: ({ layouts, activeLayout }) => ({
+        url: `/dashboard/layouts`,
+        method: 'POST',
+        body: { layouts, activeLayout },
+      }),
+    }),
+    getDashboardData: builder.query<DashboardDataResponse, DashboardFilters>({
+      query: (filters) => ({
+        url: `/dashboard/data`,
+        method: 'GET',
+        params: { ...filters },
+      }),
+    }),
     getRevenueData: builder.query<RevenueDataResponse, DashboardFilters>({
       query: (filters) => ({
-        url: '/dashboard/revenue',
+        url: `/dashboard/revenue`,
         method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-          compareWith: filters.compareWith,
-          compareStartDate: filters.compareDateRange?.startDate,
-          compareEndDate: filters.compareDateRange?.endDate,
-        },
+        params: { ...filters },
       }),
     }),
-
-    // Get orders data for charts
-    getOrdersData: builder.query<OrdersDataResponse, DashboardFilters>({
+    getOrderStats: builder.query<DashboardDataResponse['orderStats'], DashboardFilters>({
       query: (filters) => ({
-        url: '/dashboard/orders',
+        url: `/dashboard/orders/stats`,
         method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-          compareWith: filters.compareWith,
-          compareStartDate: filters.compareDateRange?.startDate,
-          compareEndDate: filters.compareDateRange?.endDate,
-        },
+        params: { ...filters },
       }),
     }),
-
-    // Get user growth data
-    getUserGrowthData: builder.query<UserGrowthResponse, DashboardFilters>({
+    getTopProducts: builder.query<DashboardDataResponse['topProducts'], DashboardFilters>({
       query: (filters) => ({
-        url: '/dashboard/users',
+        url: `/dashboard/products/top`,
         method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-          compareWith: filters.compareWith,
-          compareStartDate: filters.compareDateRange?.startDate,
-          compareEndDate: filters.compareDateRange?.endDate,
-        },
+        params: { ...filters },
       }),
     }),
-
-    // Get traffic sources data
-    getTrafficSourcesData: builder.query<TrafficSourcesResponse, DashboardFilters>({
+    getCustomerStats: builder.query<DashboardDataResponse['customerStats'], DashboardFilters>({
       query: (filters) => ({
-        url: '/dashboard/traffic',
+        url: `/dashboard/customers/stats`,
         method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-        },
+        params: { ...filters },
       }),
     }),
-
-    // Get device breakdown data
-    getDeviceData: builder.query<DeviceDataResponse, DashboardFilters>({
+    getSearchTerms: builder.query<DashboardDataResponse['searchTerms'], DashboardFilters>({
       query: (filters) => ({
-        url: '/dashboard/devices',
+        url: `/dashboard/search/terms`,
         method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-        },
+        params: { ...filters },
       }),
-    }),
-
-    // Get top products data
-    getTopProductsData: builder.query<TopProductsResponse, DashboardFilters>({
-      query: (filters) => ({
-        url: '/dashboard/products/top',
-        method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-          limit: 10,
-        },
-      }),
-    }),
-
-    // Get search analytics data
-    getSearchTermsData: builder.query<SearchTermsResponse, DashboardFilters>({
-      query: (filters) => ({
-        url: '/dashboard/search',
-        method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-          limit: 10,
-        },
-      }),
-    }),
-
-    // Get geographic distribution data
-    getGeographicData: builder.query<GeographicDataResponse, DashboardFilters>({
-      query: (filters) => ({
-        url: '/dashboard/geography',
-        method: 'GET',
-        params: {
-          timeRange: filters.timeRange,
-          startDate: filters.dateRange?.startDate,
-          endDate: filters.dateRange?.endDate,
-        },
-      }),
-    }),
-
-    // Get dashboard layout
-    getDashboardLayout: builder.query<DashboardLayout, string | undefined>({
-      query: (userId) => `/dashboard/layout${userId ? `?userId=${userId}` : ''}`,
-      providesTags: ['DashboardLayout'],
-    }),
-
-    // Update dashboard layout
-    updateDashboardLayout: builder.mutation<DashboardLayout, { userId: string; layout: Partial<DashboardLayout> }>({
-      query: ({ userId, layout }) => ({
-        url: `/dashboard/layout`,
-        method: 'PUT',
-        body: { userId, ...layout },
-      }),
-      invalidatesTags: ['DashboardLayout'],
     }),
   }),
 });
 
+// Export the generated hooks
 export const {
-  useGetDashboardStatsQuery,
-  useGetRevenueDataQuery,
-  useGetOrdersDataQuery,
-  useGetUserGrowthDataQuery,
-  useGetTrafficSourcesDataQuery,
-  useGetDeviceDataQuery,
-  useGetTopProductsDataQuery,
-  useGetSearchTermsDataQuery,
-  useGetGeographicDataQuery,
   useGetDashboardLayoutQuery,
   useUpdateDashboardLayoutMutation,
+  useGetDashboardDataQuery,
+  useGetRevenueDataQuery,
+  useGetOrderStatsQuery,
+  useGetTopProductsQuery,
+  useGetCustomerStatsQuery,
+  useGetSearchTermsQuery,
 } = dashboardApi;

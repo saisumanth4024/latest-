@@ -1,376 +1,392 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  Pencil, 
-  Save, 
-  RotateCcw, 
-  Plus, 
-  X, 
-  Maximize, 
-  Minimize, 
-  Settings,
-  ChevronDown,
-  MoreHorizontal,
-  RefreshCw
-} from 'lucide-react';
-import { 
-  selectDashboardLayout, 
-  selectIsEditMode, 
-  selectIsFullscreen,
-  selectFullscreenWidgetId,
-  toggleEditMode,
-  resetDashboard,
-  toggleFullscreen,
-  toggleWidgetVisibility,
-  updateWidgetSettings,
-  openWidgetCustomization,
-  closeWidgetCustomization
+  setTimeRange,
+  setFilters,
+  selectDashboardFilters 
 } from '../dashboardSlice';
-import { useGetDashboardStatsQuery } from '../dashboardApi';
-import { DashboardWidget, WidgetType } from '@/types/dashboard';
-import { TimeRangeSelector } from './TimeRangeSelector';
-
-// UI Components
+import { 
+  useGetDashboardDataQuery,
+  useGetDashboardLayoutQuery,
+  useUpdateDashboardLayoutMutation
+} from '../dashboardApi';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu';
-
-// Widget Components - These will be imported or created later
-import StatsWidget from './widgets/StatsWidget';
+  Calendar, 
+  LayoutGrid, 
+  Plus, 
+  RefreshCw, 
+  Save
+} from 'lucide-react';
 import RevenueChart from './widgets/RevenueChart';
-import OrdersChart from './widgets/OrdersChart';
-import TopProducts from './widgets/TopProducts';
-import TrafficSources from './widgets/TrafficSources';
-import UserGrowth from './widgets/UserGrowth';
-import GeographicDistribution from './widgets/GeographicDistribution';
-import DeviceBreakdown from './widgets/DeviceBreakdown';
-import TopSearchTerms from './widgets/TopSearchTerms';
-import RecentOrders from './widgets/RecentOrders';
 
-// Placeholder component for widgets not yet implemented
-const WidgetPlaceholder = ({ title, type }: { title: string, type: WidgetType }) => (
-  <Card className="h-full">
-    <CardHeader>
-      <CardTitle>{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="flex items-center justify-center h-[200px]">
-      <div className="text-center">
-        <p className="text-muted-foreground">{type} Widget</p>
-        <p className="text-sm text-muted-foreground">Coming soon</p>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Widget container with shared functionality for all widgets
-interface WidgetContainerProps {
-  widget: DashboardWidget;
-  children: React.ReactNode;
-}
-
-const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget, children }) => {
+export const DashboardPage: React.FC = () => {
   const dispatch = useDispatch();
-  const isEditMode = useSelector(selectIsEditMode);
-  const isFullscreen = useSelector(selectIsFullscreen);
-  const fullscreenWidgetId = useSelector(selectFullscreenWidgetId);
+  const currentFilters = useSelector(selectDashboardFilters);
+  const { data: dashboardData, isLoading: isDashboardLoading, refetch } = useGetDashboardDataQuery(currentFilters);
+  const { data: layoutData, isLoading: isLayoutLoading } = useGetDashboardLayoutQuery();
+  const [updateLayout, { isLoading: isUpdatingLayout }] = useUpdateDashboardLayoutMutation();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isCustomizingLayout, setIsCustomizingLayout] = useState(false);
   
-  // Don't render if widget is not visible and not in edit mode
-  if (!widget.visible && !isEditMode) {
-    return null;
-  }
+  // This would be based on user permissions in a real app
+  const userRole = 'admin'; // Could be 'user', 'seller', 'admin'
   
-  // Handle widget settings
-  const handleToggleVisibility = () => {
-    dispatch(toggleWidgetVisibility(widget.id));
+  const handleTimeRangeChange = (value: string) => {
+    dispatch(setTimeRange(value));
   };
   
-  const handleFullscreen = () => {
-    dispatch(toggleFullscreen(isFullscreen && fullscreenWidgetId === widget.id ? null : widget.id));
-  };
-  
-  const handleCustomize = () => {
-    dispatch(openWidgetCustomization(widget.id));
-  };
-  
-  // Determine widget size classes
-  const getWidthClass = () => {
-    if (isFullscreen && fullscreenWidgetId === widget.id) {
-      return 'col-span-12';
-    }
+  const handleSaveLayout = async () => {
+    if (!layoutData) return;
     
-    switch (widget.width) {
-      case 'full':
-        return 'col-span-12';
-      case 'two-thirds':
-        return 'col-span-12 lg:col-span-8';
-      case 'half':
-        return 'col-span-12 md:col-span-6';
-      case 'third':
-        return 'col-span-12 md:col-span-6 lg:col-span-4';
-      default:
-        return 'col-span-12';
-    }
-  };
-  
-  const getHeightClass = () => {
-    if (isFullscreen && fullscreenWidgetId === widget.id) {
-      return 'h-[calc(100vh-200px)]';
-    }
+    // In a real implementation, we would gather the current layout state
+    // and send it to the server via the updateLayout mutation
+    await updateLayout({
+      layouts: layoutData.layouts,
+      activeLayout: layoutData.activeLayout
+    });
     
-    switch (widget.height) {
-      case 'small':
-        return 'h-auto min-h-[100px]';
-      case 'medium':
-        return 'h-[320px]';
-      case 'large':
-        return 'h-[500px]';
-      default:
-        return 'h-auto';
-    }
+    setIsCustomizingLayout(false);
   };
   
   return (
-    <div 
-      className={`${getWidthClass()} transition-all duration-300 ease-in-out`}
-      style={{ opacity: !widget.visible && isEditMode ? 0.5 : 1 }}
-    >
-      <Card className={`${getHeightClass()} overflow-hidden flex flex-col`}>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <CardTitle className="text-base md:text-lg">{widget.title}</CardTitle>
-          <div className="flex items-center space-x-1">
-            {isEditMode ? (
-              <Button variant="ghost" size="icon" onClick={handleToggleVisibility}>
-                {widget.visible ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                    <line x1="2" x2="22" y1="2" y2="22" />
-                  </svg>
-                )}
-              </Button>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleFullscreen}>
-                    {isFullscreen && fullscreenWidgetId === widget.id ? (
-                      <>
-                        <Minimize className="mr-2 h-4 w-4" />
-                        Exit Fullscreen
-                      </>
-                    ) : (
-                      <>
-                        <Maximize className="mr-2 h-4 w-4" />
-                        Fullscreen
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCustomize}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Customize
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => {}}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="flex-grow overflow-auto pb-4">
-          {children}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Main Dashboard Component
-const DashboardPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const layout = useSelector(selectDashboardLayout);
-  const isEditMode = useSelector(selectIsEditMode);
-  const isFullscreen = useSelector(selectIsFullscreen);
-  const { data: dashboardStats, isLoading, refetch } = useGetDashboardStatsQuery();
-  
-  if (!layout) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="flex flex-col items-center justify-center h-[60vh]">
-          <Skeleton className="h-16 w-16 rounded-full" />
-          <h2 className="mt-4 text-xl">Loading dashboard...</h2>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Analytics Dashboard</h1>
+          <p className="text-muted-foreground">
+            Monitor your business performance and insights
+          </p>
         </div>
-      </div>
-    );
-  }
-  
-  // Sort widgets by position
-  const sortedWidgets = [...layout.widgets].sort((a, b) => a.position - b.position);
-  
-  const renderWidget = (widget: DashboardWidget) => {
-    switch (widget.type) {
-      case WidgetType.QUICK_STATS:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <StatsWidget />
-          </WidgetContainer>
-        );
         
-      case WidgetType.REVENUE_CHART:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <RevenueChart settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.ORDERS_CHART:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <OrdersChart settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.TOP_PRODUCTS:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <TopProducts settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.TRAFFIC_SOURCES:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <TrafficSources settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.USER_GROWTH:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <UserGrowth settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.GEOGRAPHIC_DISTRIBUTION:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <GeographicDistribution settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.DEVICE_BREAKDOWN:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <DeviceBreakdown settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.TOP_SEARCH_TERMS:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <TopSearchTerms settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      case WidgetType.RECENT_ORDERS:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <RecentOrders settings={widget.settings} />
-          </WidgetContainer>
-        );
-        
-      default:
-        return (
-          <WidgetContainer key={widget.id} widget={widget}>
-            <WidgetPlaceholder title={widget.title} type={widget.type} />
-          </WidgetContainer>
-        );
-    }
-  };
-  
-  return (
-    <div className="container mx-auto p-4">
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <Select 
+            defaultValue={currentFilters.timeRange}
+            onValueChange={handleTimeRangeChange}
+          >
+            <SelectTrigger className="w-[180px]">
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="90days">Last 90 days</SelectItem>
+              <SelectItem value="year">This year</SelectItem>
+              <SelectItem value="custom">Custom range</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            <TimeRangeSelector />
-            
-            <div className="flex space-x-2">
-              <Button 
-                variant={isEditMode ? "secondary" : "outline"} 
-                size="sm"
-                onClick={() => dispatch(toggleEditMode())}
-              >
-                {isEditMode ? (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Layout
-                  </>
-                ) : (
-                  <>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit Layout
-                  </>
-                )}
-              </Button>
-              
-              {isEditMode && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => dispatch(resetDashboard())}
-                >
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset
-                </Button>
-              )}
-            </div>
-          </div>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => refetch()}
+            title="Refresh data"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          
+          {userRole === 'admin' && (
+            <Button 
+              variant={isCustomizingLayout ? "default" : "outline"}
+              onClick={() => setIsCustomizingLayout(!isCustomizingLayout)}
+            >
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              {isCustomizingLayout ? "Done" : "Customize"}
+            </Button>
+          )}
         </div>
       </div>
       
-      <div className={`grid grid-cols-12 gap-4 ${isEditMode ? 'bg-muted/20 p-4 rounded-lg border border-dashed' : ''}`}>
-        {sortedWidgets.map(renderWidget)}
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="sales">Sales & Revenue</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-4">
+          {isCustomizingLayout ? (
+            <div className="bg-muted/40 p-4 rounded-lg flex justify-between items-center">
+              <p className="text-sm">
+                Drag and resize widgets to customize your dashboard layout
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsCustomizingLayout(false)}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveLayout} disabled={isUpdatingLayout}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Layout
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Revenue Summary Card */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Revenue</CardTitle>
+                  <CardDescription>
+                    {currentFilters.timeRange === 'today' 
+                      ? 'Today\'s revenue'
+                      : currentFilters.timeRange === 'yesterday'
+                      ? 'Yesterday\'s revenue'
+                      : `Revenue for the last ${
+                          currentFilters.timeRange === '7days' ? '7 days' :
+                          currentFilters.timeRange === '30days' ? '30 days' :
+                          currentFilters.timeRange === '90days' ? '90 days' : 'selected period'
+                        }`
+                    }
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2 h-80">
+                {isDashboardLoading ? (
+                  <div className="space-y-4 h-full">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-64 w-full" />
+                  </div>
+                ) : (
+                  <RevenueChart 
+                    settings={{
+                      showLegend: true,
+                      showDataLabels: false,
+                      chartType: 'area'
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Order Statistics Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Order Statistics</CardTitle>
+                  <CardDescription>
+                    Overview of order status
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                {isDashboardLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">Pending</p>
+                        <p className="text-sm text-muted-foreground">Awaiting processing</p>
+                      </div>
+                      <p className="text-2xl font-bold">{dashboardData?.orderStats?.pending || 0}</p>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">Processing</p>
+                        <p className="text-sm text-muted-foreground">In preparation</p>
+                      </div>
+                      <p className="text-2xl font-bold">{dashboardData?.orderStats?.processing || 0}</p>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">Delivered</p>
+                        <p className="text-sm text-muted-foreground">Completed orders</p>
+                      </div>
+                      <p className="text-2xl font-bold">{dashboardData?.orderStats?.delivered || 0}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Top Products */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Top Products</CardTitle>
+                  <CardDescription>
+                    Best selling items for this period
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                {isDashboardLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {dashboardData?.topProducts?.map((product, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                            <span className="text-xs font-bold">#{index + 1}</span>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium leading-none">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">{product.category}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">${product.revenue.toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">{product.units} units</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Customer Acquisition */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-base">Customer Acquisition</CardTitle>
+                  <CardDescription>
+                    New customers in period
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                {isDashboardLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-28 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : (
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold">
+                      {dashboardData?.customerStats?.newCustomers || 0}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {dashboardData?.customerStats?.percentChange >= 0 ? '+' : ''}
+                      {dashboardData?.customerStats?.percentChange || 0}% vs previous period
+                    </p>
+                    <div className="pt-4">
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between">
+                          <span>Mobile:</span>
+                          <span className="font-medium">{dashboardData?.customerStats?.sources?.mobile || 0}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Desktop:</span>
+                          <span className="font-medium">{dashboardData?.customerStats?.sources?.desktop || 0}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Social:</span>
+                          <span className="font-medium">{dashboardData?.customerStats?.sources?.social || 0}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Referral:</span>
+                          <span className="font-medium">{dashboardData?.customerStats?.sources?.referral || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Add Widget Button (when customizing) */}
+          {isCustomizingLayout && (
+            <Button variant="outline" className="w-full h-20 border-dashed">
+              <Plus className="h-5 w-5 mr-2" />
+              Add Widget
+            </Button>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="sales">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales & Revenue Analysis</CardTitle>
+                <CardDescription>
+                  Detailed breakdown of your sales performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  This section will contain more detailed revenue reports and sales analytics
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="customers">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Insights</CardTitle>
+                <CardDescription>
+                  Demographics, behavior, and retention metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  This section will contain detailed customer analytics and segmentation
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="products">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Performance</CardTitle>
+                <CardDescription>
+                  Inventory and product analytics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  This section will contain detailed product performance metrics
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,105 +1,99 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import {
-  Notification,
-  NotificationsResponse,
-  MarkAsReadResponse,
-  UnreadCountResponse,
-  NotificationSettings,
-  NotificationSettingsResponse,
-} from '@/types/notification';
+import { Notification } from '@/types/notification';
 
+// Define response types
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+  pagination?: {
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    perPage: number;
+  };
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
+}
+
+export interface MarkAsReadResponse {
+  success: boolean;
+  notification?: Notification;
+}
+
+export interface MarkAllAsReadResponse {
+  success: boolean;
+  affectedIds: string[];
+  unreadCount: number;
+}
+
+// Create the notifications API
 export const notificationsApi = createApi({
   reducerPath: 'notificationsApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  tagTypes: ['Notifications', 'NotificationSettings'],
+  tagTypes: ['Notification', 'UnreadCount'],
   endpoints: (builder) => ({
-    // Get all notifications
     getNotifications: builder.query<NotificationsResponse, void>({
       query: () => '/notifications',
-      providesTags: ['Notifications'],
-      // Poll for new notifications every 60 seconds
-      pollingInterval: 60000,
+      providesTags: (result) => 
+        result
+          ? [
+              ...result.notifications.map(({ id }) => ({ type: 'Notification' as const, id })),
+              { type: 'Notification', id: 'LIST' },
+              { type: 'UnreadCount', id: 'COUNT' },
+            ]
+          : [{ type: 'Notification', id: 'LIST' }, { type: 'UnreadCount', id: 'COUNT' }],
     }),
-
-    // Get notification by ID
-    getNotificationById: builder.query<Notification, string>({
-      query: (id) => `/notifications/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Notifications', id }],
-    }),
-
-    // Get unread count
+    
     getUnreadCount: builder.query<UnreadCountResponse, void>({
       query: () => '/notifications/unread-count',
-      providesTags: ['Notifications'],
-      // Poll for new count every 30 seconds
-      pollingInterval: 30000,
+      providesTags: [{ type: 'UnreadCount', id: 'COUNT' }],
     }),
-
-    // Mark notification as read
+    
     markAsRead: builder.mutation<MarkAsReadResponse, string>({
       query: (id) => ({
         url: `/notifications/${id}/read`,
-        method: 'PUT',
+        method: 'PATCH',
       }),
-      invalidatesTags: ['Notifications'],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Notification', id },
+        { type: 'UnreadCount', id: 'COUNT' },
+      ],
     }),
-
-    // Mark all notifications as read
-    markAllAsRead: builder.mutation<MarkAsReadResponse, void>({
+    
+    markAllAsRead: builder.mutation<MarkAllAsReadResponse, void>({
       query: () => ({
-        url: '/notifications/read-all',
-        method: 'PUT',
+        url: '/notifications/mark-all-read',
+        method: 'PATCH',
       }),
-      invalidatesTags: ['Notifications'],
+      invalidatesTags: (result) =>
+        result
+          ? [
+              ...result.affectedIds.map(id => ({ type: 'Notification' as const, id })),
+              { type: 'UnreadCount', id: 'COUNT' },
+            ]
+          : [{ type: 'Notification', id: 'LIST' }, { type: 'UnreadCount', id: 'COUNT' }],
     }),
-
-    // Archive notification
-    archiveNotification: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/notifications/${id}/archive`,
-        method: 'PUT',
-      }),
-      invalidatesTags: ['Notifications'],
-    }),
-
-    // Delete notification
-    deleteNotification: builder.mutation<void, string>({
+    
+    deleteNotification: builder.mutation<{ success: boolean }, string>({
       query: (id) => ({
         url: `/notifications/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Notifications'],
-    }),
-
-    // Get notification settings
-    getNotificationSettings: builder.query<NotificationSettingsResponse, void>({
-      query: () => '/notifications/settings',
-      providesTags: ['NotificationSettings'],
-    }),
-
-    // Update notification settings
-    updateNotificationSettings: builder.mutation<
-      NotificationSettingsResponse,
-      Partial<NotificationSettings>
-    >({
-      query: (settings) => ({
-        url: '/notifications/settings',
-        method: 'PUT',
-        body: settings,
-      }),
-      invalidatesTags: ['NotificationSettings'],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Notification', id },
+        { type: 'Notification', id: 'LIST' },
+      ],
     }),
   }),
 });
 
+// Export the generated hooks
 export const {
   useGetNotificationsQuery,
-  useGetNotificationByIdQuery,
   useGetUnreadCountQuery,
   useMarkAsReadMutation,
   useMarkAllAsReadMutation,
-  useArchiveNotificationMutation,
   useDeleteNotificationMutation,
-  useGetNotificationSettingsQuery,
-  useUpdateNotificationSettingsMutation,
 } = notificationsApi;

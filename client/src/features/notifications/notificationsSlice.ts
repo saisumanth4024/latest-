@@ -1,195 +1,140 @@
-import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { v4 as uuidv4 } from 'uuid';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/app/store';
-import { 
-  Notification, 
-  NotificationType,
-  NotificationCategory,
-  NotificationStatus,
-  NotificationPriority,
-  NotificationsResponse,
-  MarkAsReadResponse,
-  UnreadCountResponse 
-} from '@/types/notification';
 import { apiRequest } from '@/lib/queryClient';
+import { Notification, NotificationType, NotificationStatus } from '@/types/notification';
 
+// Define interface for notification state
 interface NotificationsState {
   items: Notification[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
-  pollingInterval: number;
-  settings: {
-    desktopNotificationsEnabled: boolean;
-    soundEnabled: boolean;
+  filters: {
+    status: NotificationStatus | 'all';
+    type: NotificationType | 'all';
+    startDate?: string;
+    endDate?: string;
+  };
+  // For pagination
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    perPage: number;
+    total: number;
   };
 }
 
+// Define initial state
 const initialState: NotificationsState = {
   items: [],
   unreadCount: 0,
   isLoading: false,
   error: null,
-  pollingInterval: 60000, // 1 minute default
-  settings: {
-    desktopNotificationsEnabled: true,
-    soundEnabled: true
-  }
+  filters: {
+    status: 'all',
+    type: 'all',
+  },
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    perPage: 10,
+    total: 0,
+  },
 };
 
-// Async thunks
+// Define async thunks
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiRequest<NotificationsResponse>('GET', '/api/notifications');
-      return response;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch notifications');
-    }
+  async () => {
+    const response = await apiRequest('GET', '/api/notifications');
+    return await response.json();
   }
 );
 
 export const markAsRead = createAsyncThunk(
   'notifications/markAsRead',
-  async (notificationId: string, { rejectWithValue }) => {
-    try {
-      const response = await apiRequest<MarkAsReadResponse>('PUT', `/api/notifications/${notificationId}/read`);
-      return {
-        id: notificationId,
-        response
-      };
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to mark notification as read');
-    }
+  async (id: string) => {
+    const response = await apiRequest('PATCH', `/api/notifications/${id}/read`);
+    return await response.json();
   }
 );
 
 export const markAllAsRead = createAsyncThunk(
   'notifications/markAllAsRead',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiRequest<MarkAsReadResponse>('PUT', '/api/notifications/read-all');
-      return response;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to mark all notifications as read');
-    }
+  async () => {
+    const response = await apiRequest('PATCH', '/api/notifications/mark-all-read');
+    return await response.json();
   }
 );
 
-export const dismissNotification = createAsyncThunk(
-  'notifications/dismissNotification',
-  async (notificationId: string, { rejectWithValue }) => {
-    try {
-      await apiRequest('DELETE', `/api/notifications/${notificationId}`);
-      return notificationId;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to dismiss notification');
-    }
+export const deleteNotification = createAsyncThunk(
+  'notifications/deleteNotification',
+  async (id: string) => {
+    const response = await apiRequest('DELETE', `/api/notifications/${id}`);
+    return { ...(await response.json()), id };
   }
 );
 
-export const archiveNotification = createAsyncThunk(
-  'notifications/archiveNotification',
-  async (notificationId: string, { rejectWithValue }) => {
-    try {
-      await apiRequest('PUT', `/api/notifications/${notificationId}/archive`);
-      return notificationId;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to archive notification');
-    }
-  }
-);
-
-export const pollNotificationCount = createAsyncThunk(
-  'notifications/pollNotificationCount',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiRequest<UnreadCountResponse>('GET', '/api/notifications/unread-count');
-      return response;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to poll notification count');
-    }
-  }
-);
-
+// Create notifications slice
 const notificationsSlice = createSlice({
   name: 'notifications',
   initialState,
   reducers: {
-    // Create a local notification that's not persisted to the server
-    addLocalNotification: (state, action: PayloadAction<Omit<Notification, 'id' | 'createdAt' | 'status'>>) => {
+    setFilter: (
+      state,
+      action: PayloadAction<{ key: keyof NotificationsState['filters']; value: any }>
+    ) => {
+      const { key, value } = action.payload;
+      state.filters[key] = value;
+      // Reset pagination when filters change
+      state.pagination.currentPage = 1;
+    },
+    
+    setPage: (state, action: PayloadAction<number>) => {
+      state.pagination.currentPage = action.payload;
+    },
+    
+    clearError: (state) => {
+      state.error = null;
+    },
+    
+    addLocalNotification: (
+      state,
+      action: PayloadAction<Omit<Notification, 'id' | 'createdAt' | 'status'>>
+    ) => {
       const newNotification: Notification = {
-        id: uuidv4(),
+        id: `local-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         createdAt: new Date().toISOString(),
         status: NotificationStatus.UNREAD,
-        ...action.payload
+        ...action.payload,
       };
       
       state.items.unshift(newNotification);
       state.unreadCount += 1;
-      
-      // Show browser notification if enabled
-      if (state.settings.desktopNotificationsEnabled && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification(newNotification.title, {
-            body: newNotification.message,
-            icon: newNotification.icon
-          });
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission();
-        }
-      }
-      
-      // Play sound if enabled
-      if (state.settings.soundEnabled) {
-        const audio = new Audio('/notification-sound.mp3');
-        audio.play().catch(() => {
-          // Ignore errors from autoplay restrictions
-        });
-      }
     },
     
-    // Remove a local notification by ID
-    removeLocalNotification: (state, action: PayloadAction<string>) => {
-      const index = state.items.findIndex(item => item.id === action.payload);
-      if (index !== -1) {
-        const notification = state.items[index];
-        if (notification.status === NotificationStatus.UNREAD) {
-          state.unreadCount -= 1;
-        }
-        state.items.splice(index, 1);
-      }
-    },
-    
-    // Mark a local notification as read
     markLocalNotificationAsRead: (state, action: PayloadAction<string>) => {
       const notification = state.items.find(item => item.id === action.payload);
+      
       if (notification && notification.status === NotificationStatus.UNREAD) {
         notification.status = NotificationStatus.READ;
         notification.readAt = new Date().toISOString();
-        state.unreadCount -= 1;
+        state.unreadCount = Math.max(0, state.unreadCount - 1);
       }
     },
     
-    // Update notification settings
-    updateNotificationSettings: (state, action: PayloadAction<Partial<NotificationsState['settings']>>) => {
-      state.settings = {
-        ...state.settings,
-        ...action.payload
-      };
+    removeLocalNotification: (state, action: PayloadAction<string>) => {
+      const index = state.items.findIndex(item => item.id === action.payload);
+      
+      if (index !== -1) {
+        const wasUnread = state.items[index].status === NotificationStatus.UNREAD;
+        state.items.splice(index, 1);
+        
+        if (wasUnread) {
+          state.unreadCount = Math.max(0, state.unreadCount - 1);
+        }
+      }
     },
-    
-    // Set polling interval
-    setPollingInterval: (state, action: PayloadAction<number>) => {
-      state.pollingInterval = action.payload;
-    },
-    
-    // Clear all local notifications
-    clearAllLocalNotifications: (state) => {
-      state.items = state.items.filter(item => item.userId !== undefined);
-      state.unreadCount = state.items.filter(item => item.status === NotificationStatus.UNREAD).length;
-    }
   },
   extraReducers: (builder) => {
     builder
@@ -202,104 +147,120 @@ const notificationsSlice = createSlice({
         state.isLoading = false;
         state.items = action.payload.notifications;
         state.unreadCount = action.payload.unreadCount;
+        
+        if (action.payload.pagination) {
+          state.pagination = {
+            ...state.pagination,
+            ...action.payload.pagination,
+          };
+        }
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || 'Failed to fetch notifications';
       })
       
       // Mark as read
+      .addCase(markAsRead.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(markAsRead.fulfilled, (state, action) => {
-        const notification = state.items.find(item => item.id === action.payload.id);
-        if (notification) {
-          notification.status = NotificationStatus.READ;
-          notification.readAt = new Date().toISOString();
+        state.isLoading = false;
+        
+        if (action.payload.success && action.payload.notification) {
+          const index = state.items.findIndex(
+            (item) => item.id === action.payload.notification!.id
+          );
+          
+          if (index !== -1) {
+            const wasUnread = state.items[index].status === NotificationStatus.UNREAD;
+            state.items[index] = action.payload.notification!;
+            
+            if (wasUnread) {
+              state.unreadCount = Math.max(0, state.unreadCount - 1);
+            }
+          }
         }
-        state.unreadCount = action.payload.response.unreadCount;
+      })
+      .addCase(markAsRead.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to mark notification as read';
       })
       
       // Mark all as read
+      .addCase(markAllAsRead.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(markAllAsRead.fulfilled, (state, action) => {
-        state.items.forEach(item => {
-          if (item.status === NotificationStatus.UNREAD) {
-            item.status = NotificationStatus.READ;
-            item.readAt = new Date().toISOString();
-          }
-        });
-        state.unreadCount = action.payload.unreadCount;
-      })
-      
-      // Dismiss notification
-      .addCase(dismissNotification.fulfilled, (state, action) => {
-        const index = state.items.findIndex(item => item.id === action.payload);
-        if (index !== -1) {
-          const notification = state.items[index];
-          if (notification.status === NotificationStatus.UNREAD) {
-            state.unreadCount -= 1;
-          }
-          state.items.splice(index, 1);
+        state.isLoading = false;
+        
+        if (action.payload.success) {
+          // Update all unread notifications to read
+          state.items = state.items.map((item) => {
+            if (item.status === NotificationStatus.UNREAD || action.payload.affectedIds.includes(item.id)) {
+              return {
+                ...item,
+                status: NotificationStatus.READ,
+                readAt: new Date().toISOString(),
+              };
+            }
+            return item;
+          });
+          
+          state.unreadCount = 0;
         }
       })
+      .addCase(markAllAsRead.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to mark all notifications as read';
+      })
       
-      // Archive notification
-      .addCase(archiveNotification.fulfilled, (state, action) => {
-        const notification = state.items.find(item => item.id === action.payload);
-        if (notification) {
-          notification.status = NotificationStatus.ARCHIVED;
-          if (notification.status === NotificationStatus.UNREAD) {
-            state.unreadCount -= 1;
+      // Delete notification
+      .addCase(deleteNotification.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteNotification.fulfilled, (state, action) => {
+        state.isLoading = false;
+        
+        if (action.payload.success) {
+          const index = state.items.findIndex((item) => item.id === action.payload.id);
+          
+          if (index !== -1) {
+            const wasUnread = state.items[index].status === NotificationStatus.UNREAD;
+            state.items.splice(index, 1);
+            
+            if (wasUnread) {
+              state.unreadCount = Math.max(0, state.unreadCount - 1);
+            }
           }
         }
       })
-      
-      // Poll notification count
-      .addCase(pollNotificationCount.fulfilled, (state, action) => {
-        if (action.payload.unreadCount !== state.unreadCount) {
-          // If the counts don't match, we should refresh the full list
-          // This will happen automatically if using React Query's polling
-          state.unreadCount = action.payload.unreadCount;
-        }
+      .addCase(deleteNotification.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to delete notification';
       });
-  }
+  },
 });
 
-// Selectors
+// Export actions
+export const {
+  setFilter,
+  setPage,
+  clearError,
+  addLocalNotification,
+  markLocalNotificationAsRead,
+  removeLocalNotification,
+} = notificationsSlice.actions;
+
+// Export selectors
 export const selectNotifications = (state: RootState) => state.notifications.items;
 export const selectUnreadCount = (state: RootState) => state.notifications.unreadCount;
-export const selectIsLoading = (state: RootState) => state.notifications.isLoading;
-export const selectError = (state: RootState) => state.notifications.error;
-export const selectNotificationSettings = (state: RootState) => state.notifications.settings;
-export const selectPollingInterval = (state: RootState) => state.notifications.pollingInterval;
-
-// Filtered selectors
-export const selectUnreadNotifications = createSelector(
-  [selectNotifications],
-  (notifications) => notifications.filter(n => n.status === NotificationStatus.UNREAD)
-);
-
-export const selectNotificationsByCategory = createSelector(
-  [selectNotifications, (_, category: NotificationCategory) => category],
-  (notifications, category) => notifications.filter(n => n.category === category)
-);
-
-export const selectNotificationsByType = createSelector(
-  [selectNotifications, (_, type: NotificationType) => type],
-  (notifications, type) => notifications.filter(n => n.type === type)
-);
-
-export const selectNotificationsByPriority = createSelector(
-  [selectNotifications, (_, priority: NotificationPriority) => priority],
-  (notifications, priority) => notifications.filter(n => n.priority === priority)
-);
-
-// Export actions and reducer
-export const {
-  addLocalNotification,
-  removeLocalNotification,
-  markLocalNotificationAsRead,
-  updateNotificationSettings,
-  setPollingInterval,
-  clearAllLocalNotifications
-} = notificationsSlice.actions;
+export const selectNotificationsLoading = (state: RootState) => state.notifications.isLoading;
+export const selectNotificationsError = (state: RootState) => state.notifications.error;
+export const selectNotificationsFilters = (state: RootState) => state.notifications.filters;
+export const selectNotificationsPagination = (state: RootState) => state.notifications.pagination;
 
 export default notificationsSlice.reducer;

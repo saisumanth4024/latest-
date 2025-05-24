@@ -1,16 +1,16 @@
+import { ReactNode } from 'react';
+
 export enum NotificationType {
   INFO = 'info',
   SUCCESS = 'success',
   WARNING = 'warning',
   ERROR = 'error',
-}
-
-export enum NotificationCategory {
   SYSTEM = 'system',
-  USER = 'user',
   ORDER = 'order',
-  PRODUCT = 'product',
   PAYMENT = 'payment',
+  PRODUCT = 'product',
+  PROMOTION = 'promotion',
+  INVENTORY = 'inventory',
   SECURITY = 'security',
 }
 
@@ -30,60 +30,59 @@ export enum NotificationPriority {
 export interface NotificationAction {
   label: string;
   url: string;
-  type: 'link' | 'button';
+  type: 'button' | 'link';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  onClick?: () => void;
 }
 
 export interface Notification {
   id: string;
-  userId?: string;
   title: string;
   message: string;
   type: NotificationType;
-  category: NotificationCategory;
   status: NotificationStatus;
-  priority: NotificationPriority;
+  priority?: NotificationPriority;
   createdAt: string;
   readAt?: string;
   expiresAt?: string;
-  icon?: string;
-  actions?: NotificationAction[];
-  image?: string;
-  data?: Record<string, any>;
-}
-
-export interface NotificationSettings {
-  userId: string;
-  emailEnabled: boolean;
-  pushEnabled: boolean;
-  smsEnabled: boolean;
-  inAppEnabled: boolean;
-  categories: {
-    [category in NotificationCategory]: {
-      enabled: boolean;
-      emailEnabled: boolean;
-      pushEnabled: boolean;
-      smsEnabled: boolean;
-      inAppEnabled: boolean;
-    };
+  sender?: {
+    id: string | number;
+    name: string;
+    avatar?: string;
   };
+  recipient?: {
+    id: string | number;
+    name: string;
+  };
+  category?: string;
+  image?: string;
+  icon?: ReactNode;
+  actions?: NotificationAction[];
+  data?: Record<string, any>;
+  metadata?: Record<string, any>;
+  url?: string;
 }
 
-// API Response Types
-export interface NotificationsResponse {
-  notifications: Notification[];
-  unreadCount: number;
-  totalCount: number;
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  inApp: boolean;
+  sms: boolean;
+  marketing: boolean;
+  orderUpdates: boolean;
+  promotions: boolean;
+  systemAlerts: boolean;
+  security: boolean;
+  newsletter: boolean;
 }
 
-export interface MarkAsReadResponse {
-  success: boolean;
-  unreadCount: number;
-}
-
-export interface UnreadCountResponse {
-  unreadCount: number;
-}
-
-export interface NotificationSettingsResponse {
-  settings: NotificationSettings;
+export interface NotificationFilterOptions {
+  status: NotificationStatus | 'all';
+  type: NotificationType | 'all';
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  priority?: NotificationPriority | 'all';
+  perPage?: number;
+  page?: number;
 }
