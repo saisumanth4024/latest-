@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Breadcrumb from './Breadcrumb';
 import { useMobileDetect } from '@/app/hooks';
 import { useLocation } from 'wouter';
+import { fetchCart } from '@/features/cart/cartSlice';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -52,6 +54,7 @@ const NotificationBar = ({ message, type, onClose }: NotificationProps) => {
 };
 
 export default function Layout({ children }: LayoutProps) {
+  const dispatch = useDispatch();
   const isMobile = useMobileDetect();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [location] = useLocation();
@@ -62,6 +65,11 @@ export default function Layout({ children }: LayoutProps) {
     type: 'info' | 'success' | 'warning' | 'error';
     visible: boolean;
   } | null>(null);
+  
+  // Initialize cart when component mounts
+  useEffect(() => {
+    dispatch(fetchCart() as any);
+  }, [dispatch]);
   
   // Update sidebar visibility based on screen size
   useEffect(() => {

@@ -369,13 +369,23 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.cart = action.payload;
+        // Make sure we're getting the full cart object
+        if (action.payload && 'cart' in action.payload) {
+          state.cart = action.payload.cart;
+          if (action.payload.savedItems) {
+            state.savedItems = action.payload.savedItems;
+          }
+        } else {
+          state.cart = action.payload;
+        }
         state.error = null;
         
-        // Load saved items
-        const savedItemsJson = localStorage.getItem('savedItems');
-        if (savedItemsJson) {
-          state.savedItems = JSON.parse(savedItemsJson);
+        // Load saved items if not already loaded
+        if (state.savedItems.length === 0) {
+          const savedItemsJson = localStorage.getItem('savedItems');
+          if (savedItemsJson) {
+            state.savedItems = JSON.parse(savedItemsJson);
+          }
         }
       })
       .addCase(fetchCart.rejected, (state, action) => {

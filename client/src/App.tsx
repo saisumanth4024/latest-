@@ -1,4 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Landing from "@/pages/Landing";
@@ -10,6 +12,7 @@ import { UserRole } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { fetchCart } from "@/features/cart/cartSlice";
 
 // Define placeholder components for routes that don't have implementations yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -296,6 +299,13 @@ function AppRouter() {
 }
 
 function App() {
+  const dispatch = useDispatch();
+  
+  // Initialize cart when app starts
+  useEffect(() => {
+    dispatch(fetchCart() as any);
+  }, [dispatch]);
+  
   return <AppRouter />;
 }
 
