@@ -23,7 +23,8 @@ export const ICONS = {
   PROFILE: 'profile',
   SETTINGS: 'settings',
   ADMIN: 'admin',
-  SELLER: 'seller'
+  SELLER: 'seller',
+  FORMS: 'forms'
 };
 
 // This will be used to generate the navigation structure
@@ -54,6 +55,12 @@ export const navigation: NavSection[] = [
         path: '/search',
         icon: ICONS.SEARCH,
         roles: ['guest', 'user', 'admin', 'seller']
+      },
+      {
+        title: 'Advanced Forms',
+        path: '/forms-advanced',
+        icon: ICONS.FORMS,
+        roles: ['guest', 'user', 'admin', 'seller', 'moderator']
       },
       {
         title: 'Analytics',
