@@ -73,10 +73,12 @@ export const adminApi = createApi({
   endpoints: (builder) => ({
     // User Management Endpoints
     getUsers: builder.query<PaginatedResponse<AdminUser>, UserFilterParams | void>({
-      query: (params = {}) => ({
-        url: '/users',
-        params,
-      }),
+      query: (params = {}) => {
+        return {
+          url: '/users',
+          params: params || undefined,
+        };
+      },
       providesTags: (result) =>
         result
           ? [
@@ -196,10 +198,12 @@ export const adminApi = createApi({
     
     // Product Management Endpoints
     getProducts: builder.query<PaginatedResponse<AdminProduct>, ProductFilterParams | void>({
-      query: (params = {}) => ({
-        url: '/products',
-        params,
-      }),
+      query: (params = {}) => {
+        return {
+          url: '/products',
+          params: params || undefined,
+        };
+      },
       providesTags: (result) =>
         result
           ? [

@@ -58,7 +58,7 @@ const CartPage: React.FC = () => {
 
   const handleUpdateQuantity = (itemId: string | number, quantity: number) => {
     if (quantity < 1) return;
-    dispatch(updateQuantity({ itemId, quantity }));
+    dispatch(updateQuantity({ id: itemId, quantity }));
   };
 
   const handleSaveForLater = (itemId: string | number) => {
