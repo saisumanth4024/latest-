@@ -27,6 +27,7 @@ const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
 const ProfilePageLegacy = lazy(() => import("@/pages/ProfilePage"));
 const ProductsPage = lazy(() => import("@/features/products/components/ProductsPage"));
 const ProductDetailPage = lazy(() => import("@/features/products/components/ProductDetailPage"));
+const ExtendedProductsPage = lazy(() => import("@/features/products/components/ExtendedProductsPage"));
 const CartPage = lazy(() => import("@/features/cart/components/MockCartPage"));
 const WishlistPage = lazy(() => import("@/features/wishlist/components/MockWishlistPage"));
 const Checkout = lazy(() => import("@/features/checkout/components/Checkout"));
@@ -89,6 +90,13 @@ export const routes = [
     component: ProductsPage, 
     requireAuth: false,
     title: "Products",
+    roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
+  },
+  { 
+    path: "/extended-products", 
+    component: ExtendedProductsPage, 
+    requireAuth: false,
+    title: "Extended Catalog",
     roles: ['guest', 'user', 'admin', 'seller', 'moderator'] as UserRole[]
   },
   {
