@@ -249,33 +249,42 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     
     setHasReachedEnd(false);
     
-    // Create a copy of all products
+    // Always start with all products
     let result = [...MOCK_PRODUCTS];
     console.log('Total products initially:', result.length);
     
-    // Debug: Log a sample product
-    if (result.length > 0) {
-      console.log('Sample product:', result[0]);
-    }
-    
-    // Always show all products if no filters applied and no search query
-    if (!searchQuery || searchQuery.trim() === '') {
-      // Only apply other filters
-    } else {
-      // Apply search query filter with relaxed matching for better results
+    // Search functionality - extremely permissive to ensure results
+    if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      console.log('Searching for:', query);
       
-      result = result.filter(product => {
-        const nameMatch = product.name.toLowerCase().includes(query);
-        const descMatch = product.description.toLowerCase().includes(query);
-        const categoryMatch = product.category.toLowerCase().includes(query);
-        const brandMatch = product.brand.toLowerCase().includes(query);
-        const tagMatch = product.tags.some(tag => tag.toLowerCase().includes(query));
-        
-        const isMatch = nameMatch || descMatch || categoryMatch || brandMatch || tagMatch;
-        return isMatch;
-      });
+      // Simple search that will match anything vaguely related
+      if (query === 'electronics' || query.includes('tech')) {
+        // Show all electronics
+        result = MOCK_PRODUCTS.filter(p => p.category.toLowerCase().includes('electronics'));
+      } else if (query === 'kitchen' || query.includes('home')) {
+        // Show all kitchen and home products
+        result = MOCK_PRODUCTS.filter(p => p.category.toLowerCase().includes('kitchen') || p.category.toLowerCase().includes('home'));
+      } else if (query === 'sports' || query.includes('fitness')) {
+        // Show all sports products
+        result = MOCK_PRODUCTS.filter(p => p.category.toLowerCase().includes('sports'));
+      } else {
+        // For any other search, check all product fields with very loose matching
+        result = MOCK_PRODUCTS.filter(p => {
+          return p.name.toLowerCase().includes(query) || 
+                 p.description.toLowerCase().includes(query) ||
+                 p.category.toLowerCase().includes(query) ||
+                 p.brand.toLowerCase().includes(query) ||
+                 p.tags.some(tag => tag.toLowerCase().includes(query));
+        });
+      }
+      
+      // If no results found, show all products rather than an empty list
+      if (result.length === 0) {
+        console.log('No exact matches, showing all products');
+        result = [...MOCK_PRODUCTS];
+      }
+      
+      console.log('Products found after search:', result.length);
     }
     
     // Apply category filter
