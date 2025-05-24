@@ -251,17 +251,16 @@ export default function OrderList() {
     setPage(newPage);
   };
   
-  // Error state
-  if (error) {
-    // Don't show error toast for 401 Unauthorized errors
-    if ((error as any)?.status !== 401) {
+  // Handle error state with useEffect to avoid render loops
+  React.useEffect(() => {
+    if (error && (error as any)?.status !== 401) {
       toast({
         title: 'Error loading orders',
         description: 'There was a problem fetching your orders. Please try again.',
         variant: 'destructive',
       });
     }
-  }
+  }, [error, toast]);
   
   // Empty state
   const renderEmptyState = () => (
@@ -381,10 +380,15 @@ export default function OrderList() {
             <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 1}
-                  />
+                  {page === 1 ? (
+                    <span className="cursor-not-allowed opacity-50">
+                      <PaginationPrevious />
+                    </span>
+                  ) : (
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(page - 1)}
+                    />
+                  )}
                 </PaginationItem>
                 
                 {[...Array(Math.min(5, data.totalPages))].map((_, i) => {
@@ -425,10 +429,15 @@ export default function OrderList() {
                 )}
                 
                 <PaginationItem>
-                  <PaginationNext
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page === data.totalPages}
-                  />
+                  {page === data.totalPages ? (
+                    <span className="cursor-not-allowed opacity-50">
+                      <PaginationNext />
+                    </span>
+                  ) : (
+                    <PaginationNext 
+                      onClick={() => handlePageChange(page + 1)}
+                    />
+                  )}
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
