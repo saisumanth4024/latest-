@@ -12,6 +12,8 @@ import notificationsReducer from '@/features/notifications/notificationsSlice';
 import { notificationsApi } from '@/features/notifications/notificationsApi';
 import contentReducer from '@/features/content/contentSlice';
 import { contentApi } from '@/features/content/contentApi';
+import reviewsReducer from '@/features/reviews/reviewsSlice';
+import { reviewsApi } from '@/features/reviews/reviewsApi';
 
 export const store = configureStore({
   reducer: {
@@ -23,11 +25,13 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     notifications: notificationsReducer,
     content: contentReducer,
+    reviews: reviewsReducer,
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
     [contentApi.reducerPath]: contentApi.reducer,
+    [reviewsApi.reducerPath]: reviewsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -48,7 +52,11 @@ export const store = configureStore({
           'dashboard/updateDashboardLayout/fulfilled',
           'content/setCurrentVideo',
           'content/setActiveBanner',
-          'content/setPlaylist'
+          'content/setPlaylist',
+          'reviews/setReviewFormField',
+          'reviews/setReportFormField',
+          'reviews/setModerationFormField',
+          'reviews/setResponseFormField'
         ],
         // Ignore these field paths in all actions
         ignoredActionPaths: [
@@ -77,7 +85,11 @@ export const store = configureStore({
           'payload.subtitles',
           'payload.targetAudience',
           'payload.sections',
-          'payload.metadata'
+          'payload.metadata',
+          'payload.author',
+          'payload.attachments',
+          'payload.reports',
+          'payload.moderation'
         ],
         // Ignore these paths in the state
         ignoredPaths: [
@@ -112,7 +124,12 @@ export const store = configureStore({
           'dashboard.layout.widgets.*.settings',
           'content.currentVideo',
           'content.activeBanners',
-          'content.playlist'
+          'content.playlist',
+          'reviews.reviewForm',
+          'reviews.reportForm',
+          'reviews.moderationForm',
+          'reviews.responseForm',
+          'reviews.userInteractions'
         ],
       },
     }).concat(
@@ -120,7 +137,8 @@ export const store = configureStore({
       ordersApi.middleware, 
       dashboardApi.middleware, 
       notificationsApi.middleware,
-      contentApi.middleware
+      contentApi.middleware,
+      reviewsApi.middleware
     ),
 });
 
