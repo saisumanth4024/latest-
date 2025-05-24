@@ -1,2 +1,4 @@
-export { ReviewsPage } from './ReviewsPage';
-export { ModerationPage } from './ModerationPage';
+import ReviewsPage from './ReviewsPage';
+import ModerationPage from './ModerationPage';
+
+export { ReviewsPage, ModerationPage };

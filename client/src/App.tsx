@@ -17,8 +17,8 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-// Import the actual ProductsPage component
-import { ProductsPage as ProductsPageImpl } from "@/features/products";
+// Import the product pages components
+import { ProductsPage as ProductsPageImpl, ProductDetailPage } from "@/features/products";
 
 // Import cart and wishlist pages
 import CartPage from "@/features/cart/components/CartPage";
@@ -54,6 +54,13 @@ export const routes = [
     component: ProductsPageImpl, 
     requireAuth: false,
     title: "Products"
+  },
+  {
+    path: "/products/:productId",
+    component: ProductDetailPage,
+    requireAuth: false,
+    title: "Product Details",
+    hideInMenu: true,
   },
   {
     path: "/cart",
