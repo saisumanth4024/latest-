@@ -123,7 +123,7 @@ const authSlice = createSlice({
       if (authMethod === 'replit') {
         // Use setTimeout to ensure state updates before redirect
         setTimeout(() => {
-          window.location.href = '/api/logout';
+          window.location.href = '/api/auth/logout';
         }, 100);
       }
     },
