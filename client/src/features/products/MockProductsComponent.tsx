@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import {
   StarHalf, 
   Loader2
 } from 'lucide-react';
-import useInfiniteScroll from '@/hooks/useInfiniteScroll';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { formatCurrency } from '@/lib/utils';
 
 // Mock product data with realistic details
@@ -338,13 +338,14 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
   filters = {},
   searchQuery = "",
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState(MOCK_PRODUCTS);
-  const productsPerPage = count;
-  const [, setLocation] = useLocation(); // Add this for navigation
+  const productsPerPage = 8; // Show fewer products initially for infinite scroll
+  const [, setLocation] = useLocation();
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
   
   // Filter and sort products based on criteria
   useEffect(() => {
+    setHasReachedEnd(false);
     let result = [...MOCK_PRODUCTS];
     
     // Apply search query filter
@@ -375,11 +376,9 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
           result = result.filter(product => product.price >= 50 && product.price < 100);
           break;
         case '100-200':
-        case '50-100':
           result = result.filter(product => product.price >= 100 && product.price < 200);
           break;
         case '200-500':
-        case '100-200':
           result = result.filter(product => product.price >= 200 && product.price < 500);
           break;
         case '500-1000':
@@ -425,7 +424,6 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
     }
     
     setFilteredProducts(result);
-    setCurrentPage(1); // Reset to first page when filters change
   }, [searchQuery, filters, count]);
   
   // Infinite scroll logic
@@ -488,7 +486,7 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       {/* Products count */}
       <div className="mb-4">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {currentProducts.length} of {filteredProducts.length} products
+          Showing {currentProducts.length > 0 ? currentProducts.length : 0} of {filteredProducts.length} products
         </p>
       </div>
       
@@ -576,32 +574,28 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
         </div>
       )}
       
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center">
-          <div className="flex space-x-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={prevPage}
-              disabled={currentPage === 1}
+      {/* Infinite scroll loader */}
+      {currentProducts.length > 0 && (
+        <div className="mt-8">
+          {hasMore && (
+            <div 
+              ref={lastElementRef} 
+              className="flex justify-center items-center py-4"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <span className="mx-2 flex items-center text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={nextPage}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
+              {loading && (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                  <span>Loading more products...</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {!hasMore && filteredProducts.length > productsPerPage && (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-4">
+              No more products to load
+            </div>
+          )}
         </div>
       )}
     </div>
