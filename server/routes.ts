@@ -1,124 +1,173 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./auth";
+import { getOrders, getOrderDetails, getOrderTracking, getOrderInvoice } from "./routes/orders";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-
   // Auth routes
-  // Login is now handled in the auth.ts file
-  
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // With traditional auth, we already have the user object in req.user
-      res.json(req.user);
+      // For demo purposes, return a mock admin user
+      res.json({
+        id: "1", 
+        role: "admin",
+        email: "admin@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        profileImageUrl: "https://randomuser.me/api/portraits/men/1.jpg"
+      });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // API Routes
-  
-  // Get metrics
-  app.get('/api/metrics', async (req, res) => {
+  // API Status endpoint
+  app.get('/api/status', (req, res) => {
+    res.json([
+      {
+        id: 1,
+        name: "Authentication Service",
+        status: "operational",
+        uptime: 99.98,
+        lastIncident: "2023-11-15T08:12:33Z"
+      },
+      {
+        id: 2,
+        name: "Order Processing",
+        status: "operational",
+        uptime: 99.95,
+        lastIncident: "2023-12-01T14:22:10Z"
+      },
+      {
+        id: 3,
+        name: "Payment Gateway",
+        status: "operational",
+        uptime: 99.99,
+        lastIncident: "2023-10-05T03:45:17Z"
+      },
+      {
+        id: 4,
+        name: "Product Catalog",
+        status: "operational",
+        uptime: 100,
+        lastIncident: null
+      }
+    ]);
+  });
+
+  // API Metrics endpoint
+  app.get('/api/metrics', (req, res) => {
     res.json({
       totalUsers: 12435,
       apiRequests: 45300000,
-      avgResponseTime: 238,
-      errorRate: 0.12
+      avgResponseTime: 128,
+      errorRate: 0.05,
+      lastUpdated: new Date().toISOString()
     });
   });
 
-  // Get API activities
-  app.get('/api/activities', async (req, res) => {
-    const activities = [
-      { id: 1, endpoint: '/api/users', method: 'GET', status: 200, time: '5m ago' },
-      { id: 2, endpoint: '/api/products', method: 'POST', status: 201, time: '12m ago' },
-      { id: 3, endpoint: '/api/auth', method: 'POST', status: 401, time: '15m ago' },
-      { id: 4, endpoint: '/api/orders/123', method: 'PUT', status: 200, time: '20m ago' },
-      { id: 5, endpoint: '/api/users/456', method: 'DELETE', status: 204, time: '25m ago' },
-    ];
-    res.json(activities);
+  // API Activities endpoint
+  app.get('/api/activities', (req, res) => {
+    res.json([
+      {
+        id: 1,
+        endpoint: "/api/users",
+        method: "GET",
+        count: 234567,
+        avgResponseTime: 85,
+        errorRate: 0.02
+      },
+      {
+        id: 2,
+        endpoint: "/api/products",
+        method: "GET",
+        count: 789012,
+        avgResponseTime: 102,
+        errorRate: 0.01
+      },
+      {
+        id: 3,
+        endpoint: "/api/orders",
+        method: "POST",
+        count: 45678,
+        avgResponseTime: 145,
+        errorRate: 0.08
+      },
+      {
+        id: 4,
+        endpoint: "/api/auth",
+        method: "POST",
+        count: 123456,
+        avgResponseTime: 110,
+        errorRate: 0.03
+      }
+    ]);
   });
 
-  // Get API status
-  app.get('/api/status', async (req, res) => {
-    const statuses = [
-      { id: 1, name: 'Authentication Service', status: 'operational' },
-      { id: 2, name: 'User Management API', status: 'operational' },
-      { id: 3, name: 'Data Processing Service', status: 'degraded' },
-      { id: 4, name: 'Storage Service', status: 'operational' },
-      { id: 5, name: 'Notification Service', status: 'operational' },
-    ];
-    res.json(statuses);
+  // Notifications endpoint
+  app.get('/api/notifications', (req, res) => {
+    res.json({
+      unread: 5,
+      notifications: [
+        {
+          id: "1",
+          type: "info",
+          title: "Welcome to the dashboard",
+          message: "Take a tour of the new features",
+          timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+          read: false
+        },
+        {
+          id: "2",
+          type: "success",
+          title: "Order #12345 shipped",
+          message: "Your order has been shipped and will arrive in 2-3 business days",
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          read: false
+        },
+        {
+          id: "3",
+          type: "warning",
+          title: "Subscription expiring soon",
+          message: "Your subscription will expire in 3 days",
+          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          read: false
+        },
+        {
+          id: "4",
+          type: "error",
+          title: "Payment failed",
+          message: "We couldn't process your last payment",
+          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          read: false
+        },
+        {
+          id: "5",
+          type: "info",
+          title: "New feature available",
+          message: "Check out our new reporting dashboard",
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          read: false
+        },
+        {
+          id: "6",
+          type: "success",
+          title: "Account verified",
+          message: "Your account has been successfully verified",
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          read: true
+        }
+      ]
+    });
   });
 
-  // Create user endpoint (using upsertUser instead of createUser)
-  app.post('/api/users', async (req, res) => {
-    try {
-      // With Replit auth, we don't need to create users directly
-      // Users are created via Replit authentication flow
-      res.status(201).json({ 
-        success: true, 
-        message: 'Users are now managed through Replit authentication' 
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, error: 'Could not process request' });
-    }
-  });
-
-  // Deploy API endpoint
-  app.post('/api/deploy', async (req, res) => {
-    // Simulate deployment process
-    setTimeout(() => {
-      res.json({ success: true });
-    }, 1000);
-  });
-
-  // View logs endpoint
-  app.get('/api/logs', async (req, res) => {
-    const logs = [
-      '[2023-07-01 12:34:56] INFO: System startup',
-      '[2023-07-01 12:35:23] INFO: User login - user123',
-      '[2023-07-01 12:36:45] ERROR: Database connection failed',
-      '[2023-07-01 12:37:12] INFO: Database connection restored',
-      '[2023-07-01 12:38:56] WARN: High memory usage detected'
-    ];
-    res.json(logs);
-  });
-
-  // Configure rules endpoint
-  app.post('/api/configure', async (req, res) => {
-    // Simulate configuration process
-    setTimeout(() => {
-      res.json({ success: true });
-    }, 1000);
-  });
-
-  // Refresh data endpoint
-  app.post('/api/refresh', async (req, res) => {
-    // Just return success since all queries will refetch data
-    res.json({ success: true });
-  });
-
-  // Export data endpoint
-  app.get('/api/export', async (req, res) => {
-    // Create a simple CSV string
-    const csv = `Metric,Value
-Total Users,12435
-API Requests,45300000
-Avg Response Time,238ms
-Error Rate,0.12%`;
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=dashboard-export.csv');
-    res.send(csv);
-  });
+  // Orders API routes
+  app.get('/api/orders', getOrders);
+  app.get('/api/orders/:id', getOrderDetails);
+  app.get('/api/orders/:id/tracking', getOrderTracking);
+  app.get('/api/orders/:id/invoice', getOrderInvoice);
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
