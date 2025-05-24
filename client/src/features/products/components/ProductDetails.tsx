@@ -213,23 +213,26 @@ const ProductDetails: React.FC = () => {
           
           {/* Price */}
           <div>
-            {product.discountPrice ? (
+            {enhancedProduct.discount > 0 ? (
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">{formatPrice(product.discountPrice)}</span>
+                <span className="text-3xl font-bold">
+                  {formatPrice(enhancedProduct.discountPrice || 
+                    (enhancedProduct.price * (1 - enhancedProduct.discount / 100)))}
+                </span>
                 <span className="text-xl text-gray-500 dark:text-gray-400 line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(enhancedProduct.price)}
                 </span>
                 <Badge variant="destructive" className="ml-2">
-                  {Math.round((1 - product.discountPrice / product.price) * 100)}% OFF
+                  {enhancedProduct.discount}% OFF
                 </Badge>
               </div>
             ) : (
-              <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+              <span className="text-3xl font-bold">{formatPrice(enhancedProduct.price)}</span>
             )}
           </div>
           
           {/* Short description */}
-          <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
+          <p className="text-gray-600 dark:text-gray-300">{enhancedProduct.description}</p>
           
           {/* Color selection */}
           {colors.length > 0 && (
@@ -373,25 +376,61 @@ const ProductDetails: React.FC = () => {
             value="reviews"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent px-4 py-3 data-[state=active]:bg-transparent"
           >
-            Reviews ({product.reviewCount})
+            Reviews ({enhancedProduct.reviews || enhancedProduct.reviewCount || 0})
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="details" className="mt-6">
           <div className="prose dark:prose-invert max-w-none">
             <h3>Product Details</h3>
-            <p>{product.description}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl nec ultricies lacinia, nisl nisl aliquet nisl, eget aliquet nisl nisl eget nisl. Sed euismod, nisl nec ultricies lacinia, nisl nisl aliquet nisl, eget aliquet nisl nisl eget nisl.</p>
+            <p>{enhancedProduct.description}</p>
             
             <h4>Features</h4>
             <ul>
-              {product.tags.map((tag, index) => (
+              {enhancedProduct.tags && enhancedProduct.tags.map((tag: string, index: number) => (
                 <li key={index}>{tag}</li>
               ))}
-              <li>High-quality materials</li>
-              <li>Durable construction</li>
-              <li>Easy to use and maintain</li>
+              
+              {/* Category-specific features */}
+              {enhancedProduct.category === 'electronics' && (
+                <>
+                  <li>Advanced technology</li>
+                  <li>Energy efficient design</li>
+                  <li>Smart connectivity options</li>
+                </>
+              )}
+              
+              {enhancedProduct.category === 'clothing' && (
+                <>
+                  <li>Premium quality fabrics</li>
+                  <li>Comfortable fit</li>
+                  <li>Durable construction</li>
+                </>
+              )}
+              
+              {enhancedProduct.category === 'home' && (
+                <>
+                  <li>Stylish modern design</li>
+                  <li>Space-saving functionality</li>
+                  <li>Easy assembly and maintenance</li>
+                </>
+              )}
+              
+              {!['electronics', 'clothing', 'home'].includes(enhancedProduct.category || '') && (
+                <>
+                  <li>High-quality materials</li>
+                  <li>Durable construction</li>
+                  <li>Easy to use and maintain</li>
+                </>
+              )}
             </ul>
+            
+            {/* Brand information */}
+            <h4>About {enhancedProduct.brand}</h4>
+            <p>
+              {enhancedProduct.brand} is known for their exceptional quality and attention to detail. 
+              This {enhancedProduct.category} product represents their commitment to innovation and customer satisfaction.
+            </p>
           </div>
         </TabsContent>
         
@@ -462,7 +501,10 @@ const ProductDetails: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="reviews" className="mt-6">
-          <ProductReviews productId={product.id} initialCount={product.reviewCount} />
+          <ProductReviews 
+            productId={enhancedProduct.id} 
+            initialCount={enhancedProduct.reviews || enhancedProduct.reviewCount || 0} 
+          />
         </TabsContent>
       </Tabs>
       
@@ -471,7 +513,7 @@ const ProductDetails: React.FC = () => {
         <h2 className="text-2xl font-bold mb-6">You Might Also Like</h2>
         <ProductRecommendations 
           products={relatedProducts} 
-          currentProductId={product.id}
+          currentProductId={enhancedProduct.id}
         />
       </div>
     </div>
