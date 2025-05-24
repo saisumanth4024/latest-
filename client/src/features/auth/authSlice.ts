@@ -171,6 +171,22 @@ const authSlice = createSlice({
         state.token = null;
         state.refreshToken = null;
         state.expiresAt = null;
+      })
+      .addCase(signup.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(signup.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.expiresAt = action.payload.expiresAt;
+        state.isAuthenticated = true;
+      })
+      .addCase(signup.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });
@@ -250,6 +266,25 @@ export const googleLogin = createAsyncThunk(
   }
 );
 
+export const signup = createAsyncThunk(
+  'auth/signup',
+  async (userData: { username: string; email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest('POST', '/api/auth/signup', userData);
+      const data = await response.json();
+      
+      // Store auth data in localStorage on successful signup
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_refresh_token', data.refreshToken);
+      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Signup failed');
+    }
+  }
+);
+
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { getState, rejectWithValue }) => {
@@ -272,6 +307,45 @@ export const refreshToken = createAsyncThunk(
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Token refresh failed');
+    }
+  }
+);
+
+export const getUserSessions = createAsyncThunk(
+  'auth/getUserSessions',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      
+      if (!state.auth.token) {
+        return rejectWithValue('Not authenticated');
+      }
+      
+      const response = await apiRequest('GET', '/api/auth/sessions');
+      const data = await response.json();
+      
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch user sessions');
+    }
+  }
+);
+
+export const revokeSession = createAsyncThunk(
+  'auth/revokeSession',
+  async (sessionId: string, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      
+      if (!state.auth.token) {
+        return rejectWithValue('Not authenticated');
+      }
+      
+      await apiRequest('DELETE', `/api/auth/sessions/${sessionId}`);
+      
+      return sessionId;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to revoke session');
     }
   }
 );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
-import { selectUserRole } from '@/features/auth/authSlice';
+import { selectUserRole, setAuthState, logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
 import { getNavigationByRole, type UserRole, type NavItem as NavItemType, type NavSection } from '@/config/navigation';
 import { NavIcon } from '@/components/icons/NavIcons';
@@ -50,12 +50,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRole = e.target.value as UserRole;
     
-    // Store the selected role in localStorage for demo purposes
-    window.localStorage.setItem('demoUserRole', JSON.stringify({ role: selectedRole }));
-    
-    // Reload the page to simulate a role change
-    // In a real app, this would be handled by the auth system
-    window.location.reload();
+    // Use Redux action creator to update the auth state with the selected role
+    dispatch(setAuthState(selectedRole));
+  };
+  
+  const handleLogout = () => {
+    dispatch(logout());
   };
   
   return (
