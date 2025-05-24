@@ -5,6 +5,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Router } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { vi } from 'vitest';
 
 // Import reducers
 import authReducer from '@/features/auth/authSlice';
