@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Switch, Route, useLocation, useRoute, Redirect } from "wouter";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
-import { UserRole } from "@/config/navigation";
+import { UserRole } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import NavigationToast from "@/features/navigation/NavigationToast";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
+import { canAccessRoute } from "@/features/auth/rbac";
 
 // Global loading component for lazy-loaded routes
 const GlobalLoadingFallback = () => (
@@ -303,10 +304,13 @@ function AppRouter() {
   const [isSignupMatch] = useRoute("/signup");
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
 
-  // Redirect to login if not authenticated and not already on login/signup page
+  // Redirect to login only if the current route requires authentication
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !isLoginMatch && !isSignupMatch) {
-      navigate("/login");
+      const { canAccess } = canAccessRoute(location, UserRole.GUEST);
+      if (!canAccess) {
+        navigate("/login");
+      }
     }
   }, [isLoading, isAuthenticated, isLoginMatch, isSignupMatch, navigate, location]);
 
@@ -337,17 +341,6 @@ function AppRouter() {
   const content = (
     <ErrorBoundary>
       <Switch>
-        {/* Special handling for the root path - redirect to login if not authenticated */}
-        <Route path="/">
-          {isAuthenticated ? (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <Dashboard />
-            </Suspense>
-          ) : (
-            <RedirectToLogin />
-          )}
-        </Route>
-
         {/* Login and Signup routes should not require auth */}
         <Route path="/login">
           {isAuthenticated ? (
@@ -396,6 +389,17 @@ function AppRouter() {
               />
             );
           })}
+
+        {/* Special handling for the root path - redirect to login if not authenticated */}
+        <Route path="/">
+          {isAuthenticated ? (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <Dashboard />
+            </Suspense>
+          ) : (
+            <RedirectToLogin />
+          )}
+        </Route>
       </Switch>
       <OfflineIndicator />
     </ErrorBoundary>

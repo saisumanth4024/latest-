@@ -14,18 +14,18 @@ interface SelectedFilters {
 }
 
 const SearchResults: React.FC = () => {
-  const [, setLocation] = useLocation();
-  const [location] = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('q') || '';
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   // Parse the search query from the URL
   useEffect(() => {
     const query = new URLSearchParams(location.split('?')[1] || '');
     const q = query.get('q');
-    if (q) {
-      setSearchQuery(q);
-    }
+    setSearchQuery(q || '');
   }, [location]);
   
   // Sorting options
