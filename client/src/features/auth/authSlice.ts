@@ -47,23 +47,26 @@ const initialState: AuthState = {
 
 // Load persisted auth state if available
 try {
-  const token = localStorage.getItem('auth_token');
-  const refreshToken = localStorage.getItem('auth_refresh_token');
-  const expiresAtStr = localStorage.getItem('auth_expires_at');
-  
-  if (token && refreshToken && expiresAtStr) {
-    const expiresAt = parseInt(expiresAtStr, 10);
-    // Only restore if token hasn't expired
-    if (expiresAt && Date.now() < expiresAt * 1000) {
-      initialState.token = token;
-      initialState.refreshToken = refreshToken;
-      initialState.expiresAt = expiresAt;
-      initialState.isAuthenticated = true;
-    } else {
-      // Clear expired tokens
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_refresh_token');
-      localStorage.removeItem('auth_expires_at');
+  const storages: Storage[] = [localStorage, sessionStorage];
+  for (const storage of storages) {
+    const token = storage.getItem('auth_token');
+    const refreshToken = storage.getItem('auth_refresh_token');
+    const expiresAtStr = storage.getItem('auth_expires_at');
+
+    if (token && refreshToken && expiresAtStr) {
+      const expiresAt = parseInt(expiresAtStr, 10);
+      // Only restore if token hasn't expired
+      if (expiresAt && Date.now() < expiresAt * 1000) {
+        initialState.token = token;
+        initialState.refreshToken = refreshToken;
+        initialState.expiresAt = expiresAt;
+        initialState.isAuthenticated = true;
+        break;
+      } else {
+        storage.removeItem('auth_token');
+        storage.removeItem('auth_refresh_token');
+        storage.removeItem('auth_expires_at');
+      }
     }
   }
 } catch (error) {
@@ -71,6 +74,9 @@ try {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('auth_refresh_token');
   localStorage.removeItem('auth_expires_at');
+  sessionStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_refresh_token');
+  sessionStorage.removeItem('auth_expires_at');
 }
 
 // Login async thunk
@@ -88,12 +94,11 @@ export const login = createAsyncThunk(
       
       const data = await response.json();
       
-      // Store auth data in localStorage for persistence
-      if (credentials.rememberMe) {
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_refresh_token', data.refreshToken);
-        localStorage.setItem('auth_expires_at', data.expiresAt.toString());
-      }
+      // Store auth data for persistence
+      const storage = credentials.rememberMe ? localStorage : sessionStorage;
+      storage.setItem('auth_token', data.token);
+      storage.setItem('auth_refresh_token', data.refreshToken);
+      storage.setItem('auth_expires_at', data.expiresAt.toString());
       
       return data;
     } catch (error: any) {
@@ -133,6 +138,9 @@ const authSlice = createSlice({
       localStorage.removeItem('auth_expires_at');
       localStorage.removeItem('demoUserRole');
       localStorage.removeItem('auth');
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_refresh_token');
+      sessionStorage.removeItem('auth_expires_at');
       sessionStorage.removeItem('redirectAfterLogin');
       
       // Any other auth-related items should be cleared here
@@ -319,10 +327,11 @@ export const githubLogin = createAsyncThunk(
       const response = await apiRequest('POST', '/api/auth/github', { code });
       const data = await response.json();
       
-      // Store auth data in localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_refresh_token', data.refreshToken);
-      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      // Store auth data in whichever storage is currently used
+      const storage = localStorage.getItem('auth_token') ? localStorage : sessionStorage;
+      storage.setItem('auth_token', data.token);
+      storage.setItem('auth_refresh_token', data.refreshToken);
+      storage.setItem('auth_expires_at', data.expiresAt.toString());
       
       return data;
     } catch (error: any) {
@@ -338,10 +347,11 @@ export const googleLogin = createAsyncThunk(
       const response = await apiRequest('POST', '/api/auth/google', { token });
       const data = await response.json();
       
-      // Store auth data in localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_refresh_token', data.refreshToken);
-      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      // Store auth data in whichever storage is currently used
+      const storage = localStorage.getItem('auth_token') ? localStorage : sessionStorage;
+      storage.setItem('auth_token', data.token);
+      storage.setItem('auth_refresh_token', data.refreshToken);
+      storage.setItem('auth_expires_at', data.expiresAt.toString());
       
       return data;
     } catch (error: any) {
@@ -397,9 +407,10 @@ export const refreshToken = createAsyncThunk(
       const data = await response.json();
       
       // Update stored auth data
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_refresh_token', data.refreshToken);
-      localStorage.setItem('auth_expires_at', data.expiresAt.toString());
+      const storage = localStorage.getItem('auth_token') ? localStorage : sessionStorage;
+      storage.setItem('auth_token', data.token);
+      storage.setItem('auth_refresh_token', data.refreshToken);
+      storage.setItem('auth_expires_at', data.expiresAt.toString());
       
       return data;
     } catch (error: any) {
