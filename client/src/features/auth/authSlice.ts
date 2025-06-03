@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, createAction, PayloadAction } from '@red
 import { RootState } from '@/app/store';
 import { apiRequest } from '@/lib/queryClient';
 import { User, UserStatus } from './types';
-import { UserRole } from '@/config/navigation';
+import type { UserRole } from '@/types';
 
 /**
  * Authentication slice for Redux Toolkit

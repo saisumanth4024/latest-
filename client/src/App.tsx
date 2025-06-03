@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Switch, Route, useLocation, useRoute, Redirect } from "wouter";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
-import { UserRole } from "@/config/navigation";
+import { UserRole } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,14 @@ const SellerDashboardPage = withErrorBoundary(() => <PlaceholderPage title="Sell
 export const routes = [
   {
     path: "/",
+    component: Dashboard,
+    exact: true,
+    requireAuth: true,
+    title: "Dashboard",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
+  },
+  {
+    path: "/dashboard",
     component: Dashboard,
     exact: true,
     requireAuth: true,
@@ -341,17 +349,6 @@ function AppRouter() {
   const content = (
     <ErrorBoundary>
       <Switch>
-        {/* Special handling for the root path - redirect to login if not authenticated */}
-        <Route path="/">
-          {isAuthenticated ? (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <Dashboard />
-            </Suspense>
-          ) : (
-            <RedirectToLogin />
-          )}
-        </Route>
-
         {/* Login and Signup routes should not require auth */}
         <Route path="/login">
           {isAuthenticated ? (
@@ -400,6 +397,17 @@ function AppRouter() {
               />
             );
           })}
+
+        {/* Special handling for the root path - redirect to login if not authenticated */}
+        <Route path="/">
+          {isAuthenticated ? (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <Dashboard />
+            </Suspense>
+          ) : (
+            <RedirectToLogin />
+          )}
+        </Route>
       </Switch>
       <OfflineIndicator />
     </ErrorBoundary>

@@ -20,7 +20,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 // Import cart and wishlist state from Redux store
 import { RootState } from '@/app/store';
 import { useAppSelector } from '@/app/hooks';
-import { UserRole } from '@/config/navigation';
+import type { UserRole } from '@/types';
 import { selectCartItemsCount } from '@/features/cart/cartSlice';
 
 import {
@@ -54,7 +54,7 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -69,8 +69,15 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle search logic
-    // Navigate to search results page
+
+    // Navigate to search results page if a query is provided
+    if (searchQuery.trim()) {
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      // If no query, just go to the search page
+      setLocation('/search');
+    }
+
   };
   
   const getInitials = (name: string) => {

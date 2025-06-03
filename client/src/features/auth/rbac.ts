@@ -172,6 +172,11 @@ export const ROUTE_CONFIG: Record<string, RouteConfig> = {
   '/': {
     requireAuth: false,
   },
+  '/dashboard': {
+    requireAuth: true,
+    permissions: ['dashboard:access'],
+    redirectTo: '/login',
+  },
   '/login': {
     requireAuth: false,
   },

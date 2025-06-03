@@ -65,6 +65,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/login');
   });
 
+  // Redirect legacy dashboard path to root
+  app.get('/dashboard', (_req, res) => {
+    res.redirect('/');
+  });
+
   // API Status endpoint
   app.get('/api/status', (req, res) => {
     res.json([
