@@ -14,7 +14,7 @@ import { Loader } from '@/components/ui/Loader';
 
 // Form validation schema using Zod
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username or email is required'),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional().default(false),
 });
@@ -38,7 +38,7 @@ export default function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
       rememberMe: false,
     },
@@ -49,7 +49,7 @@ export default function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
     try {
       setError(null);
       const success = await login({
-        username: values.username,
+        username: values.email,
         password: values.password,
         rememberMe: values.rememberMe,
       });
@@ -94,19 +94,20 @@ export default function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
             </Alert>
           )}
           
-          {/* Username/Email field */}
+          {/* Email field */}
           <FormField
             control={form.control}
-            name="username"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username or Email</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter your username or email" 
-                    {...field} 
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    {...field}
                     disabled={isLoading}
-                    autoComplete="username"
+                    autoComplete="email"
                   />
                 </FormControl>
                 <FormMessage />

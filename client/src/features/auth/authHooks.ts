@@ -68,7 +68,13 @@ export function useAuth() {
   
   // Login method
   const login = async (credentials: UserCredentials) => {
-    const resultAction = await dispatch(loginAction(credentials));
+    const resultAction = await dispatch(
+      loginAction({
+        email: (credentials as any).email || credentials.username,
+        password: credentials.password,
+        rememberMe: (credentials as any).rememberMe ?? credentials.remember,
+      })
+    );
     
     if (loginAction.fulfilled.match(resultAction)) {
       toast.success({ 
