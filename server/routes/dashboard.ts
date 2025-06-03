@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 
 export const getDashboardLayout = (req: Request, res: Response) => {
   res.json({
@@ -128,3 +128,16 @@ export const getSearchTerms = (req: Request, res: Response) => {
     { term: 'headphones', count: 80, percentChange: 3 },
   ]);
 };
+
+// Express router that wires the handlers above
+const router = Router();
+router.get('/layouts', getDashboardLayout);
+router.post('/layouts', updateDashboardLayout);
+router.get('/data', getDashboardData);
+router.get('/revenue', getRevenueData);
+router.get('/orders/stats', getOrderStats);
+router.get('/products/top', getTopProducts);
+router.get('/customers/stats', getCustomerStats);
+router.get('/search/terms', getSearchTerms);
+
+export default router;

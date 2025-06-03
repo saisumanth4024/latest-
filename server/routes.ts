@@ -12,16 +12,7 @@ import {
   getBestSellers,
   getProductRecommendations
 } from "./routes/products";
-import {
-  getDashboardLayout,
-  updateDashboardLayout,
-  getDashboardData,
-  getRevenueData,
-  getOrderStats,
-  getTopProducts,
-  getCustomerStats,
-  getSearchTerms,
-} from "./routes/dashboard";
+import dashboardRouter from "./routes/dashboard";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -221,14 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard API routes
-  app.get('/api/dashboard/layouts', getDashboardLayout);
-  app.post('/api/dashboard/layouts', updateDashboardLayout);
-  app.get('/api/dashboard/data', getDashboardData);
-  app.get('/api/dashboard/revenue', getRevenueData);
-  app.get('/api/dashboard/orders/stats', getOrderStats);
-  app.get('/api/dashboard/products/top', getTopProducts);
-  app.get('/api/dashboard/customers/stats', getCustomerStats);
-  app.get('/api/dashboard/search/terms', getSearchTerms);
+  app.use('/api/dashboard', dashboardRouter);
 
   // Orders API routes
   app.get('/api/orders', getOrders);
