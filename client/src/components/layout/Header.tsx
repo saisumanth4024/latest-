@@ -26,7 +26,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const wishlistItemsCount = useAppSelector((state) => state.wishlist.wishlists.reduce((count, list) => count + list.items.length, 0));
   
   return (
-    <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm py-2 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+    <header
+      className="sticky top-0 z-20 flex items-center justify-between border-b border-transparent bg-gradient-to-r from-blue-600 to-green-500 py-3 px-4 text-white shadow-md dark:from-blue-800 dark:to-green-700"
+    >
       <div className="flex items-center">
         <button 
           onClick={toggleSidebar}
@@ -39,42 +41,42 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </button>
         <Link href="/">
           <div className="flex items-center space-x-2 cursor-pointer">
-            <svg viewBox="0 0 24 24" className="h-8 w-8 text-primary-600 dark:text-primary-400" fill="currentColor">
+            <svg viewBox="0 0 24 24" className="h-8 w-8 text-white" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
             </svg>
-            <span className="font-bold text-xl tracking-tight text-primary-800 dark:text-primary-200">Enterprise App</span>
+            <span className="font-bold text-xl tracking-tight text-white">ShopEase</span>
           </div>
         </Link>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex ml-6 space-x-4">
           <Link href="/">
-            <div className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer">Dashboard</div>
+            <div className="cursor-pointer rounded px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Dashboard</div>
           </Link>
           <Link href="/products">
-            <div className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer">Products</div>
+            <div className="cursor-pointer rounded px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Products</div>
           </Link>
           <Link href="/orders">
-            <div className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer">Orders</div>
+            <div className="cursor-pointer rounded px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Orders</div>
           </Link>
           <Link href="/search">
-            <div className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer">Search</div>
+            <div className="cursor-pointer rounded px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Search</div>
           </Link>
         </nav>
       </div>
       
       <div className="flex items-center space-x-4">
         {/* Global Search */}
-        <div className="relative hidden sm:block w-72">
+        <div className="relative hidden sm:block w-96">
           <GlobalSearch />
         </div>
         
         {/* Wishlist Icon */}
         <Link href="/wishlists">
-          <div className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
-            <Heart className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          <div className="relative cursor-pointer rounded-full p-2 hover:bg-white/10">
+            <Heart className="h-5 w-5 text-white" />
             {wishlistItemsCount > 0 && (
-              <Badge 
+              <Badge
                 variant="secondary"
                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
               >
@@ -86,10 +88,10 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         
         {/* Cart Icon */}
         <Link href="/cart">
-          <div className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">
-            <ShoppingCart className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          <div className="relative cursor-pointer rounded-full p-2 hover:bg-white/10">
+            <ShoppingCart className="h-5 w-5 text-white" />
             {cartItemsCount > 0 && (
-              <Badge 
+              <Badge
                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
               >
                 {cartItemsCount > 99 ? '99+' : cartItemsCount}
@@ -107,9 +109,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* Custom Logout Button */}
         {isAuthenticated && (
           <div className="hidden md:block">
-            <LogoutButton 
-              variant="outline" 
-              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 border-red-200"
+            <LogoutButton
+              variant="outline"
+              className="border-white bg-white/20 px-4 py-2 text-white hover:bg-white/30"
             />
           </div>
         )}
@@ -117,7 +119,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* If not authenticated, show login button */}
         {!isAuthenticated && (
           <Link href="/login">
-            <div className="px-4 py-2 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-300 rounded-md text-sm font-medium cursor-pointer">
+            <div className="cursor-pointer rounded-md bg-yellow-400 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-yellow-300">
               Log In
             </div>
           </Link>
