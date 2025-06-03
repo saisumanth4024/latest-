@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { cn, formatNumber, formatCurrency, formatTimeAgo } from './utils';
+import {
+  cn,
+  formatNumber,
+  formatCurrency,
+  formatTimeAgo,
+  formatDate,
+  formatTime,
+  truncateText,
+  generateId,
+  debounce,
+  capitalizeFirstLetter,
+  isEmptyObject,
+  removeDuplicates
+} from './utils';
 
 describe('Utility Functions', () => {
   describe('cn function', () => {
@@ -111,6 +124,49 @@ describe('Utility Functions', () => {
       const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
       
       expect(formatTimeAgo(twoYearsAgo)).toBe('2 years ago');
+    });
+  });
+});
+  describe('additional utility functions', () => {
+    it('formats a date string', () => {
+      expect(formatDate('2023-01-01T00:00:00Z')).toBe('January 1, 2023');
+    });
+
+    it('formats time', () => {
+      const timestamp = Date.parse('2023-01-01T12:00:00Z');
+      expect(formatTime(timestamp)).toMatch(/12:00/);
+    });
+
+    it('truncates text', () => {
+      expect(truncateText('Hello world', 5)).toBe('Hello...');
+    });
+
+    it('generates id of length 7', () => {
+      expect(generateId()).toMatch(/^[a-z0-9]{7}$/);
+    });
+
+    it('debounces function calls', () => {
+      vi.useFakeTimers();
+      const fn = vi.fn();
+      const debounced = debounce(fn, 100);
+      debounced();
+      debounced();
+      vi.advanceTimersByTime(100);
+      expect(fn).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it('capitalizes first letter', () => {
+      expect(capitalizeFirstLetter('hello')).toBe('Hello');
+    });
+
+    it('checks empty object', () => {
+      expect(isEmptyObject({})).toBe(true);
+      expect(isEmptyObject({ a: 1 })).toBe(false);
+    });
+
+    it('removes duplicates', () => {
+      expect(removeDuplicates([1, 1, 2, 3])).toEqual([1, 2, 3]);
     });
   });
 });

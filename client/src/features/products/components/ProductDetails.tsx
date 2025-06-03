@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '@/app/hooks';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,8 @@ import {
   Check
 } from 'lucide-react';
 import { useGetProductByIdQuery, useGetProductsQuery } from '../productsApi';
+import { addToCart } from '@/features/cart/cartSlice';
+import { useToast } from '@/hooks/use-toast';
 import ProductImageGallery from './ProductImageGallery';
 import ProductReviews from './ProductReviews';
 import ProductRecommendations from './ProductRecommendations';
@@ -28,7 +30,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const ProductDetails: React.FC = () => {
   const params = useParams<{ id: string }>();
   const productId = parseInt(params.id, 10);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const { toast } = useToast();
   
   // State for product customization (size, color, quantity)
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -85,12 +88,40 @@ const ProductDetails: React.FC = () => {
   
   // Handle add to cart
   const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', {
-      productId,
-      quantity,
-      color: selectedColor,
-      size: selectedSize
+    if (!product) return;
+
+    dispatch(
+      addToCart({
+        productId: product.id,
+        product: {
+          name: product.name,
+          imageUrl: product.image || product.imageUrl,
+          price: product.price,
+          sku: product.sku,
+          brand: product.brand,
+        },
+        quantity,
+        unitPrice: product.price,
+        discountTotal:
+          product.discount && product.discount > 0
+            ? product.price * (product.discount / 100)
+            : 0,
+        sku: product.sku,
+        options: {
+          ...(selectedColor ? { color: selectedColor } : {}),
+          ...(selectedSize ? { size: selectedSize } : {}),
+        },
+        isDigital: product.isDigital || false,
+        requiresShipping: product.requiresShipping !== false,
+        isTaxExempt: false,
+        weight: product.weight,
+      })
+    );
+
+    toast({
+      title: 'Added to cart',
+      description: `${product.name} has been added to your cart.`,
+      variant: 'success',
     });
   };
   
