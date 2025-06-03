@@ -2,16 +2,26 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getOrders, getOrderDetails, getOrderTracking, getOrderInvoice } from "./routes/orders";
-import { 
-  getProducts, 
-  getProductById, 
-  getProductsByCategory, 
-  searchProducts, 
-  getFeaturedProducts, 
-  getNewArrivals, 
-  getBestSellers, 
-  getProductRecommendations 
+import {
+  getProducts,
+  getProductById,
+  getProductsByCategory,
+  searchProducts,
+  getFeaturedProducts,
+  getNewArrivals,
+  getBestSellers,
+  getProductRecommendations
 } from "./routes/products";
+import {
+  getDashboardLayout,
+  updateDashboardLayout,
+  getDashboardData,
+  getRevenueData,
+  getOrderStats,
+  getTopProducts,
+  getCustomerStats,
+  getSearchTerms,
+} from "./routes/dashboard";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -204,11 +214,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: "Account verified",
           message: "Your account has been successfully verified",
           timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          read: true
-        }
-      ]
-    });
+      read: true
+      }
+    ]
   });
+  });
+
+  // Dashboard API routes
+  app.get('/api/dashboard/layouts', getDashboardLayout);
+  app.post('/api/dashboard/layouts', updateDashboardLayout);
+  app.get('/api/dashboard/data', getDashboardData);
+  app.get('/api/dashboard/revenue', getRevenueData);
+  app.get('/api/dashboard/orders/stats', getOrderStats);
+  app.get('/api/dashboard/products/top', getTopProducts);
+  app.get('/api/dashboard/customers/stats', getCustomerStats);
+  app.get('/api/dashboard/search/terms', getSearchTerms);
 
   // Orders API routes
   app.get('/api/orders', getOrders);
