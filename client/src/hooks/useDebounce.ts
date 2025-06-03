@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 
 /**
  * A hook that provides a debounced value.
@@ -13,7 +14,9 @@ export function useDebounce<T>(value: T, delay: number): T {
   useEffect(() => {
     // Set a timeout to update the debounced value after the specified delay
     const timer = setTimeout(() => {
-      setDebouncedValue(value);
+      flushSync(() => {
+        setDebouncedValue(value);
+      });
     }, delay);
 
     // Clean up the timeout if the value changes before the delay has elapsed

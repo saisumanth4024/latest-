@@ -11,26 +11,23 @@ interface NetworkStatusResult {
  * @returns Object containing network status information
  */
 export function useNetworkStatus(): NetworkStatusResult {
-  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-  const [wasOffline, setWasOffline] = useState<boolean>(false);
-  const [since, setSince] = useState<Date | null>(null);
+  const initialOnline = navigator.onLine;
+  const [isOnline, setIsOnline] = useState<boolean>(initialOnline);
+  const [wasOffline, setWasOffline] = useState<boolean>(!initialOnline);
+  const [since, setSince] = useState<Date | null>(initialOnline ? null : new Date());
 
   useEffect(() => {
     // Handler for online status
     const handleOnline = () => {
-      if (!isOnline) {
-        setIsOnline(true);
-        setSince(new Date());
-      }
+      setIsOnline(true);
+      setSince(new Date());
     };
 
     // Handler for offline status
     const handleOffline = () => {
-      if (isOnline) {
-        setIsOnline(false);
-        setWasOffline(true);
-        setSince(new Date());
-      }
+      setIsOnline(false);
+      setWasOffline(true);
+      setSince(new Date());
     };
 
     // Add event listeners
@@ -42,7 +39,7 @@ export function useNetworkStatus(): NetworkStatusResult {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [isOnline]);
+  }, []);
 
   return { isOnline, wasOffline, since };
 }
@@ -61,13 +58,10 @@ export function useSlowConnection(): boolean {
         const connection = (navigator as any).connection;
         
         if (connection) {
-          // Check if the effective type is 2G or 3G (slow connections)
           const isSlowType = connection.effectiveType === '2g' || connection.effectiveType === '3g';
-          
-          // Check if the downlink is less than 1Mbps
           const isSlowSpeed = connection.downlink < 1;
-          
-          setIsSlowConnection(isSlowType || isSlowSpeed);
+          const isSaveData = connection.saveData === true;
+          setIsSlowConnection(isSlowType || isSlowSpeed || isSaveData);
         }
       }
     };
@@ -76,12 +70,13 @@ export function useSlowConnection(): boolean {
     checkConnectionSpeed();
 
     // Add event listener for connection changes if available
-    if ('connection' in navigator && (navigator as any).connection) {
-      (navigator as any).connection.addEventListener('change', checkConnectionSpeed);
-      
+    const connection = (navigator as any).connection;
+    if (connection && typeof connection.addEventListener === 'function') {
+      connection.addEventListener('change', checkConnectionSpeed);
+
       // Remove event listener on cleanup
       return () => {
-        (navigator as any).connection.removeEventListener('change', checkConnectionSpeed);
+        connection.removeEventListener('change', checkConnectionSpeed);
       };
     }
   }, []);

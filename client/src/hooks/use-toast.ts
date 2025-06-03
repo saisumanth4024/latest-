@@ -175,11 +175,25 @@ function useToast() {
     }
   }, [])
 
+  const makeVariantToast = (variant: ToasterToast["variant"]) =>
+    (props: Omit<Toast, "variant">) => toast({ ...props, variant })
+
+  const update = (toast: Partial<ToasterToast> & { id: string }) =>
+    dispatch({ type: actionTypes.UPDATE_TOAST, toast })
+
+  const clearAll = () => dispatch({ type: actionTypes.REMOVE_TOAST })
+
   return {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
     remove: (toastId?: string) => dispatch({ type: actionTypes.REMOVE_TOAST, toastId }),
+    update,
+    clearAll,
+    success: makeVariantToast('success'),
+    error: makeVariantToast('destructive'),
+    warning: makeVariantToast('warning'),
+    info: makeVariantToast('info'),
   }
 }
 

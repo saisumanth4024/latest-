@@ -15,12 +15,13 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formats a number as currency
  */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount: number, currency = 'USD'): string {
+  const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount);
+    currency,
+    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+  });
+  return formatter.format(amount);
 }
 
 /**
@@ -35,6 +36,10 @@ export function formatTime(timestamp: number): string {
  */
 export function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
+
+  if (seconds < 60) {
+    return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`;
+  }
   
   let interval = Math.floor(seconds / 31536000);
   if (interval >= 1) {
@@ -83,6 +88,15 @@ export function formatDate(dateString: string, options: Intl.DateTimeFormatOptio
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return `${text.substring(0, maxLength)}...`;
+}
+
+/**
+ * Formats a number with thousands separators
+ */
+export function formatNumber(value: number): string {
+  const [int, dec] = value.toString().split('.');
+  const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return dec ? `${formatted}.${dec}` : formatted;
 }
 
 /**
