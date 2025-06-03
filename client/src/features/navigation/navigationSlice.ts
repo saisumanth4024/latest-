@@ -8,7 +8,7 @@ export interface NavigationState {
   lastTransitionTime: number | null;
 }
 
-const initialState: NavigationState = {
+export const initialState: NavigationState = {
   previousPath: null,
   currentPath: null,
   navigationHistory: [],
@@ -20,18 +20,22 @@ export const navigationSlice = createSlice({
   initialState,
   reducers: {
     navigateTo: (state, action: PayloadAction<string>) => {
+      if (state.currentPath === action.payload) {
+        return;
+      }
+
       // Update previous path
       state.previousPath = state.currentPath;
-      
+
       // Set new current path
       state.currentPath = action.payload;
-      
+
       // Add to history (limited to last 10 entries)
       state.navigationHistory = [
         action.payload,
         ...state.navigationHistory.slice(0, 9)
       ];
-      
+
       // Set transition time
       state.lastTransitionTime = Date.now();
     },

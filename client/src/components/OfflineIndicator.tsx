@@ -5,15 +5,19 @@ import useNetworkStatus from '@/hooks/useNetworkStatus';
 /**
  * Component that displays an offline notification when the user loses connection
  */
+import { formatDistanceToNow } from 'date-fns';
+
 const OfflineIndicator: React.FC = () => {
-  const { isOnline } = useNetworkStatus();
+  const { isOnline, since } = useNetworkStatus();
   
   if (isOnline) return null;
   
   return (
     <div className="fixed bottom-4 right-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-4 py-2 rounded-md shadow-lg z-50 flex items-center gap-2">
       <WifiOff className="h-4 w-4" />
-      <span>You are currently offline. Some features may be unavailable.</span>
+      <span>
+        You are offline{since ? ` (${formatDistanceToNow(since)} ago)` : ''}. Some features may be unavailable.
+      </span>
     </div>
   );
 };

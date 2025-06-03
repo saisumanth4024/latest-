@@ -6,18 +6,40 @@ import * as api from '../productsApi';
 import * as hooks from '@/app/hooks';
 import { useToast } from '@/hooks/use-toast';
 import * as wouter from 'wouter';
+import React from 'react';
+import ProductRecommendations from './ProductRecommendations';
 
 vi.mock('../productsApi');
 vi.mock('@/app/hooks');
 vi.mock('@/hooks/use-toast');
-vi.mock('wouter');
+vi.mock('wouter', async () => {
+  const actual = await vi.importActual<typeof import('wouter')>('wouter');
+  return {
+    ...actual,
+    useParams: vi.fn(),
+  };
+});
+vi.mock('./ProductRecommendations', () => ({
+  __esModule: true,
+  default: () => <div />,
+}));
 
 describe('ProductDetails', () => {
   it('adds item to cart when button is clicked', async () => {
     (wouter.useParams as unknown as vi.Mock).mockReturnValue({ id: '1' });
 
     (api.useGetProductByIdQuery as unknown as vi.Mock).mockReturnValue({
-      data: { id: 1, name: 'Test', price: 10, sku: 'sku1', brand: 'Brand', inStock: true },
+      data: {
+        id: 1,
+        name: 'Test',
+        price: 10,
+        sku: 'sku1',
+        brand: 'Brand',
+        inStock: true,
+        rating: 4.5,
+        reviews: 10,
+        tags: [],
+      },
       isLoading: false,
     });
     (api.useGetProductsQuery as unknown as vi.Mock).mockReturnValue({

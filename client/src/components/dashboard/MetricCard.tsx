@@ -20,7 +20,7 @@ export default function MetricCard({
   linkHref,
 }: MetricCardProps) {
   return (
-    <div className="bg-white dark:bg-slate-800 overflow-hidden shadow rounded-lg">
+    <div className="bg-white dark:bg-slate-800 overflow-hidden shadow rounded-lg transition-transform hover:scale-105 hover:shadow-lg">
       <div className="p-5">
         <div className="flex items-center">
           <div className="flex-shrink-0">

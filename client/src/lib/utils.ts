@@ -86,6 +86,15 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 /**
+ * Formats a number with thousands separators
+ */
+export function formatNumber(value: number): string {
+  const [int, dec] = value.toString().split('.');
+  const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return dec ? `${formatted}.${dec}` : formatted;
+}
+
+/**
  * Generates a random ID
  */
 export function generateId(): string {

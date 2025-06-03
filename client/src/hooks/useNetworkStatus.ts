@@ -76,12 +76,13 @@ export function useSlowConnection(): boolean {
     checkConnectionSpeed();
 
     // Add event listener for connection changes if available
-    if ('connection' in navigator && (navigator as any).connection) {
-      (navigator as any).connection.addEventListener('change', checkConnectionSpeed);
-      
+    const connection = (navigator as any).connection;
+    if (connection && typeof connection.addEventListener === 'function') {
+      connection.addEventListener('change', checkConnectionSpeed);
+
       // Remove event listener on cleanup
       return () => {
-        (navigator as any).connection.removeEventListener('change', checkConnectionSpeed);
+        connection.removeEventListener('change', checkConnectionSpeed);
       };
     }
   }, []);
