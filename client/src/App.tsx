@@ -11,6 +11,7 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import NavigationToast from "@/features/navigation/NavigationToast";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
+import { canAccessRoute } from "@/features/auth/rbac";
 
 // Global loading component for lazy-loaded routes
 const GlobalLoadingFallback = () => (
@@ -303,10 +304,13 @@ function AppRouter() {
   const [isSignupMatch] = useRoute("/signup");
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
 
-  // Redirect to login if not authenticated and not already on login/signup page
+  // Redirect to login only if the current route requires authentication
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !isLoginMatch && !isSignupMatch) {
-      navigate("/login");
+      const { canAccess } = canAccessRoute(location, UserRole.GUEST);
+      if (!canAccess) {
+        navigate("/login");
+      }
     }
   }, [isLoading, isAuthenticated, isLoginMatch, isSignupMatch, navigate, location]);
 
