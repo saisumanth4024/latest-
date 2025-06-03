@@ -126,7 +126,7 @@ describe('Utility Functions', () => {
       expect(formatTimeAgo(twoYearsAgo)).toBe('2 years ago');
     });
   });
-});
+
   describe('additional utility functions', () => {
     it('formats a date string', () => {
       expect(formatDate('2023-01-01T00:00:00Z')).toBe('January 1, 2023');
