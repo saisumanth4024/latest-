@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Switch, Route, useLocation, useRoute, Redirect } from "wouter";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
-import { UserRole } from "@/config/navigation";
+import { UserRole } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";

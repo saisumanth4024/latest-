@@ -1,5 +1,5 @@
 // Authentication Types
-import { UserRole } from '@/config/navigation';
+import type { UserRole } from '@/types';
 
 export enum UserStatus {
   ACTIVE = 'active',
