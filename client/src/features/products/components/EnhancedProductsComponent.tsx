@@ -594,7 +594,8 @@ const EnhancedProductsComponent: React.FC<EnhancedProductsComponentProps> = ({
 };
 
 // Mock products data
-const MOCK_PRODUCTS = [
+
+const ADDITIONAL_PRODUCTS = [
   {
     id: "1",
     name: "Ultra Wireless Headphones",

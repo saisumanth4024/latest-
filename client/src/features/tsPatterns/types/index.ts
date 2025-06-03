@@ -9,10 +9,58 @@
 /**
  * Represents an item with an ID and display properties
  */
+// Product Type Discriminated Unions
+export interface BaseProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+}
+
+export interface PhysicalProduct extends BaseProduct {
+  type: 'physical';
+  weight: number;
+  dimensions: {
+    width: number;
+    height: number;
+    depth: number;
+  };
+  stockLevel: number;
+}
+
+export interface DigitalProduct extends BaseProduct {
+  type: 'digital';
+  fileSize: number;
+  downloadUrl: string;
+  fileFormat: string;
+}
+
+export interface SubscriptionProduct extends BaseProduct {
+  type: 'subscription';
+  billingCycle: 'monthly' | 'quarterly' | 'yearly';
+  trialPeriod: number;
+  features: string[];
+}
+
+export type ProductType = PhysicalProduct | DigitalProduct | SubscriptionProduct;
+
+// Type guards for product types
+export const isPhysicalProduct = (product: ProductType): product is PhysicalProduct => {
+  return product.type === 'physical';
+};
+
+export const isDigitalProduct = (product: ProductType): product is DigitalProduct => {
+  return product.type === 'digital';
+};
+
+export const isSubscriptionProduct = (product: ProductType): product is SubscriptionProduct => {
+  return product.type === 'subscription';
+};
 export interface Identifiable {
   id: string | number;
   name: string;
-  description?: string;
+   description?: string;
 }
 
 /**
