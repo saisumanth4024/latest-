@@ -20,7 +20,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 // Import cart and wishlist state from Redux store
 import { RootState } from '@/app/store';
 import { useAppSelector } from '@/app/hooks';
-import { UserRole } from '@/config/navigation';
+import type { UserRole } from '@/types';
 import { selectCartItemsCount } from '@/features/cart/cartSlice';
 
 import {
