@@ -70,7 +70,6 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle search logic
-    console.log('Searching for:', searchQuery);
     // Navigate to search results page
   };
   

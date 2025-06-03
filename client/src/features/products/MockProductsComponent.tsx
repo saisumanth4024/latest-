@@ -245,13 +245,10 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
   
   // Filter and sort products based on criteria
   useEffect(() => {
-    console.log('Effect running with:', { searchQuery, filters });
-    
     setHasReachedEnd(false);
-    
+
     // Always start with all products
     let result = [...MOCK_PRODUCTS];
-    console.log('Total products initially:', result.length);
     
     // Search functionality - extremely permissive to ensure results
     if (searchQuery && searchQuery.trim()) {
@@ -280,11 +277,8 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       
       // If no results found, show all products rather than an empty list
       if (result.length === 0) {
-        console.log('No exact matches, showing all products');
         result = [...MOCK_PRODUCTS];
       }
-      
-      console.log('Products found after search:', result.length);
     }
     
     // Apply category filter

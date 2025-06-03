@@ -129,7 +129,11 @@ export const getProductById = (req: Request, res: Response) => {
     const product = productsCache.find(p => p.id === productId);
     
     if (!product) {
-      console.log(`Product not found with ID: ${productId}. Available IDs: ${productsCache.map(p => p.id).join(', ')}`);
+      console.warn(
+        `Product not found with ID: ${productId}. Available IDs: ${productsCache
+          .map((p) => p.id)
+          .join(', ')}`
+      );
       return res.status(404).json({ message: 'Product not found' });
     }
     
