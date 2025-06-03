@@ -10,8 +10,6 @@ export const ProductList: React.FC<ProductListProps> = ({ products }) => {
   // Use sampleProducts if products is undefined or an empty array
   const displayProducts = products && products.length > 0 ? products : sampleProducts;
 
-  // Debug: log products to console
-  console.log('ProductList displayProducts:', displayProducts);
 
   return (
     <div>

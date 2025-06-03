@@ -154,7 +154,9 @@ const TypeScriptPatternsDemo: React.FC = () => {
                   <GenericDropdown
                     items={sampleUsers}
                     value={sampleUsers[0].id}
-                    onChange={(value) => console.log('Selected user:', value)}
+                    onChange={(value) => {
+                      /* handle selection */
+                    }}
                     label="Select User"
                     getDisplayText={(user) => `${user.name} (${user.role})`}
                   />

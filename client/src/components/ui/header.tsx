@@ -69,6 +69,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+
     // Navigate to search results page if a query is provided
     if (searchQuery.trim()) {
       setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -76,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onThemeToggle, isDarkMode }) => 
       // If no query, just go to the search page
       setLocation('/search');
     }
+
   };
   
   const getInitials = (name: string) => {
