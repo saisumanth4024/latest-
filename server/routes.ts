@@ -2,16 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getOrders, getOrderDetails, getOrderTracking, getOrderInvoice } from "./routes/orders";
-import { 
-  getProducts, 
-  getProductById, 
-  getProductsByCategory, 
-  searchProducts, 
-  getFeaturedProducts, 
-  getNewArrivals, 
-  getBestSellers, 
-  getProductRecommendations 
+import {
+  getProducts,
+  getProductById,
+  getProductsByCategory,
+  searchProducts,
+  getFeaturedProducts,
+  getNewArrivals,
+  getBestSellers,
+  getProductRecommendations
 } from "./routes/products";
+import dashboardRouter from "./routes/dashboard";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -204,11 +205,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: "Account verified",
           message: "Your account has been successfully verified",
           timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          read: true
-        }
-      ]
-    });
+      read: true
+      }
+    ]
   });
+  });
+
+  // Dashboard API routes
+  app.use('/api/dashboard', dashboardRouter);
 
   // Orders API routes
   app.get('/api/orders', getOrders);
