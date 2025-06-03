@@ -22,6 +22,7 @@ const NavigationToast = () => {
     // Define routes map
     const pathToTitle: Record<string, string> = {
       "/": "Dashboard",
+      "/dashboard": "Dashboard",
       "/login": "Login",
       "/signup": "Sign Up",
       "/products": "Products",

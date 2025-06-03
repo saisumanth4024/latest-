@@ -66,6 +66,14 @@ export const routes = [
     roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
   },
   {
+    path: "/dashboard",
+    component: Dashboard,
+    exact: true,
+    requireAuth: true,
+    title: "Dashboard",
+    roles: ['user', 'admin', 'seller', 'moderator'] as UserRole[],
+  },
+  {
     path: "/login",
     component: LoginPage,
     requireAuth: false,
