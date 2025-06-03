@@ -341,17 +341,6 @@ function AppRouter() {
   const content = (
     <ErrorBoundary>
       <Switch>
-        {/* Special handling for the root path - redirect to login if not authenticated */}
-        <Route path="/">
-          {isAuthenticated ? (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <Dashboard />
-            </Suspense>
-          ) : (
-            <RedirectToLogin />
-          )}
-        </Route>
-
         {/* Login and Signup routes should not require auth */}
         <Route path="/login">
           {isAuthenticated ? (
@@ -400,6 +389,17 @@ function AppRouter() {
               />
             );
           })}
+
+        {/* Special handling for the root path - redirect to login if not authenticated */}
+        <Route path="/">
+          {isAuthenticated ? (
+            <Suspense fallback={<GlobalLoadingFallback />}>
+              <Dashboard />
+            </Suspense>
+          ) : (
+            <RedirectToLogin />
+          )}
+        </Route>
       </Switch>
       <OfflineIndicator />
     </ErrorBoundary>
