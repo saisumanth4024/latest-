@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Toaster } from './toaster';
+import { Toaster } from './Toaster';
 import * as hooks from '@/hooks/use-toast';
 import { ToastActionElement } from '@/hooks/use-toast';
 

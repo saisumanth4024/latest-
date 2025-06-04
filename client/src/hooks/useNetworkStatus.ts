@@ -16,6 +16,13 @@ export function useNetworkStatus(): NetworkStatusResult {
   const [since, setSince] = useState<Date | null>(null);
 
   useEffect(() => {
+    if (!navigator.onLine) {
+      setWasOffline(true);
+      setSince(new Date());
+    }
+  }, []);
+
+  useEffect(() => {
     // Handler for online status
     const handleOnline = () => {
       if (!isOnline) {
@@ -66,8 +73,11 @@ export function useSlowConnection(): boolean {
           
           // Check if the downlink is less than 1Mbps
           const isSlowSpeed = connection.downlink < 1;
-          
-          setIsSlowConnection(isSlowType || isSlowSpeed);
+
+          // Respect user preference for reduced data usage
+          const isSaveData = connection.saveData === true;
+
+          setIsSlowConnection(isSlowType || isSlowSpeed || isSaveData);
         }
       }
     };
@@ -77,12 +87,17 @@ export function useSlowConnection(): boolean {
 
     // Add event listener for connection changes if available
     if ('connection' in navigator && (navigator as any).connection) {
-      (navigator as any).connection.addEventListener('change', checkConnectionSpeed);
-      
-      // Remove event listener on cleanup
-      return () => {
-        (navigator as any).connection.removeEventListener('change', checkConnectionSpeed);
-      };
+      const connection = (navigator as any).connection;
+      if (typeof connection.addEventListener === 'function') {
+        connection.addEventListener('change', checkConnectionSpeed);
+
+        // Remove event listener on cleanup
+        return () => {
+          if (typeof connection.removeEventListener === 'function') {
+            connection.removeEventListener('change', checkConnectionSpeed);
+          }
+        };
+      }
     }
   }, []);
 

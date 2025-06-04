@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import OfflineIndicator, { withOfflineDetection } from './OfflineIndicator';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
+let mockUseNetworkStatusFn: ReturnType<typeof vi.fn>;
 // Mock the useNetworkStatus hook
 vi.mock('../hooks/useNetworkStatus', () => ({
-  useNetworkStatus: vi.fn()
+  __esModule: true,
+  get useNetworkStatus() {
+    return (...args: any[]) => mockUseNetworkStatusFn(...args);
+  },
+  get default() {
+    return (...args: any[]) => mockUseNetworkStatusFn(...args);
+  },
 }));
+mockUseNetworkStatusFn = vi.fn();
 
 // Mock component for HOC testing
 const TestComponent = () => (
@@ -13,7 +22,7 @@ const TestComponent = () => (
 );
 
 describe('OfflineIndicator Component', () => {
-  const mockUseNetworkStatus = vi.mocked(require('../hooks/useNetworkStatus').useNetworkStatus);
+  const mockUseNetworkStatus = mockUseNetworkStatusFn;
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,7 +54,7 @@ describe('OfflineIndicator Component', () => {
     render(<OfflineIndicator />);
     
     // Should display offline message
-    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/you are currently offline/i)).toBeInTheDocument();
   });
 
   it('should include the offline duration when provided', () => {
@@ -65,7 +74,7 @@ describe('OfflineIndicator Component', () => {
 });
 
 describe('withOfflineDetection HOC', () => {
-  const mockUseNetworkStatus = vi.mocked(require('../hooks/useNetworkStatus').useNetworkStatus);
+  const mockUseNetworkStatus = mockUseNetworkStatusFn;
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -85,7 +94,7 @@ describe('withOfflineDetection HOC', () => {
     // Wrapped component should be rendered
     expect(screen.getByTestId('test-component')).toBeInTheDocument();
     // No offline notification should be visible
-    expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/you are currently offline/i)).not.toBeInTheDocument();
   });
 
   it('should render wrapped component with offline notification when offline', () => {
@@ -101,7 +110,7 @@ describe('withOfflineDetection HOC', () => {
     
     // Both wrapped component and offline notification should be rendered
     expect(screen.getByTestId('test-component')).toBeInTheDocument();
-    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/you are currently offline/i)).toBeInTheDocument();
   });
 
   it('should pass props through to the wrapped component', () => {

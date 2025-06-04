@@ -31,7 +31,7 @@ describe('ProductDetails', () => {
     const mockToast = vi.fn();
     (useToast as unknown as vi.Mock).mockReturnValue({ toast: mockToast });
 
-    const { getByText } = renderWithProviders(<ProductDetails />, { route: '/product/1' });
+    const { getByText } = renderWithProviders(<ProductDetails />, { route: '/products/1' });
     fireEvent.click(getByText(/add to cart/i));
 
     await waitFor(() => expect(mockDispatch).toHaveBeenCalled());

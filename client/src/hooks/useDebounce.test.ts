@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useDebounce } from './useDebounce';
 
 describe('useDebounce', () => {
@@ -29,7 +29,9 @@ describe('useDebounce', () => {
     expect(result.current).toBe('initial value');
 
     // Advance timer but not enough to trigger update
-    vi.advanceTimersByTime(300);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
     expect(result.current).toBe('initial value');
   });
 
@@ -43,7 +45,9 @@ describe('useDebounce', () => {
     rerender({ value: 'new value', delay: 500 });
 
     // Advance timer to trigger update
-    vi.advanceTimersByTime(500);
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
     
     // Value should be updated
     expect(result.current).toBe('new value');
@@ -59,18 +63,24 @@ describe('useDebounce', () => {
     rerender({ value: 'intermediate value', delay: 500 });
     
     // Advance timer but not enough to trigger update
-    vi.advanceTimersByTime(200);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(result.current).toBe('initial value');
     
     // Second change before the first completes
     rerender({ value: 'final value', delay: 500 });
     
     // Advance timer but not enough for second change
-    vi.advanceTimersByTime(200);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(result.current).toBe('initial value');
     
     // Advance timer to complete the debounce for the second change
-    vi.advanceTimersByTime(300);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
     expect(result.current).toBe('final value');
   });
 
@@ -84,7 +94,9 @@ describe('useDebounce', () => {
     rerender({ value: 'new value', delay: 300 });
     
     // Advance timer by the new delay
-    vi.advanceTimersByTime(300);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
     expect(result.current).toBe('new value');
   });
 });

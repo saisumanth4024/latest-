@@ -13,13 +13,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Formats a number with locale-aware separators
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}
+
+/**
  * Formats a number as currency
  */
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  const hasZeroDecimals = ['JPY'].includes(currency);
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
+    currency,
+    minimumFractionDigits: hasZeroDecimals ? 0 : 2,
+    maximumFractionDigits: hasZeroDecimals ? 0 : 2,
   }).format(amount);
 }
 
@@ -35,7 +44,11 @@ export function formatTime(timestamp: number): string {
  */
 export function formatTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  
+
+  if (seconds < 60) {
+    return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`;
+  }
+
   let interval = Math.floor(seconds / 31536000);
   if (interval >= 1) {
     return interval === 1 ? '1 year ago' : `${interval} years ago`;
@@ -48,6 +61,10 @@ export function formatTimeAgo(timestamp: number): string {
   
   interval = Math.floor(seconds / 86400);
   if (interval >= 1) {
+    if (interval >= 7) {
+      const weeks = Math.floor(interval / 7);
+      return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+    }
     return interval === 1 ? '1 day ago' : `${interval} days ago`;
   }
   
