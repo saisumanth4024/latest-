@@ -205,6 +205,10 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       }
     }
     
+    if (result.length === 0) {
+      result = MOCK_PRODUCTS.slice(0, count);
+    }
+
     setFilteredProducts(result);
   }, [searchQuery, filters, count]);
   
@@ -290,7 +294,12 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
       )}
       
       {/* Product grid */}
-      {currentProducts.length === 0 ? (
+      {loading && currentProducts.length === 0 ? (
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+          <span>Loading products...</span>
+        </div>
+      ) : filteredProducts.length === 0 && !loading ? (
         <div className="flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
           <h3 className="text-xl font-semibold mb-2">No products found</h3>
           <p className="text-gray-500 dark:text-gray-400 text-center">
@@ -306,11 +315,15 @@ const MockProductsComponent: React.FC<MockProductsComponentProps> = ({
               onClick={() => handleProductClick(product.id)}
             >
               <div className="relative aspect-w-4 aspect-h-3 bg-gray-100 dark:bg-gray-800">
-                <img 
-                  src={`https://source.unsplash.com/random/400x300?${product.category.toLowerCase().replace(/\s+/g, '-')}`}
+                <img
+                  src={product.image}
                   alt={product.name}
                   className="object-cover w-full h-48"
                   loading="lazy"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src =
+                      "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image";
+                  }}
                 />
                 {product.discount > 0 && (
                   <Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600">
