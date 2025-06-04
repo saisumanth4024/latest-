@@ -6,13 +6,15 @@ import * as hooks from '@/hooks/use-toast';
 import { act } from '@testing-library/react';
 
 // Mock the useLocation hook from wouter
+let useLocationMock: ReturnType<typeof vi.fn>;
 vi.mock('wouter', async () => {
   const actual = await vi.importActual('wouter');
   return {
     ...actual,
-    useLocation: vi.fn(() => ['/', vi.fn()])
+    useLocation: (...args: any[]) => useLocationMock(...args),
   };
 });
+useLocationMock = vi.fn(() => ['/', vi.fn()]);
 
 // Mock the routes from App.tsx
 vi.mock('@/App', () => ({
@@ -36,13 +38,12 @@ vi.mock('@/hooks/use-toast', () => ({
 
 describe('NavigationToast Component', () => {
   const mockToast = vi.fn(() => 'mocked-toast-id');
-  const useLocationMock = vi.fn(() => ['/', vi.fn()]);
   
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Setup default location mock
-    vi.spyOn(require('wouter'), 'useLocation').mockImplementation(useLocationMock);
+
+    // Setup default location mock - the mocked module already exposes useLocationMock
+    useLocationMock.mockReturnValue(['/', vi.fn()]);
     
     // Setup toast mock for each test
     vi.mocked(hooks.useToast).mockImplementation(() => ({
