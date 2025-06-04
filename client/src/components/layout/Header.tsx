@@ -27,7 +27,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   
   return (
     <header
-      className="sticky top-0 z-20 flex items-center justify-between border-b border-transparent bg-[#2874F0] py-3 px-4 text-white shadow-md"
+      className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-primary-600 to-blue-700 px-4 py-2 text-white shadow-sm backdrop-blur-md"
     >
       <div className="flex items-center">
         <button 
@@ -119,7 +119,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* If not authenticated, show login button */}
         {!isAuthenticated && (
           <Link href="/login">
-            <div className="cursor-pointer rounded-md bg-[#FFE500] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-yellow-300">
+            <div className="cursor-pointer rounded-md bg-white/90 px-4 py-2 text-sm font-medium text-primary-700 shadow hover:bg-white">
               Log In
             </div>
           </Link>
