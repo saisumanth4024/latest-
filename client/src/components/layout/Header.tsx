@@ -27,7 +27,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   
   return (
     <header
-      className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-primary-600 to-blue-700 px-4 py-2 text-white shadow-sm backdrop-blur-md"
+      className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-[#131921] px-4 py-2 text-white shadow-md"
     >
       <div className="flex items-center">
         <button 
