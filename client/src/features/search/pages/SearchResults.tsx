@@ -121,7 +121,7 @@ const SearchResults: React.FC = () => {
         
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">
-            Search Results for "{searchQuery}"
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'Browse Products'}
           </h1>
           
           <div className="flex items-center gap-2">
@@ -282,9 +282,9 @@ const SearchResults: React.FC = () => {
         
         {/* Search results */}
         <div className="md:col-span-3">
-          <MockProductsComponent 
+          <MockProductsComponent
             title=""
-            count={12} 
+            count={100}
             columns={3}
             filters={{
               category: selectedFilters.category,
