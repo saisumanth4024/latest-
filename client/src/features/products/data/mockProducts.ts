@@ -741,9 +741,10 @@ const generateMockProducts = (): MockProduct[] => {
         // Generate tags
         const tags = generateTags(category, subcategory, name);
         
-        // Generate a unique image URL using a placeholder service
+        // Generate an image URL based on the product name to keep images unique
         const seed = id + name.substring(0, 5).replace(/\s/g, '');
-        const image = `https://source.unsplash.com/random/600x400?${encodeURIComponent(subcategory)}&sig=${seed}`;
+        const query = encodeURIComponent(name);
+        const image = `https://source.unsplash.com/featured/600x400?${query}&sig=${seed}`;
         
         // Create the product object
         products.push({

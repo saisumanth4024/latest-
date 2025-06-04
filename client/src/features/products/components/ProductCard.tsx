@@ -35,11 +35,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
       onClick={handleClick}
     >
       <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
-        <img 
+        <img
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
           loading="lazy"
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src =
+              "https://placehold.co/400x300/e2e8f0/1e293b?text=Product+Image";
+          }}
         />
         
         {product.discountPrice && (
