@@ -74,7 +74,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* Wishlist Icon */}
         <Link href="/wishlists">
           <div className="relative cursor-pointer rounded-full p-2 hover:bg-white/10">
-            <Heart className="h-5 w-5 text-white" />
+            <Heart className="h-6 w-6 text-white drop-shadow-sm" />
             {wishlistItemsCount > 0 && (
               <Badge
                 variant="secondary"
@@ -89,7 +89,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         {/* Cart Icon */}
         <Link href="/cart">
           <div className="relative cursor-pointer rounded-full p-2 hover:bg-white/10">
-            <ShoppingCart className="h-5 w-5 text-white" />
+            <ShoppingCart className="h-6 w-6 text-white drop-shadow-sm" />
             {cartItemsCount > 0 && (
               <Badge
                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
