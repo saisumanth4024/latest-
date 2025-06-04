@@ -372,7 +372,7 @@ function AppRouter() {
 
         {/* All other routes */}
         {routes
-          .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup")
+          .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup" && route.path !== "*")
           .map((route, index) => {
             const Component = route.component;
             const WrappedComponent = () => (
@@ -407,6 +407,9 @@ function AppRouter() {
           ) : (
             <RedirectToLogin />
           )}
+        </Route>
+        <Route>
+          <NotFound />
         </Route>
       </Switch>
       <OfflineIndicator />
