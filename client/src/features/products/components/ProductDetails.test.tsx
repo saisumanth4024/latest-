@@ -10,7 +10,14 @@ import * as wouter from 'wouter';
 vi.mock('../productsApi');
 vi.mock('@/app/hooks');
 vi.mock('@/hooks/use-toast');
-vi.mock('wouter');
+vi.mock('wouter', async () => {
+  const actual = await vi.importActual<typeof import('wouter')>('wouter');
+  return {
+    ...actual,
+    useParams: vi.fn(),
+  };
+});
+vi.mock('./ProductRecommendations', () => ({ default: () => <div /> }));
 
 describe('ProductDetails', () => {
   it('adds item to cart when button is clicked', async () => {

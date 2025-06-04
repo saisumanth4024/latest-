@@ -227,9 +227,9 @@ const ProductDetails: React.FC = () => {
               <div className="flex items-center mr-2">
                 {renderRatingStars(enhancedProduct.rating)}
               </div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {enhancedProduct.rating.toFixed(1)} ({enhancedProduct.reviews || enhancedProduct.reviewCount || 0} reviews)
-              </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {(enhancedProduct.rating ?? 0).toFixed(1)} ({enhancedProduct.reviews || enhancedProduct.reviewCount || 0} reviews)
+                </span>
             </div>
             
             {/* Status badges */}
@@ -484,7 +484,7 @@ const ProductDetails: React.FC = () => {
                 </tr>
                 <tr className="border-b">
                   <td className="py-2 font-medium">Tags</td>
-                  <td className="py-2">{product.tags.join(', ')}</td>
+                  <td className="py-2">{(product.tags || []).join(', ')}</td>
                 </tr>
                 {/* Show price range if available */}
                 {product.priceRange && (

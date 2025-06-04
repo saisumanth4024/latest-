@@ -122,10 +122,12 @@ describe('Toast Components', () => {
         <ToastViewport />
       </ToastProvider>
     );
-    
+
     const viewport = document.querySelector('[role="region"]');
     expect(viewport).toBeInTheDocument();
-    expect(viewport).toHaveClass('fixed');
+    const ol = viewport?.querySelector('ol');
+    expect(ol).toBeInTheDocument();
+    expect(ol).toHaveClass('fixed');
   });
 
   it('should render a complete toast with all components', () => {
