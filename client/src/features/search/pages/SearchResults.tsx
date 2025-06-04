@@ -121,7 +121,7 @@ const SearchResults: React.FC = () => {
         
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Browse Products'}
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'Browse Products'
           </h1>
           
           <div className="flex items-center gap-2">
@@ -294,6 +294,7 @@ const SearchResults: React.FC = () => {
             }}
             searchQuery={searchQuery}
           />
+
         </div>
       </div>
     </div>
