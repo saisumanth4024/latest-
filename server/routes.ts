@@ -45,12 +45,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login route
   app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
-    
+
     // For demo purposes, any valid-looking credentials will work
     if (email && password && password.length >= 6) {
       res.json({
         user: {
-          id: "1", 
+          id: "1",
           role: "admin",
           email: email,
           firstName: "John",
@@ -58,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: "https://randomuser.me/api/portraits/men/1.jpg"
         },
         token: "demo-token-12345",
+        refreshToken: "demo-refresh-token-12345",
+        // expiresAt is returned as a unix timestamp in seconds
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
       });
     } else {
       res.status(401).json({ message: "Invalid credentials" });
