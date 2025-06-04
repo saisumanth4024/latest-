@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useToast } from './use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock the module to prevent actual DOM operations
 vi.mock('@/hooks/use-toast', async () => {

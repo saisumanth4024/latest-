@@ -3,9 +3,19 @@ import { render, screen } from '@testing-library/react';
 import OfflineIndicator, { withOfflineDetection } from './OfflineIndicator';
 
 // Mock the useNetworkStatus hook
-vi.mock('../hooks/useNetworkStatus', () => ({
-  useNetworkStatus: vi.fn()
-}));
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+
+var networkStatusMock: any;
+
+vi.mock('../hooks/useNetworkStatus', () => {
+  networkStatusMock = vi.fn();
+  return {
+    __esModule: true,
+    default: networkStatusMock,
+    useNetworkStatus: networkStatusMock,
+    useSlowConnection: vi.fn(),
+  };
+});
 
 // Mock component for HOC testing
 const TestComponent = () => (
@@ -13,7 +23,7 @@ const TestComponent = () => (
 );
 
 describe('OfflineIndicator Component', () => {
-  const mockUseNetworkStatus = vi.mocked(require('../hooks/useNetworkStatus').useNetworkStatus);
+  const mockUseNetworkStatus = vi.mocked(useNetworkStatus);
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,7 +75,7 @@ describe('OfflineIndicator Component', () => {
 });
 
 describe('withOfflineDetection HOC', () => {
-  const mockUseNetworkStatus = vi.mocked(require('../hooks/useNetworkStatus').useNetworkStatus);
+  const mockUseNetworkStatus = vi.mocked(useNetworkStatus);
   
   beforeEach(() => {
     vi.clearAllMocks();

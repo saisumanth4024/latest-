@@ -2,16 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getOrders, getOrderDetails, getOrderTracking, getOrderInvoice } from "./routes/orders";
-import { 
-  getProducts, 
-  getProductById, 
-  getProductsByCategory, 
-  searchProducts, 
-  getFeaturedProducts, 
-  getNewArrivals, 
-  getBestSellers, 
-  getProductRecommendations 
+import {
+  getProducts,
+  getProductById,
+  getProductsByCategory,
+  searchProducts,
+  getFeaturedProducts,
+  getNewArrivals,
+  getBestSellers,
+  getProductRecommendations
 } from "./routes/products";
+import dashboardRouter from "./routes/dashboard";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -204,11 +205,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: "Account verified",
           message: "Your account has been successfully verified",
           timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          read: true
-        }
-      ]
+          read: true,
+        },
+      ],
     });
   });
+
+  // Quick action endpoints used by the dashboard
+  app.post('/api/users', (_req, res) => {
+    res.json({ success: true });
+  });
+
+  app.post('/api/deploy', (_req, res) => {
+    res.json({ success: true });
+  });
+
+  app.get('/api/logs', (_req, res) => {
+    res.json([
+      '2024-01-01 10:00 INFO Server started',
+      '2024-01-01 10:05 INFO Database connected',
+      '2024-01-01 10:10 WARN High memory usage',
+    ]);
+  });
+
+  app.post('/api/configure', (_req, res) => {
+    res.json({ success: true });
+  });
+
+  app.post('/api/refresh', (_req, res) => {
+    res.json({ success: true });
+  });
+
+  app.get('/api/export', (_req, res) => {
+    const csv = 'id,name\n1,Example\n';
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="export.csv"');
+    res.send(csv);
+  });
+
+  // Dashboard API routes
+  app.use('/api/dashboard', dashboardRouter);
 
   // Orders API routes
   app.get('/api/orders', getOrders);
