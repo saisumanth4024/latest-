@@ -1,38 +1,22 @@
 import React from 'react';
 import {
   BrowserRouter,
-  Routes as RRRoutes,
-  Route as RRRoute,
+  Routes,
+  Route,
   Navigate,
+  Link,
   useLocation as rrUseLocation,
   useNavigate,
-  matchPath
+  matchPath,
+  useParams
 } from 'react-router-dom';
 
-export { BrowserRouter as Router, Navigate as Redirect };
-export { Link } from 'react-router-dom';
-export { useParams } from 'react-router-dom';
+export { BrowserRouter as Router, Navigate as Redirect, Link, Route };
+// Alias React Router's Routes as Switch for wouter compatibility
+export { Routes as Switch } from 'react-router-dom';
+export { useParams };
 
-export function Switch({ children }: { children: React.ReactNode }) {
-  return <RRRoutes>{children}</RRRoutes>;
-}
-
-interface RouteProps {
-  path: string;
-  component?: React.ComponentType<any>;
-  children?: React.ReactNode;
-  index?: boolean;
-}
-
-export function Route({ path, component: Component, children, index }: RouteProps) {
-  const element = Component ? <Component /> : undefined;
-  return (
-    <RRRoute path={path} element={element} index={index}>
-      {children}
-    </RRRoute>
-  );
-}
-
+// Custom hooks to mimic wouter's return signatures
 export function useLocation(): [string, (to: string) => void] {
   const location = rrUseLocation();
   const navigate = useNavigate();

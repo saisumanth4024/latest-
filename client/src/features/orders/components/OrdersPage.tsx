@@ -54,9 +54,9 @@ export default function OrdersPage() {
   return (
     <Container>
       <Switch>
-        <Route path="/orders" component={OrderList} />
-        <Route path="/orders/:id" component={OrderDetails} />
-        <Route path="/orders/:orderId/return/:itemId" component={ReturnItemForm} />
+        <Route path="/orders" element={<OrderList />} />
+        <Route path="/orders/:id" element={<OrderDetails />} />
+        <Route path="/orders/:orderId/return/:itemId" element={<ReturnItemForm />} />
       </Switch>
     </Container>
   );
