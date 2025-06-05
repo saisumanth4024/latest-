@@ -350,28 +350,40 @@ function AppRouter() {
   const routesContent = (
     <ErrorBoundary>
       <Switch>
-        <Route path="/login">
-          {isAuthenticated ? (
-            <Redirect to="/" />
-          ) : (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <LoginPage />
-            </Suspense>
-          )}
-        </Route>
-        <Route path="/signup">
-          {isAuthenticated ? (
-            <Redirect to="/" />
-          ) : (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <SignupPage />
-            </Suspense>
-          )}
-        </Route>
-        <Route path="/" component={Layout}>
-          <Route index component={Dashboard} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Redirect to="/" />
+            ) : (
+              <Suspense fallback={<GlobalLoadingFallback />}>
+                <LoginPage />
+              </Suspense>
+            )
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated ? (
+              <Redirect to="/" />
+            ) : (
+              <Suspense fallback={<GlobalLoadingFallback />}>
+                <SignupPage />
+              </Suspense>
+            )
+          }
+        />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
           {routes
-            .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup" && route.path !== "*")
+            .filter(
+              route =>
+                route.path !== "/" &&
+                route.path !== "/login" &&
+                route.path !== "/signup" &&
+                route.path !== "*"
+            )
             .map((route, index) => {
               const Component = route.component;
               const WrappedComponent = () => (
@@ -383,16 +395,20 @@ function AppRouter() {
               );
 
               return route.requireAuth ? (
-                <Route key={index} path={route.path}>
-                  <ProtectedRoute roles={route.roles}>
-                    <WrappedComponent />
-                  </ProtectedRoute>
-                </Route>
+                <Route
+                  key={index}
+                  path={route.path}
+                  element={
+                    <ProtectedRoute roles={route.roles}>
+                      <WrappedComponent />
+                    </ProtectedRoute>
+                  }
+                />
               ) : (
-                <Route key={index} path={route.path} component={WrappedComponent} />
+                <Route key={index} path={route.path} element={<WrappedComponent />} />
               );
             })}
-          <Route path="*" component={NotFound} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Switch>
       <OfflineIndicator />
