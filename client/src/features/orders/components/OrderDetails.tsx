@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'wouter';
+import { useParams, Link } from '@/router/wouterCompat';
 import { format } from 'date-fns';
 import {
   useGetOrderDetailsQuery,

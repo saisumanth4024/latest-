@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/app/hooks';
 import { RootState } from '@/app/store';

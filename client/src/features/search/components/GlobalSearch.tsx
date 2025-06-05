@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { useDebounce } from '@/hooks/useDebounce';
 import { 
   setQuery, 

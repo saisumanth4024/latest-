@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route, useRoute } from 'wouter';
+import { Switch, Route, useRoute } from '@/router/wouterCompat';
 import { Container } from '@/components/ui/container';
 import OrderList from './OrderList';
 import OrderDetails from './OrderDetails';

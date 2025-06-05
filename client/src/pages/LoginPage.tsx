@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { useAppSelector } from '@/app/hooks';
 import { selectIsAuthenticated } from '@/features/auth/authSlice';
 import LoginForm from '@/features/auth/components/LoginForm';

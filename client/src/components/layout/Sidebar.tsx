@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation } from '@/router/wouterCompat';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { selectUserRole, setAuthState, logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';

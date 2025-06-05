@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Bell, CheckCheck, Check, Trash2 } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { formatTimeAgo } from '@/lib/utils';
 import { 
   selectNotifications, 

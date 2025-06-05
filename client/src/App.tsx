@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from "react";
-import { Switch, Route, useLocation, useRoute, Redirect } from "wouter";
+import { Switch, Route, useLocation, useRoute, Redirect } from "@/router/wouterCompat";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/Layout";
 import { UserRole } from "@/types";
@@ -12,6 +12,7 @@ import NavigationToast from "@/features/navigation/NavigationToast";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
 import { canAccessRoute } from "@/features/auth/rbac";
+import ScrollToTop from "@/router/ScrollToTop";
 
 // Global loading component for lazy-loaded routes
 const GlobalLoadingFallback = () => (
@@ -345,11 +346,10 @@ function AppRouter() {
     );
   }
 
-  // Always wrap content with ErrorBoundary
-  const content = (
+  // React Router nested routes with Layout and Outlet
+  const routesContent = (
     <ErrorBoundary>
       <Switch>
-        {/* Login and Signup routes should not require auth */}
         <Route path="/login">
           {isAuthenticated ? (
             <Redirect to="/" />
@@ -359,7 +359,6 @@ function AppRouter() {
             </Suspense>
           )}
         </Route>
-
         <Route path="/signup">
           {isAuthenticated ? (
             <Redirect to="/" />
@@ -369,63 +368,45 @@ function AppRouter() {
             </Suspense>
           )}
         </Route>
+        <Route path="/" component={Layout}>
+          <Route index component={Dashboard} />
+          {routes
+            .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup" && route.path !== "*")
+            .map((route, index) => {
+              const Component = route.component;
+              const WrappedComponent = () => (
+                <ErrorBoundary boundary={route.title}>
+                  <Suspense fallback={<GlobalLoadingFallback />}>
+                    <Component />
+                  </Suspense>
+                </ErrorBoundary>
+              );
 
-        {/* All other routes */}
-        {routes
-          .filter(route => route.path !== "/" && route.path !== "/login" && route.path !== "/signup" && route.path !== "*")
-          .map((route, index) => {
-            const Component = route.component;
-            const WrappedComponent = () => (
-              <ErrorBoundary boundary={route.title}>
-                <Suspense fallback={<GlobalLoadingFallback />}>
-                  <Component />
-                </Suspense>
-              </ErrorBoundary>
-            );
-
-            return route.requireAuth ? (
-              <Route key={index} path={route.path}>
-                <ProtectedRoute roles={route.roles}>
-                  <WrappedComponent />
-                </ProtectedRoute>
-              </Route>
-            ) : (
-              <Route 
-                key={index} 
-                path={route.path} 
-                component={WrappedComponent} 
-              />
-            );
-          })}
-
-        {/* Special handling for the root path - redirect to login if not authenticated */}
-        <Route path="/">
-          {isAuthenticated ? (
-            <Suspense fallback={<GlobalLoadingFallback />}>
-              <Dashboard />
-            </Suspense>
-          ) : (
-            <RedirectToLogin />
-          )}
-        </Route>
-        <Route>
-          <NotFound />
+              return route.requireAuth ? (
+                <Route key={index} path={route.path}>
+                  <ProtectedRoute roles={route.roles}>
+                    <WrappedComponent />
+                  </ProtectedRoute>
+                </Route>
+              ) : (
+                <Route key={index} path={route.path} component={WrappedComponent} />
+              );
+            })}
+          <Route path="*" component={NotFound} />
         </Route>
       </Switch>
       <OfflineIndicator />
     </ErrorBoundary>
   );
-  
-  // Only show Layout if user is authenticated and not on login/signup pages
-  const showLayout = isAuthenticated && !isLoginMatch && !isSignupMatch;
-  
-  return showLayout ? <Layout>{content}</Layout> : content;
+
+  return routesContent;
 }
 
 function App() {
   return (
     <>
       <NavigationToast />
+      <ScrollToTop />
       <AppRouter />
       <Toaster />
     </>
