@@ -1,6 +1,6 @@
 import React, { useState, useCallback, memo } from 'react';
 import { useGetProductsQuery } from '../productsApi';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Heart, ShoppingCart } from 'lucide-react';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

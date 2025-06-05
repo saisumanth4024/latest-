@@ -3,7 +3,7 @@ import { useAppDispatch } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
 import { cn } from '@/lib/utils';
 import { User } from '@/features/auth/types';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 
 interface UserMenuProps {
   user: User;

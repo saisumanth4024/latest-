@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { Banner, BannerPosition } from '../../types';
 import { useGetBannersByPositionQuery, useTrackBannerViewMutation } from '../../contentApi';
 import { setActiveBanner } from '../../contentSlice';

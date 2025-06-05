@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { Product } from '../productsApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectProduct, selectRecentlyViewedIds } from '../productsSlice';

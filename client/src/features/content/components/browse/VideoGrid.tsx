@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { Video } from '../../types';
 import { useDispatch } from 'react-redux';
 import { setCurrentVideo, setIsPlaying } from '../../contentSlice';

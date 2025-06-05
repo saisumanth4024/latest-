@@ -1,5 +1,5 @@
-import { useLocation } from 'wouter';
-import { Link } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
+import { Link } from '@/router/wouterCompat';
 import { routes } from '@/App';
 import { cn } from '@/lib/utils';
 
