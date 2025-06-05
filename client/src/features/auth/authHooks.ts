@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
 import { 
   selectIsAuthenticated, 
