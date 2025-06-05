@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute } from '@/router/wouterCompat';
 import { useGetProductByIdQuery } from '../productsApi';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { uploadProductImages, clearImageUploadState } from '../productsSlice';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import {
   Card,
   CardContent,

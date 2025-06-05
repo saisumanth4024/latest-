@@ -5,10 +5,10 @@ import { navigateTo } from './navigationSlice';
 import * as hooks from '@/hooks/use-toast';
 import { act } from '@testing-library/react';
 
-// Mock the useLocation hook from wouter
+// Mock the useLocation hook from the router
 let useLocationMock: ReturnType<typeof vi.fn>;
-vi.mock('wouter', async () => {
-  const actual = await vi.importActual('wouter');
+vi.mock('@/router/wouterCompat', async () => {
+  const actual = await vi.importActual('@/router/wouterCompat');
   return {
     ...actual,
     useLocation: (...args: any[]) => useLocationMock(...args),

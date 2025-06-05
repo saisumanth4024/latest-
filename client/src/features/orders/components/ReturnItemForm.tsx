@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link, useLocation } from 'wouter';
+import { useParams, Link, useLocation } from '@/router/wouterCompat';
 import {
   useGetOrderDetailsQuery,
   useSubmitReturnRequestMutation,

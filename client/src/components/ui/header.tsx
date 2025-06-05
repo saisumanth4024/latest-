@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation } from '@/router/wouterCompat';
 import { useSelector } from 'react-redux';
 import { 
   Search, 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { useAuth } from '@/features/auth';
 import SignupWizard from '@/features/auth/components/signup/SignupWizard';
 import { useAppDispatch } from '@/app/hooks';

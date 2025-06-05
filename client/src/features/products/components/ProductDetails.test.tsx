@@ -5,13 +5,13 @@ import { renderWithProviders } from '@/test/test-utils';
 import * as api from '../productsApi';
 import * as hooks from '@/app/hooks';
 import { useToast } from '@/hooks/use-toast';
-import * as wouter from 'wouter';
+import * as wouter from '@/router/wouterCompat';
 
 vi.mock('../productsApi');
 vi.mock('@/app/hooks');
 vi.mock('@/hooks/use-toast');
-vi.mock('wouter', async () => {
-  const actual = await vi.importActual<typeof import('wouter')>('wouter');
+vi.mock('@/router/wouterCompat', async () => {
+  const actual = await vi.importActual<typeof import('@/router/wouterCompat')>('@/router/wouterCompat');
   return {
     ...actual,
     useParams: vi.fn(),

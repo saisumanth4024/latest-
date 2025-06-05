@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'wouter';
+import { useParams, Link } from '@/router/wouterCompat';
 import { useAppDispatch } from '@/app/hooks';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
