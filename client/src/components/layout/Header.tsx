@@ -7,7 +7,7 @@ import UserMenu from '@/components/ui/UserMenu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import GlobalSearch from '@/features/search/components/GlobalSearch';
 import { cn } from '@/lib/utils';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

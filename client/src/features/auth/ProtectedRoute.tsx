@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from 'react';
-import { useLocation, useRoute, Redirect } from 'wouter';
+import { useLocation, useRoute, Redirect } from '@/router/wouterCompat';
 import { useAppSelector } from '@/app/hooks';
 import { selectIsAuthenticated, selectUserRole } from './authSlice';
 import { canAccessRoute } from './rbac';

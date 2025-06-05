@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'wouter';
+import { Link } from '@/router/wouterCompat';
 import { format } from 'date-fns';
 import {
   Table,

@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Breadcrumb from './Breadcrumb';
 import { useMobileDetect } from '@/app/hooks';
-import { useLocation } from 'wouter';
+import { useLocation } from '@/router/wouterCompat';
 import { fetchCart } from '@/features/cart/cartSlice';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
 
 interface NotificationProps {
   message: string;
@@ -53,7 +51,7 @@ const NotificationBar = ({ message, type, onClose }: NotificationProps) => {
   );
 };
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout() {
   const dispatch = useDispatch();
   const isMobile = useMobileDetect();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
@@ -131,7 +129,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Banner Slot - for future use */}
             <div id="banner-slot"></div>
             
-            {children}
+            <Outlet />
           </main>
         </div>
       </div>
